@@ -28,6 +28,7 @@ Se publica sola en Vercel con cada git push a main.
 
 ## Estilo visual
 Lenguaje Nike (getdesign.md/nike): blanco y negro (#111111 / #FFFFFF) con un solo gris de superficie (#F5F5F5) y líneas #CACACB. Rojo #D30005 solo para lo negativo o pendiente, verde #007D48 solo para lo positivo. Títulos cartel en Anton mayúsculas (reemplazo libre de Futura) y UI en Inter. Barra utilitaria gris arriba, navegación horizontal con subrayado en la sección activa, botones píldora (negro el principal), tarjetas planas sin sombra ni bordes redondeados, filtros que se invierten a negro. Sin fotos: el bloque de campaña negro con el número gigante (cuánto falta retirar) hace de imagen.
+Marca visible: "Santiago Rossi" con el escudo SMR (img/logo-smr.png; img/logo-smr-180.png para la barra, el ícono de iPhone y el PDF; img/favicon.png). El escudo es el único elemento a color fuera de las señales rojo/verde.
 Modo claro y oscuro con tokens CSS (:root, prefers-color-scheme y data-theme); en oscuro se invierte todo. Preferencia en Ajustes › Apariencia, guardada en localStorage "mr:theme". Los gráficos SVG toman los colores del tema desde el objeto K (readK al renderizar). El PDF siempre sale en fondo blanco.
 
 ## Forma de trabajo

@@ -6,11 +6,12 @@
 <meta name="theme-color" content="#F5F5F5" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <script>try{var t=localStorage.getItem("mr:theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
-<title>Mayor Rossi</title>
+<title>Santiago Rossi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='0' fill='%23111111'/%3E%3Cpath d='M12 48 L28 20 L37 34 L43 26 L54 48 Z' fill='none' stroke='white' stroke-width='4' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="apple-touch-icon" href="img/logo-smr-180.png">
 <style>
 /* Layout: lenguaje Nike — barra utilitaria gris, navegación horizontal blanca, título cartel en mayúsculas,
    bloque de campaña negro con el número gigante, tarjetas planas sobre gris, píldoras negras. */
@@ -65,8 +66,8 @@ button{cursor:pointer}
 .tcinfo b{font-size:13px;font-weight:600}
 .nav{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:24px;height:64px;padding:0 var(--gut);background:var(--rail-bg);box-shadow:inset 0 -1px 0 var(--sep)}
 .brandmark{display:flex;align-items:center;gap:10px;flex:none;color:var(--ink);text-decoration:none}
-.brandmark svg{width:30px;height:30px;fill:var(--ink)}
-.brandmark span{font:400 22px/1 var(--fx);letter-spacing:.01em;text-transform:uppercase}
+.brandmark img{display:block;height:40px;width:auto}
+.brandmark span{font:400 22px/1 var(--fx);letter-spacing:.01em;text-transform:uppercase;white-space:nowrap}
 .rail{flex:1;display:flex;justify-content:center;gap:4px;min-width:0}
 .rail button{position:relative;display:inline-flex;align-items:center;gap:6px;height:64px;padding:0 12px;border:0;background:none;color:var(--ink);font-size:16px;font-weight:500;white-space:nowrap}
 .rail button svg{display:none}
@@ -334,7 +335,7 @@ td .note{display:block;font-size:13px;color:var(--sec);font-weight:400;margin-to
 /* acceso */
 .gate{position:fixed;inset:0;z-index:80;display:grid;align-content:center;justify-items:start;padding:var(--gut);background:#111111;color:#FFFFFF}
 .gate form{width:min(560px,100%);display:grid;gap:16px;justify-items:start}
-.gate .ic{display:none}
+.gate .logo{display:block;width:112px;height:auto;margin-bottom:12px}
 .gate h1{margin:0;font:400 clamp(72px,14vw,168px)/.85 var(--fx);text-transform:uppercase}
 .gate p{margin:0;color:#9E9EA0;font-size:16px}
 .gate input{width:100%;height:56px;padding:0 24px;border:0;border-radius:var(--pill);background:#1F1F21;color:#fff;font-size:18px}
@@ -355,7 +356,7 @@ td .note{display:block;font-size:13px;color:var(--sec);font-weight:400;margin-to
   .nav .btn{height:36px;padding:0 14px;font-size:13px}
   .hud{padding-block:28px 16px}
 }
-@media (max-width:600px){ .util .tcinfo #tcsrc{display:none} }
+@media (max-width:600px){ .util .tcinfo #tcsrc{display:none} .hide-sm{display:none} .nav .btn{width:40px;padding:0} .brandmark span{font-size:20px} }
 @media (pointer:coarse){.ib{width:44px;height:44px}.btn,.pill{min-height:44px}.seg button{min-height:36px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
@@ -394,7 +395,7 @@ td .note{display:block;font-size:13px;color:var(--sec);font-weight:400;margin-to
     </div>
   </div>
   <header class="nav">
-    <button class="brandmark" data-act="view" data-v="cabina" style="border:0;background:none;padding:0" aria-label="Ir al resumen"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M2 27 L12.5 8 L18 17.5 L22 12 L30 27 Z"/></svg><span>Mayor Rossi</span></button>
+    <button class="brandmark" data-act="view" data-v="cabina" style="border:0;background:none;padding:0" aria-label="Ir al resumen"><img src="img/logo-smr-180.png" alt="" width="36" height="41"><span>Santiago Rossi</span></button>
     <nav class="rail" aria-label="Secciones">
       <button data-act="view" data-v="cabina">Resumen</button>
       <button data-act="view" data-v="retiros">Retiros</button>
@@ -403,13 +404,13 @@ td .note{display:block;font-size:13px;color:var(--sec);font-weight:400;margin-to
       <button data-act="view" data-v="comisiones">Cobros 5%</button>
       <button data-act="view" data-v="ajustes">Ajustes</button>
     </nav>
-    <button class="btn primary" data-act="print"><svg viewBox="0 0 24 24"><path d="M7 9V3h10v6M7 18H4v-7h16v7h-3M7 14h10v7H7z"/></svg>Resumen PDF</button>
+    <button class="btn primary" data-act="print" aria-label="Resumen PDF"><svg viewBox="0 0 24 24"><path d="M7 9V3h10v6M7 18H4v-7h16v7h-3M7 14h10v7H7z"/></svg><span class="hide-sm">Resumen PDF</span></button>
   </header>
   <div class="main">
     <header class="hud">
       <div class="brand">
         <h1 id="vtitle">Resumen</h1>
-        <p id="sub">Mayor Rossi</p>
+        <p id="sub">Santiago Rossi</p>
       </div>
     </header>
     <div class="scale" id="scale" role="group" aria-label="Período"></div>
@@ -421,8 +422,8 @@ td .note{display:block;font-size:13px;color:var(--sec);font-weight:400;margin-to
 <div id="print" aria-hidden="true"></div>
 <div class="gate" id="gate" hidden>
   <form id="gateForm" novalidate>
-    <span class="ic"><svg viewBox="0 0 24 24"><path d="M3 19 L9.5 8 L13 13.5 L15.5 10 L21 19 Z"/></svg></span>
-    <h1>Mayor Rossi</h1>
+    <img class="logo" src="img/logo-smr.png" alt="SMR" width="112" height="128">
+    <h1>Santiago Rossi</h1>
     <p>Ingresá tu clave para abrir tus finanzas.</p>
     <label class="sr" for="gateKey">Clave</label>
     <input id="gateKey" type="password" autocomplete="current-password" placeholder="Clave" required>
@@ -687,7 +688,7 @@ function renderChrome(M, ms){
   $("#tcsrc").textContent = tcManual(tm) ? "Cargado a mano en Ajustes" : TCD.keys.length ? "Oficial BNA · venta" : "Sin conexión · último valor";
   $("#vtitle").textContent = TITLES[S.view] || "Resumen";
   $("#sub").textContent = S.sel === "all" ? "Todo el período" : ymLong(S.sel) + (S.view === "cabina" ? " · hoy " + NOW.getDate() + " de " + MESL[NOW.getMonth()].toLowerCase() : "");
-  document.title = (TITLES[S.view] || "Resumen") + " · Mayor Rossi";
+  document.title = (TITLES[S.view] || "Resumen") + " · Santiago Rossi";
   const pend = S.retiros.filter(r => r.tipo !== "efectivo" && !r.facturado).length;
   $("#arcaBadge").textContent = pend ? String(pend) : "";
   document.querySelectorAll("[data-act=cur]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.c === S.cur)));
@@ -1261,7 +1262,8 @@ function printResumen(){
   const fw = factWindow(), cat0 = c.monotributo || "A";
   const tcTxt = U ? (single ? `Dólar oficial BNA venta de cada operación (promedio ${ymLabel(S.sel)}: $ ${nf0.format(tcFor(S.sel))}).` : "Dólar oficial BNA venta de cada operación.") : "Montos en pesos.";
   $("#print").innerHTML = `
-    <h1>Mayor Rossi · ${esc(per)}</h1>
+    <img src="img/logo-smr-180.png" alt="" style="height:52pt;width:auto;float:right">
+    <h1>Santiago Rossi · ${esc(per)}</h1>
     <div class="meta">Resumen de finanzas personales · emitido el ${NOW.toLocaleDateString("es-AR")} · ${esc(tcTxt)}</div>
     <div class="kp"><div><span>Sueldo retirado</span><b>${fmt(ret)}</b></div><div><span>Le corresponde</span><b>${fmt(objC)}</b></div>
       <div><span>Gastos</span><b>${fmt(gas)}</b></div><div><span>Ahorro neto</span><b class="${ret+ing-gas>=0?"pos":"neg"}">${fmt(ret+ing-gas)}</b></div></div>
@@ -1290,7 +1292,7 @@ function printResumen(){
       <tr><td>Tope categoría ${cat0}</td><td class="r">${ars(MONO[cat0][0])} · usado ${pct(fw.tot/MONO[cat0][0],1)}</td></tr>
       <tr><td>Proyección a 12 meses</td><td class="r">${ars(fw.proj)} · categoría ${fitCat(fw.proj)}</td></tr>
     </tbody></table>
-    <div class="foot">Mayor Rossi · escala de Monotributo vigente desde agosto 2026.</div>`;
+    <div class="foot">Santiago Rossi · escala de Monotributo vigente desde agosto 2026.</div>`;
   setTimeout(() => window.print(), 60);
 }
 
@@ -1300,7 +1302,7 @@ async function exportCSV(col){
   const cols = col === "retiros" ? ["fecha","cliente","importe","tipo","facturado","nota"] : col === "gastos" ? ["fecha","concepto","importe","categoria","nota"] : ["fecha","cliente","importe","tasa","facturado","compensado","compensadoFecha","nota"];
   const q = v => { v = v === undefined || v === null ? "" : String(v); return /[",;\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; };
   const csv = "\uFEFF" + [cols.join(";"), ...L.map(r => cols.map(k => q(typeof r[k] === "number" ? String(r[k]).replace(".",",") : r[k])).join(";"))].join("\n");
-  download(`mayor-rossi-${col}-${NOW.toISOString().slice(0,10)}.csv`, csv, "text/csv;charset=utf-8");
+  download(`santiago-rossi-${col}-${NOW.toISOString().slice(0,10)}.csv`, csv, "text/csv;charset=utf-8");
 }
 
 /* ===================== eventos ===================== */
@@ -1332,7 +1334,7 @@ document.addEventListener("click", async ev => {
   if (a === "send"){ ask($("#ask").value); return; }
   if (a === "stop"){ S.ctl && S.ctl.abort(); return; }
   if (a === "exp"){ exportCSV(el.dataset.col); return; }
-  if (a === "backup"){ download(`mayor-rossi-respaldo-${NOW.toISOString().slice(0,10)}.json`, JSON.stringify(snapshot(), null, 1), "application/json"); return; }
+  if (a === "backup"){ download(`santiago-rossi-respaldo-${NOW.toISOString().slice(0,10)}.json`, JSON.stringify(snapshot(), null, 1), "application/json"); return; }
   if (a === "impNo"){ S.pendingImport = null; render(true); return; }
   if (a === "impOk"){ const d = S.pendingImport; S.pendingImport = null; S.retiros = d.retiros; S.gastos = d.gastos; S.comisiones = d.comisiones; if (d.config) S.config = d.config; S.sel = null; changed(); toast("Datos importados"); return; }
   if (a === "logout"){ logout(); return; }
@@ -1365,7 +1367,7 @@ document.addEventListener("change", ev => {
       if (!ok) throw new Error();
       const fix = (L, p) => L.map((r, i) => Object.assign({id: r.id || p + i + Date.now().toString(36)}, r));
       S.pendingImport = {retiros:fix(o.retiros,"r"), gastos:fix(o.gastos,"g"), comisiones:fix(o.comisiones,"c"), config:o.config || null}; render(true);
-    }).catch(() => toast("Ese archivo no es un respaldo de Mayor Rossi.", true)); t.value = ""; return; }
+    }).catch(() => toast("Ese archivo no es un respaldo de Santiago Rossi.", true)); t.value = ""; return; }
   if (t.dataset.cfg){ const v = t.dataset.cfg === "objetivo" ? Math.max(0, +t.value || 0) : t.value; saveCfg(Object.assign({}, c, {[t.dataset.cfg]: v})); }
   else if (t.dataset.tc){ const tc = Object.assign({}, c.tcManual||{}); const v = +t.value; if (v > 0) tc[t.dataset.tc] = v; else delete tc[t.dataset.tc]; saveCfg(Object.assign({}, c, {tcManual:tc})); }
   else if (t.dataset.saldo !== undefined){ const s = (c.saldos||[]).map(x => Object.assign({}, x)); const i = +t.dataset.saldo; if (!s[i]) return; s[i][t.dataset.k] = t.dataset.k === "importe" ? (+t.value || 0) : t.value.trim(); saveCfg(Object.assign({}, c, {saldos:s})); }
