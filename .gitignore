@@ -1,0 +1,5 @@
+node_modules
+.vercel
+*.json.bak
+mayor-rossi-importar.json
+mayor-rossi-respaldo-*.json
