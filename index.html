@@ -377,6 +377,14 @@ td .note{display:block;font-size:13px;color:var(--sec);font-weight:400;margin-to
 .ledger td.pg{color:var(--green)}
 .pill-cur{display:inline-block;min-width:38px;padding:2px 8px;border:1px solid var(--sep2);border-radius:var(--pill);font-size:11px;font-weight:600;text-align:center}
 
+.subtabs{display:flex;gap:32px;margin:0 0 32px;border-bottom:1px solid var(--sep2);overflow-x:auto;scrollbar-width:none}
+.subtabs button{position:relative;display:inline-flex;align-items:center;gap:8px;height:56px;padding:0;border:0;background:none;color:var(--sec);font:400 clamp(24px,3vw,32px)/1 var(--fx);text-transform:uppercase;white-space:nowrap}
+.subtabs button:hover{color:var(--ink)}
+.subtabs button[aria-current="page"]{color:var(--ink)}
+.subtabs button[aria-current="page"]::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:3px;background:var(--ink)}
+@media (max-width:600px){.subtabs{gap:16px;margin-bottom:24px}.subtabs button{font-size:20px;height:48px}.strip b{font-size:28px}}
+.subtabs .badge{min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--red);color:#fff;font:600 12px/20px Inter,Arial,sans-serif;text-align:center}
+
 /* móvil */
 @media (max-width:900px){
   .nav{height:auto;flex-wrap:wrap;gap:0;padding-top:12px}
@@ -434,9 +442,7 @@ td .note{display:block;font-size:13px;color:var(--sec);font-weight:400;margin-to
       <button data-act="view" data-v="gastos">Gastos</button>
       <button data-act="view" data-v="arca">ARCA<span class="badge" id="arcaBadge"></span></button>
       <button data-act="view" data-v="comisiones">Cobros 5%</button>
-      <button data-act="view" data-v="inversiones">Inversiones</button>
-      <button data-act="view" data-v="cheques">Cheques<span class="badge" id="chqBadge"></span></button>
-      <button data-act="view" data-v="papa">Papá</button>
+      <button data-act="view" data-v="cartera">Cartera<span class="badge" id="chqBadge"></span></button>
       <button data-act="view" data-v="ajustes">Ajustes</button>
     </nav>
     <button class="btn primary" data-act="print" aria-label="Resumen PDF"><svg viewBox="0 0 24 24"><path d="M7 9V3h10v6M7 18H4v-7h16v7h-3M7 14h10v7H7z"/></svg><span class="hide-sm">Resumen PDF</span></button>
@@ -497,9 +503,10 @@ const S = {
 };
 const SELF = new Set();
 const VIEWS = ["cabina","retiros","gastos","arca","comisiones","inversiones","cheques","papa","ajustes"];
-const TITLES = {cabina:"Resumen",retiros:"Retiros",gastos:"Gastos",arca:"ARCA",comisiones:"Cobros 5%",inversiones:"Inversiones",cheques:"Cheques",papa:"Cuenta con papá",ajustes:"Ajustes"};
+const TITLES = {cabina:"Resumen",retiros:"Retiros",gastos:"Gastos",arca:"ARCA",comisiones:"Cobros 5%",inversiones:"Cartera",cheques:"Cartera",papa:"Cartera",ajustes:"Ajustes"};
 const NOPER = ["inversiones","cheques","papa"];
-if (VIEWS.includes(location.hash.slice(1))) S.view = location.hash.slice(1);
+if (location.hash === "#cartera") S.view = "inversiones";
+else if (VIEWS.includes(location.hash.slice(1))) S.view = location.hash.slice(1);
 else { const v = ls.get("view"); if (VIEWS.includes(v)) S.view = v; }
 
 /* ===================== utilidades ===================== */
@@ -793,9 +800,9 @@ function renderChrome(M, ms){
   $("#arcaBadge").textContent = pend ? String(pend) : "";
   const qa = chqAlert().length; $("#chqBadge").textContent = qa ? String(qa) : "";
   $("#scale").hidden = NOPER.includes(S.view);
-  if (NOPER.includes(S.view)) $("#sub").textContent = S.view === "inversiones" ? "Cocos, Binance, Lemon y más · en dólares" : S.view === "cheques" ? "Mesa de cheques · compras y vencimientos" : "Consumos de tarjeta y liquidaciones";
+  if (NOPER.includes(S.view)) $("#sub").textContent = "Inversiones, mesa de cheques y cuenta con papá";
   document.querySelectorAll("[data-act=cur]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.c === S.cur)));
-  document.querySelectorAll(".rail [data-act=view]").forEach(b => { if (b.dataset.v === S.view) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
+  document.querySelectorAll(".rail [data-act=view]").forEach(b => { if (b.dataset.v === S.view || (b.dataset.v === "cartera" && NOPER.includes(S.view))) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
   const obj = cfg().objetivo || 1;
   let h = ms.map(m => { const r = at(M,m).ret / obj, hh = Math.min(r,1.6)/1.6*100;
     return `<button data-act="sel" data-m="${m}" aria-pressed="${S.sel===m}" aria-label="${ymLong(m)}: ${pct(r)} del sueldo" title="${ymLong(m)}: ${pct(r)} del sueldo"><span class="alt"><b class="${r>=1?"ok":r>0?"low":""}" style="height:${Math.max(hh, r>0?8:4).toFixed(0)}%"></b></span><span>${ymLabel(m)}</span></button>`; }).join("");
@@ -1151,6 +1158,10 @@ function vComis(M, ms){
 
 const BRC = ["INK","#0A7281","#ED1AA0","#9E9EA0","#BEAFFD","#1EAA52","#707072"];
 const TIPOL = {cedear:"CEDEAR", accion:"Acción", cripto:"Cripto", lecap:"LECAP / bono", fci:"FCI", efectivo:"Efectivo", otro:"Otro"};
+function subTabs(){
+  const qa = chqAlert().length;
+  return `<nav class="subtabs" aria-label="Cartera">${[["inversiones","Inversiones"],["cheques","Cheques"],["papa","Papá"]].map(([k,l]) => `<button data-act="view" data-v="${k}" ${S.view===k?'aria-current="page"':""}>${l}${k==="cheques"&&qa?`<span class="badge">${qa}</span>`:""}</button>`).join("")}</nav>`;
+}
 function vInversiones(){
   const H = (S.inversiones||[]).map(h => Object.assign({}, h, {px: pxOf(h)}));
   const tot = H.reduce((a,h) => a + h.px.v, 0), cost = H.reduce((a,h) => a + (+h.costo||0), 0), res = tot - cost;
@@ -1312,8 +1323,9 @@ function render(force){
   renderChrome(M, ms);
   const v = $("#view");
   v.innerHTML = S.view === "retiros" ? vRetiros(M, ms) : S.view === "gastos" ? vGastos(M, ms) : S.view === "arca" ? vArca(M, ms)
-    : S.view === "comisiones" ? vComis(M, ms) : S.view === "inversiones" ? vInversiones() : S.view === "cheques" ? vCheques() : S.view === "papa" ? vPapa()
+    : S.view === "comisiones" ? vComis(M, ms) : NOPER.includes(S.view) ? subTabs() + (S.view === "inversiones" ? vInversiones() : S.view === "cheques" ? vCheques() : vPapa())
     : S.view === "ajustes" ? vAjustes(ms) : vCabina(M, ms);
+  const stb = document.querySelector(".subtabs"), sta = stb && stb.querySelector("[aria-current]"); if (sta) stb.scrollLeft = Math.max(0, sta.offsetLeft - stb.offsetLeft - 16);
 }
 document.addEventListener("focusout", () => setTimeout(() => { if (pendingRender && !( $("#view").contains(document.activeElement) && document.activeElement.matches("input,select,textarea"))) render(); }, 0));
 
@@ -1565,7 +1577,7 @@ async function exportCSV(col){
 document.addEventListener("click", async ev => {
   const el = ev.target.closest("[data-act]"); if (!el) return;
   const a = el.dataset.act;
-  if (a === "view"){ S.view = el.dataset.v; ls.set("view", S.view); try { history.replaceState(null, "", "#"+S.view); } catch(e){} render(true); window.scrollTo({top:0}); if (S.view === "copiloto") setTimeout(() => $("#ask") && $("#ask").focus(), 30); return; }
+  if (a === "view"){ S.view = el.dataset.v === "cartera" ? (NOPER.includes(ls.get("csub")) ? ls.get("csub") : "inversiones") : el.dataset.v; if (NOPER.includes(S.view)) ls.set("csub", S.view); ls.set("view", S.view); try { history.replaceState(null, "", "#"+S.view); } catch(e){} render(true); window.scrollTo({top:0}); if (S.view === "copiloto") setTimeout(() => $("#ask") && $("#ask").focus(), 30); return; }
   if (a === "sel"){ S.sel = el.dataset.m; if (S.view === "copiloto"){ S.view = "cabina"; } render(true); return; }
   if (a === "cur"){ S.cur = el.dataset.c; ls.set("cur", S.cur); render(true); return; }
   if (a === "donut"){ S.donut = el.dataset.d; render(true); return; }
