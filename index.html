@@ -182,7 +182,7 @@ table.lib tfoot td{border-top:1px solid var(--ink);border-bottom:0;font-weight:7
 .dl{display:grid;gap:9px;min-width:0}
 .dl div{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:10px;align-items:center;font-size:14px;font-weight:500}
 .dl i{width:10px;height:10px;border-radius:50%}
-.dl span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:capitalize}
+.dl span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dl b{font-size:13px;font-weight:500;color:var(--sec)}
 @media (max-width:420px){.donut{grid-template-columns:minmax(0,1fr);justify-items:center}}
 
@@ -216,7 +216,7 @@ table.lib tfoot td{border-top:1px solid var(--ink);border-bottom:0;font-weight:7
 .bar-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
 .bar-row .l{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .pills{display:flex;flex-wrap:wrap;gap:8px}
-.pill{height:40px;padding:0 18px;border:1px solid var(--sep2);border-radius:var(--pill);background:var(--bg);font-size:14px;font-weight:500;color:var(--ink);text-transform:capitalize}
+.pill{height:40px;padding:0 18px;border:1px solid var(--sep2);border-radius:var(--pill);background:var(--bg);font-size:14px;font-weight:500;color:var(--ink)}
 .pill:hover{border-color:var(--ink)}
 .pill[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--on-ink)}
 .search{height:40px;width:min(280px,100%);padding:0 18px;border:0;border-radius:24px;background:var(--bg);font-size:15px}
@@ -236,7 +236,7 @@ td.r,th.r{text-align:right}
 td.m{white-space:nowrap;font-weight:500}
 td.d{color:var(--sec);white-space:nowrap;font-size:14px;font-weight:500}
 td .note{display:block;font-size:13px;color:var(--sec);font-weight:400;margin-top:1px}
-.tag{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 12px;border:1px solid var(--sep2);border-radius:var(--pill);background:var(--bg);font-size:12px;font-weight:500;color:var(--ink);text-transform:capitalize;white-space:nowrap}
+.tag{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 12px;border:1px solid var(--sep2);border-radius:var(--pill);background:var(--bg);font-size:12px;font-weight:500;color:var(--ink);white-space:nowrap}
 .tag i{width:8px;height:8px;border-radius:50%}
 .tag.cash{border-color:var(--ink)}
 .sw{position:relative;width:48px;height:28px;border:0;border-radius:999px;background:var(--sep2);padding:0;vertical-align:middle;transition:background .2s}
@@ -262,7 +262,7 @@ td .note{display:block;font-size:13px;color:var(--sec);font-weight:400;margin-to
 
 .heat{display:grid;gap:2px;min-width:560px}
 .heat .hr{display:grid;grid-template-columns:140px repeat(var(--n),minmax(48px,1fr));gap:2px;align-items:stretch}
-.heat .hl{font-size:14px;font-weight:500;text-transform:capitalize;display:flex;align-items:center;gap:8px;color:var(--ink)}
+.heat .hl{font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px;color:var(--ink)}
 .heat .hl i{width:8px;height:8px;border-radius:50%}
 .heat .hc{height:38px;display:grid;place-items:center;font-size:12px;font-weight:500;color:var(--ink);background:var(--bg);border:2px solid transparent}
 .heat .hc.sel{border-color:var(--ink)}
@@ -397,6 +397,13 @@ td .note{display:block;font-size:13px;color:var(--sec);font-weight:400;margin-to
 @media (max-width:1100px){.pat{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:700px){.pat-cols{grid-template-columns:minmax(0,1fr)}}
 
+.catplan{display:grid;gap:20px;max-height:56vh;overflow:auto;margin-bottom:20px}
+.cp-h{display:flex;align-items:center;gap:10px;padding-bottom:8px;border-bottom:1px solid var(--ink)}
+.cp-h i{width:10px;height:10px}
+.cp-h span{margin-left:auto;font-size:13px;color:var(--sec)}
+.cp-r{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--sep);font-size:14px}
+.cp-r small{color:var(--sec);white-space:nowrap}
+
 /* móvil */
 @media (max-width:900px){
   .nav{height:auto;flex-wrap:wrap;gap:0;padding-top:12px}
@@ -492,7 +499,31 @@ td .note{display:block;font-size:13px;color:var(--sec);font-weight:400;margin-to
 /* ===================== constantes ===================== */
 // Escala Monotributo vigente desde agosto 2026 (tope anual, cuota mensual servicios)
 const MONO = {A:[12009410,49527.18],B:[17595182,56379],C:[24670494,66020],D:[30628651,84614],E:[36028231,119811],F:[45151659,150784],G:[53995798,230612],H:[81924660,522706],I:[91699761,963747],J:[105012519,1167299],K:[126610830,1614446.02]};
-const CATC = {comida:"INK",ropa:"#ED1AA0",salud:"#0A7281",generales:"#9E9EA0",impuestos:"#707072","gastos bancarios":"#BEAFFD",ganancias:"#1EAA52"};
+const CATS = ["súper","salidas","suscripciones","transporte","cuidado personal","salud","deporte y outdoor","ropa y equipo","compras al exterior","impuestos","bancos","ingresos","varios"];
+const CATC = {"súper":"INK",salidas:"#ED1AA0",suscripciones:"#BEAFFD",transporte:"#707072","cuidado personal":"#FFB0DD",salud:"#0A7281","deporte y outdoor":"#5BA8A0","ropa y equipo":"#9E9EA0","compras al exterior":"#D6D1FF",impuestos:"#4B4B4D",bancos:"#CACACB",ingresos:"#1EAA52",varios:"#E2E2E3",
+  comida:"INK",ropa:"#9E9EA0",generales:"#E2E2E3","gastos bancarios":"#CACACB",ganancias:"#1EAA52"};
+/* reorganización de categorías viejas de la planilla: primero por palabras del concepto, después por la categoría vieja */
+const OLDCAT = ["comida","ropa","generales","gastos bancarios","ganancias"];
+const CATRULES = [
+  [/monotribut|\bafip\b|\barca\b|ingresos brutos|\biibb\b|\bapi\b|ganancias|bienes personales/, "impuestos"],
+  [/kakobuy|\bvep\b|courier|aliexpress|shein|temu|amazon|chinad|ebay|tienda mia|tiendamia/, "compras al exterior"],
+  [/hbo|netflix|spotify|disney|prime video|youtube|icloud|chatgpt|openai|claude|\bcode\b|suscrip|streaming|paramount|star\+|apple tv/, "suscripciones"],
+  [/nafta|combustible|peaje|uber|cabify|didi|colectivo|\bsube\b|estacionamiento|peugeot|gnc|\byp?f\b|shell|axion|remis|taxi|pasaje/, "transporte"],
+  [/creatina|prote[ií]na|gimnasio|\bgym\b|goretex|gore-tex|trekking|camping|escalada|ski|bici|running|club/, "deporte y outdoor"],
+  [/corte de pelo|peluquer|barber|shampoo|crema|perfume|desodorante|afeitad|cosm[eé]t/, "cuidado personal"],
+  [/oculista|m[eé]dic|farmacia|odont|dentist|an[aá]lisis|obra social|prepaga|kinesi|psic|turno|cl[ií]nica/, "salud"],
+  [/s[uú]per|mercado|agua|gaseosa|verdul|carnic|almac|vino|soda|diet[eé]tica|panader/, "súper"],
+  [/empanada|tarta|restaur|cena|almuerzo|\bbar\b|cerve|helad|pizza|chapul|caf[eé]|delivery|rappi|pedidos ya|hamburg|asado/, "salidas"],
+  [/comisi[oó]n|\bicbc\b|banco|mantenimiento|lemon|mercado pago|\bmp\b/, "bancos"]
+];
+function catSuggest(g){
+  const c = String(g.concepto||"").toLowerCase(), old = String(g.categoria||"").toLowerCase();
+  if (+g.importe < 0) return "ingresos";
+  if (old === "impuestos") return "impuestos";
+  for (const [re, k] of CATRULES) if (re.test(c)) return k;
+  return {comida:"salidas", ropa:"ropa y equipo", generales:"varios", "gastos bancarios":"bancos", ganancias:"ingresos"}[old] || old;
+}
+const catPlan = () => cfg().catsV2 ? [] : S.gastos.map(g => [g, catSuggest(g)]).filter(([g, k]) => k && k !== g.categoria && (OLDCAT.includes(g.categoria) || g.categoria === "salud" || !CATS.includes(g.categoria)));
 const EXTRA = ["#D6D1FF","#FFB0DD","#4B4B4D","#CACACB"];
 const MES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
 const MESL = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
@@ -523,6 +554,7 @@ else { const v = ls.get("view"); if (VIEWS.includes(v)) S.view = v; }
 
 /* ===================== utilidades ===================== */
 const $ = s => document.querySelector(s);
+const catL = c => { c = String(c ?? ""); return esc(c.charAt(0).toUpperCase() + c.slice(1)); };
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const cfg = () => Object.assign({}, DEF_CFG, S.config || {});
 const ymOf = f => String(f||"").slice(0,7);
@@ -683,7 +715,7 @@ const fitCat = v => Object.keys(MONO).find(k => MONO[k][0] >= v) || "K";
 function demoData(){
   let s = 7; const rnd = () => (s = (s*16807) % 2147483647) / 2147483647;
   const cli = ["Ferretería Andina","Lucía Bertone","Constructora Valle","Martín Gaido","Estudio Cumbre","Paula Rinaldi","Obras del Litoral","Tomás Ferrero","Hugo Bianchi","Carla Mansilla"];
-  const g = [["Supermercado","comida"],["Monotributo","impuestos"],["Streaming","generales"],["Campera técnica","ropa"],["Gimnasio","salud"],["Comisión bancaria","gastos bancarios"],["Nafta","generales"],["Cena","comida"],["Suscripción IA","generales"],["Zapatillas trail","ropa"]];
+  const g = [["Supermercado","súper"],["Monotributo","impuestos"],["Streaming","suscripciones"],["Campera técnica","ropa y equipo"],["Gimnasio","deporte y outdoor"],["Comisión bancaria","bancos"],["Nafta","transporte"],["Cena","salidas"],["Suscripción IA","suscripciones"],["Zapatillas trail","ropa y equipo"],["Corte de pelo","cuidado personal"],["Pedido Kakobuy","compras al exterior"]];
   const R = [], G = [], C = []; let id = 0;
   const ms = []; for (let i = 7; i >= 0; i--) ms.push(addM(CUR_YM,-i));
   ms.forEach((m, mi) => {
@@ -693,8 +725,8 @@ function demoData(){
     if (rnd() > .4) R.push({id:"d"+(id++), fecha:m+"-15", cliente:"Retiro en efectivo", importe:Math.round(3+rnd()*7)*100000, tipo:"efectivo", facturado:false, nota:""});
     const k = 5 + Math.floor(rnd()*5);
     for (let i = 0; i < k; i++){ const p = g[Math.floor(rnd()*g.length)]; const day = String(1+Math.floor(rnd()*27)).padStart(2,"0");
-      G.push({id:"d"+(id++), fecha:m+"-"+day, concepto:p[0], importe:Math.round((p[1]==="ropa"?90000:p[1]==="impuestos"?49500:15000)+rnd()*120000), categoria:p[1], nota:""}); }
-    if (rnd() > .6) G.push({id:"d"+(id++), fecha:m+"-28", concepto:"Intereses billetera", importe:-Math.round(10000+rnd()*30000), categoria:"ganancias", nota:""});
+      G.push({id:"d"+(id++), fecha:m+"-"+day, concepto:p[0], importe:Math.round((p[1]==="ropa y equipo"||p[1]==="compras al exterior"?90000:p[1]==="impuestos"?49500:15000)+rnd()*120000), categoria:p[1], nota:""}); }
+    if (rnd() > .6) G.push({id:"d"+(id++), fecha:m+"-28", concepto:"Intereses billetera", importe:-Math.round(10000+rnd()*30000), categoria:"ingresos", nota:""});
     if (mi % 2 === 0) C.push({id:"d"+(id++), fecha:m+"-10", cliente:cli[Math.floor(rnd()*cli.length)], importe:Math.round(150000+rnd()*500000), tasa:.05, facturado:true, compensado: mi < 6, compensadoFecha: mi < 6 ? addM(m,1)+"-05" : "", nota:""});
   });
   const tc = {}; ms.forEach((m,i) => tc[m] = 1400 + i*20);
@@ -886,7 +918,7 @@ function vCabina(M, ms){
       <div class="ph"><h2 id="h-cat">Gastos por categoría</h2>
         <div class="seg" role="group" aria-label="Alcance"><button data-act="donut" data-d="mes" aria-pressed="${S.donut==="mes"}">${single?ymLabel(S.sel):"Período"}</button><button data-act="donut" data-d="todo" aria-pressed="${S.donut==="todo"}">Todo</button></div></div>
       ${ents.length ? `<div class="donut">${donutSVG(ents, ctot, S.donut==="mes" && single ? ymLabel(S.sel).toUpperCase() : "TOTAL")}
-        <div class="dl">${ents.map(([k,v]) => `<div><i style="background:${catColor(k)}"></i><span>${esc(k)}</span><b class="num">${compact(v)} · ${pct(v/ctot)}</b></div>`).join("")}</div></div>`
+        <div class="dl">${ents.map(([k,v]) => `<div><i style="background:${catColor(k)}"></i><span>${catL(k)}</span><b class="num">${compact(v)} · ${pct(v/ctot)}</b></div>`).join("")}</div></div>`
         : `<div class="empty"><b>Sin gastos</b>No hay gastos cargados en este período.</div>`}
     </section>
 
@@ -1003,7 +1035,7 @@ function retRows(){
   return rows.map(r => `<tr>
     <td class="d">${ddmm(r.fecha)}</td>
     <td>${esc(r.cliente)}${r.nota ? `<span class="note">${esc(r.nota)}</span>` : ""}</td>
-    <td>${r.tipo === "efectivo" ? `<span class="tag cash">efectivo</span>` : `<span class="tag">transferencia</span>`}</td>
+    <td>${r.tipo === "efectivo" ? `<span class="tag cash">Efectivo</span>` : `<span class="tag">Transferencia</span>`}</td>
     <td class="m r">${ars(+r.importe||0)}${S.cur==="USD" ? `<span class="note">${moneyD(+r.importe||0, r.fecha)}</span>` : ""}</td>
     <td>${r.tipo === "efectivo" ? `<span class="na">no aplica</span>` : `<button class="sw" role="switch" aria-checked="${!!r.facturado}" aria-label="Facturado en ARCA: ${esc(r.cliente)}" data-act="fac" data-id="${esc(r.id)}"></button>`}</td>
     <td>${acts("retiros", r.id)}</td></tr>`).join("");
@@ -1047,7 +1079,7 @@ function gasRows(){
   if (!rows.length) return `<tr><td colspan="5"><div class="empty"><b>Sin gastos</b>No hay gastos con estos filtros.</div></td></tr>`;
   return rows.map(g => { const v = +g.importe||0; return `<tr>
     <td class="d">${ddmm(g.fecha)}</td><td>${esc(g.concepto)}${g.nota?`<span class="note">${esc(g.nota)}</span>`:""}</td>
-    <td><span class="tag"><i style="background:${catColor(g.categoria)}"></i>${esc(g.categoria)}</span></td>
+    <td><span class="tag"><i style="background:${catColor(g.categoria)}"></i>${catL(g.categoria)}</span></td>
     <td class="m r ${v<0?"pos":""}">${v<0?"+ ":""}${ars(Math.abs(v))}${S.cur==="USD"?`<span class="note">${moneyD(Math.abs(v), g.fecha)}</span>`:""}</td>
     <td>${acts("gastos", g.id)}</td></tr>`; }).join("");
 }
@@ -1057,7 +1089,8 @@ function vGastos(M, ms){
   const hm = ms.filter(m => m <= CUR_YM);
   let hmax = 1; const cell = {}; for (const c of cats) for (const m of hm){ const v = cv(at(M,m)).cat[c]||0; cell[c+"|"+m] = v; if (v > hmax) hmax = v; }
   const done = hm.filter(m => m !== S.sel && at(M,m).gas > 0), avg = done.length ? done.reduce((a,m) => a + cv(at(M,m)).gas, 0)/done.length : 0;
-  return `
+  const plan = catPlan();
+  return `${plan.length ? `<div class="banner info"><b>Categorías nuevas</b><span>${plan.length} gasto${plan.length>1?"s":""} todavía usa${plan.length>1?"n":""} las categorías de la planilla (generales, comida, ganancias…). Te armé una propuesta para ordenarlos.</span><button class="btn" data-act="catPlan">Ver propuesta</button></div>` : ""}
   <div class="strip">
     <div class="panel"><span class="lbl">Gastos</span><b class="num">${fmt(G)}</b></div>
     <div class="panel"><span class="lbl">Ingresos y reintegros</span><b class="num pos">${fmt(I)}</b></div>
@@ -1069,13 +1102,13 @@ function vGastos(M, ms){
       <div class="ph"><h2 id="h-heat">Mapa térmico · categoría por mes</h2><span class="meta">intensidad = monto · ${S.cur}</span></div>
       <div class="tw"><div class="heat" style="--n:${hm.length}">
         <div class="hr"><span></span>${hm.map(m => `<span class="hh">${ymLabel(m)}</span>`).join("")}</div>
-        ${cats.map(c => `<div class="hr"><span class="hl"><i style="background:${catColor(c)}"></i>${esc(c)}</span>${hm.map(m => { const v = cell[c+"|"+m]; const a = v ? Math.round(14 + v/hmax*70) : 0;
+        ${cats.map(c => `<div class="hr"><span class="hl"><i style="background:${catColor(c)}"></i>${catL(c)}</span>${hm.map(m => { const v = cell[c+"|"+m]; const a = v ? Math.round(14 + v/hmax*70) : 0;
           return `<span class="hc ${S.sel===m?"sel":""}" style="${v?`background:color-mix(in srgb, ${catColor(c)} ${a}%, transparent)`:""}" title="${esc(c)} · ${ymLong(m)}: ${fmt(v||0)}">${v?compact(v):""}</span>`; }).join("")}</div>`).join("")}
       </div></div>
     </section>
     <section class="panel s12" aria-labelledby="h-gas">
       <div class="ph"><h2 id="h-gas">Gastos · ${S.sel==="all"?"todo el período":esc(ymLong(S.sel))}</h2><button class="btn primary" data-act="new" data-col="gastos"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Nuevo gasto</button></div>
-      <div class="bar-row"><div class="l pills"><button class="pill" data-act="fgas" data-f="todas" aria-pressed="${S.fGas==="todas"}">Todas</button>${cats.map(c => `<button class="pill" data-act="fgas" data-f="${esc(c)}" aria-pressed="${S.fGas===c}">${esc(c)}</button>`).join("")}</div>
+      <div class="bar-row"><div class="l pills"><button class="pill" data-act="fgas" data-f="todas" aria-pressed="${S.fGas==="todas"}">Todas</button>${cats.map(c => `<button class="pill" data-act="fgas" data-f="${esc(c)}" aria-pressed="${S.fGas===c}">${catL(c)}</button>`).join("")}</div>
         <input class="search" id="qgas" type="search" placeholder="Buscar concepto" value="${esc(S.qGas)}" aria-label="Buscar gastos"></div>
       <div class="tw"><table><thead><tr><th>Fecha</th><th>Concepto</th><th>Categoría</th><th class="r">Importe</th><th><span class="sr">Acciones</span></th></tr></thead><tbody id="gasBody">${gasRows()}</tbody></table></div>
       <p class="foot-note">Un importe negativo se registra como ingreso o reintegro (intereses, comisiones cobradas) y se descuenta del neto.</p>
@@ -1164,7 +1197,7 @@ function vComis(M, ms){
     ${rows.length ? rows.map(c => `<tr><td class="d">${ddmm(c.fecha)}</td><td>${esc(c.cliente)}${c.nota?`<span class="note">${esc(c.nota)}</span>`:""}</td>
       <td class="m r">${ars(+c.importe||0)}</td><td class="m r">${ars((+c.importe||0)*(+c.tasa||.05))}<span class="note">${pct(+c.tasa||.05,1)}</span></td>
       <td><button class="sw" role="switch" aria-checked="${!!c.facturado}" data-act="cfac" data-id="${esc(c.id)}" aria-label="Facturado: ${esc(c.cliente)}"></button></td>
-      <td>${c.compensado ? `<span class="tag" style="color:var(--green);background:rgba(52,199,89,.14)">compensado ${ddmm(c.compensadoFecha)}</span>` : `<button class="btn ghost" data-act="comp" data-id="${esc(c.id)}">Marcar compensado</button>`}</td>
+      <td>${c.compensado ? `<span class="tag" style="color:var(--green);background:rgba(52,199,89,.14)">Compensado ${ddmm(c.compensadoFecha)}</span>` : `<button class="btn ghost" data-act="comp" data-id="${esc(c.id)}">Marcar compensado</button>`}</td>
       <td>${acts("comisiones", c.id)}</td></tr>`).join("") : `<tr><td colspan="7"><div class="empty"><b>Sin cobros</b>No hay cobros con comisión en este período.</div></td></tr>`}
     </tbody></table></div>
   </section>`;
@@ -1450,7 +1483,7 @@ function openForm(col, id){
     col === "cuenta" ? {tipo: openForm.papa || "cargo", moneda:"ARS", concepto:""} : col === "inversiones" ? {tipo:"cedear", broker:"Cocos", ticker:"", cantidad:"", costo:"", precio:""} : col === "cheques" ? {librador:"", pagado:"", nominal:"", vencimiento:""} : {}, openForm.pre || {});
   openForm.papa = null; openForm.pre = null;
   const clients = [...new Set([...S.retiros, ...S.comisiones].map(x => x.cliente).filter(Boolean))].sort();
-  const cats = [...new Set([...Object.keys(CATC), ...S.gastos.map(g => g.categoria).filter(Boolean)])];
+  const cats = [...new Set([...CATS, ...S.gastos.map(g => g.categoria).filter(g => g && !OLDCAT.includes(g))])];
   const title = {retiros:"retiro", gastos:"gasto", comisiones:"cobro con comisión", inversiones:"posición", cheques:"cheque", cuenta: r.tipo === "pago" ? "pago a papá" : "consumo de papá"}[col];
   let fields = `<div class="f2"><div class="f"><label for="fFecha">Fecha</label><input id="fFecha" type="date" required value="${esc(r.fecha)}"></div>
     <div class="f"><label for="fImp">Importe (ARS)</label><input id="fImp" type="number" step="0.01" required value="${r.importe===""?"":+r.importe}" inputmode="decimal"></div></div>`;
@@ -1595,7 +1628,7 @@ function printResumen(){
     <p class="meta">${last.acc < 0 ? `Pendiente de retirar al cierre: ${ars(-last.acc)}.` : `Adelantado al cierre: ${ars(last.acc)}.`}</p>
     <h2>Gastos por categoría</h2>
     <table><thead><tr><th>Categoría</th><th class="r">Importe</th><th class="r">%</th></tr></thead><tbody>
-      ${cats.map(([k,v]) => `<tr><td style="text-transform:capitalize">${esc(k)}</td><td class="r">${fmt(v)}</td><td class="r">${pct(v/(gas||1))}</td></tr>`).join("") || `<tr><td colspan="3">Sin gastos</td></tr>`}
+      ${cats.map(([k,v]) => `<tr><td>${catL(k)}</td><td class="r">${fmt(v)}</td><td class="r">${pct(v/(gas||1))}</td></tr>`).join("") || `<tr><td colspan="3">Sin gastos</td></tr>`}
       ${ing ? `<tr><td>Ingresos y reintegros</td><td class="r pos">−${fmt(ing)}</td><td></td></tr>` : ""}
     </tbody></table>
     <h2>Retiros del período</h2>
@@ -1604,7 +1637,7 @@ function printResumen(){
     </tbody></table>
     <h2>Gastos del período</h2>
     <table><thead><tr><th>Fecha</th><th>Concepto</th><th>Categoría</th><th class="r">Importe</th></tr></thead><tbody>
-      ${gg.map(g => `<tr><td>${ddmm(g.fecha)}</td><td>${esc(g.concepto)}</td><td style="text-transform:capitalize">${esc(g.categoria)}</td><td class="r">${ars(+g.importe||0)}</td></tr>`).join("") || `<tr><td colspan="4">Sin gastos</td></tr>`}
+      ${gg.map(g => `<tr><td>${ddmm(g.fecha)}</td><td>${esc(g.concepto)}</td><td>${catL(g.categoria)}</td><td class="r">${ars(+g.importe||0)}</td></tr>`).join("") || `<tr><td colspan="4">Sin gastos</td></tr>`}
     </tbody></table>
     <h2>ARCA y Monotributo (pesos)</h2>
     <table><tbody>
@@ -1653,6 +1686,15 @@ document.addEventListener("click", async ev => {
   if (a === "liquidar"){ const s = cuentaSaldo(); const c = s.USD > 0 && !(s.ARS > 0) ? "USD" : "ARS"; if (!(s[c] > 0)){ toast("No hay saldo para liquidar"); return; }
     openForm.papa = "pago"; openForm.pre = {moneda:c, importe:Math.round(s[c]*100)/100, concepto:"Liquidación"}; openForm("cuenta");
     if (s.ARS > 0 && s.USD > 0) toast("Primero pesos; después liquidá los dólares"); return; }
+  if (a === "catPlan"){ const plan = catPlan(); if (!plan.length){ toast("No hay nada para reorganizar"); return; }
+    formOpener = el; const by = {}; plan.forEach(([g,k]) => (by[k] = by[k] || []).push(g));
+    $("#layer").innerHTML = `<div class="scrim" data-act="close"></div><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+      <h3 id="dTitle">Ordenar categorías</h3><p class="sub" style="margin:0 0 18px">${plan.length} gastos cambian de categoría. Los importes no se tocan; después podés corregir cualquiera desde Gastos.</p>
+      <div class="catplan">${Object.entries(by).sort((a,b) => CATS.indexOf(a[0]) - CATS.indexOf(b[0])).map(([k, L]) => `<div class="cp-g"><div class="cp-h"><i style="background:${catColor(k)}"></i><b>${catL(k)}</b><span>${L.length}</span></div>
+        ${L.map(g => `<div class="cp-r"><span>${esc(g.concepto)}</span><small>${ddmm(g.fecha)} · antes «${esc(g.categoria)}»</small></div>`).join("")}</div>`).join("")}</div>
+      <div class="foot"><button type="button" class="btn ghost" data-act="close">Cancelar</button><button type="button" class="btn primary" data-act="catApply">Aplicar a ${plan.length} gastos</button></div></aside>`;
+    setTimeout(() => $("#layer .btn.primary").focus(), 30); return; }
+  if (a === "catApply"){ const plan = catPlan(); plan.forEach(([g,k]) => g.categoria = k); S.config = Object.assign({}, cfg(), {catsV2:true}); closeForm(); S.fGas = "todas"; changed(); toast(`${plan.length} gastos reorganizados`); return; }
   if (a === "pxRefresh"){ loadPX(true); render(true); return; }
   if (a === "comp"){ try { await patch("comisiones", el.dataset.id, {compensado:true, compensadoFecha: NOW.toISOString().slice(0,10)}); toast("Marcado como compensado"); } catch(e){ toast(errMsg(e), true); } return; }
   if (a === "copy"){ const r = S.retiros.find(x => x.id === el.dataset.id); if (!r) return; const txt = `${r.cliente} — ${ddmm(r.fecha)}/${r.fecha.slice(0,4)} — $ ${nf2.format(+r.importe||0)}`;

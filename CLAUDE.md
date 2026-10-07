@@ -24,6 +24,7 @@ Se publica sola en Vercel con cada git push a main.
 - Resumen PDF: botón en el encabezado; arma la vista #print del período elegido y abre la impresión del navegador.
 - Los retiros en efectivo cuentan como sueldo pero no se facturan.
 - Gastos con importe negativo = ingresos o reintegros (intereses, comisiones cobradas).
+- Categorías de gastos (CATS): súper, salidas, suscripciones, transporte, cuidado personal, salud, deporte y outdoor, ropa y equipo, compras al exterior, impuestos, bancos, ingresos, varios. Las viejas de la planilla se reorganizan una sola vez con «Ver propuesta» en Gastos (reglas CATRULES por concepto); al aplicar queda config.catsV2 = true.
 - Resumen › Patrimonio y cartera: patrimonio neto en USD al oficial de hoy (líquido de Ajustes + inversiones + nominal de cheques − deuda con papá), composición y tres tarjetas que llevan a cada subsección.
 - Pestaña Cartera: agrupa Inversiones, Cheques y Papá como subsecciones (vistas inversiones/cheques/papa, la última abierta queda en localStorage "mr:csub").
 - Inversiones (data.inversiones): posiciones {broker, tipo cedear/accion/cripto/lecap/fci/efectivo/otro, ticker, cantidad, costo USD, precio manual}. Precios online: cripto en Binance (USDT), CEDEARs y acciones en data912 en pesos ÷ MEP de dolarapi; cache en localStorage "mayor_rossi_px" 15 min. LECAP/FCI/otro se valúan con el valor manual. Falta: importar el CSV de operaciones de Cocos.
