@@ -385,6 +385,18 @@ td .note{display:block;font-size:13px;color:var(--sec);font-weight:400;margin-to
 @media (max-width:600px){.subtabs{gap:16px;margin-bottom:24px}.subtabs button{font-size:20px;height:48px}.strip b{font-size:28px}}
 .subtabs .badge{min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--red);color:#fff;font:600 12px/20px Inter,Arial,sans-serif;text-align:center}
 
+.pat{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:32px;align-items:start}
+.pat-head .big{display:block;margin:6px 0 10px;font:400 clamp(48px,6vw,80px)/.95 var(--fx)}
+.pat-head p{margin:0 0 18px;font-size:14px;color:var(--sec);max-width:48ch}
+.pat-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pat-col{display:grid;align-content:start;gap:6px;padding:20px;border:0;background:var(--bg);color:var(--ink);text-align:left;font:inherit;cursor:pointer}
+.pat-col:hover{outline:1px solid var(--ink)}
+.pat-col b{font:400 32px/1 var(--fx)}
+.pat-col > span:not(.lbl){font-size:13px;font-weight:600}
+.pat-col small{font-size:12px;line-height:1.5;color:var(--sec)}
+@media (max-width:1100px){.pat{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:700px){.pat-cols{grid-template-columns:minmax(0,1fr)}}
+
 /* móvil */
 @media (max-width:900px){
   .nav{height:auto;flex-wrap:wrap;gap:0;padding-top:12px}
@@ -878,6 +890,8 @@ function vCabina(M, ms){
         : `<div class="empty"><b>Sin gastos</b>No hay gastos cargados en este período.</div>`}
     </section>
 
+    ${carteraPanel()}
+
     <section class="panel s7" aria-labelledby="h-sig"><div class="ph"><h2 id="h-sig">Señales</h2><span class="meta">calculadas sobre tus datos</span></div>
       <div class="signals">${signals(M, ms)}</div></section>
     <section class="panel s5" aria-labelledby="h-sal"><div class="ph"><h2 id="h-sal">Saldos y ritmo</h2><button class="btn ghost" data-act="view" data-v="ajustes">Editar</button></div>
@@ -1158,6 +1172,45 @@ function vComis(M, ms){
 
 const BRC = ["INK","#0A7281","#ED1AA0","#9E9EA0","#BEAFFD","#1EAA52","#707072"];
 const TIPOL = {cedear:"CEDEAR", accion:"Acción", cripto:"Cripto", lecap:"LECAP / bono", fci:"FCI", efectivo:"Efectivo", otro:"Otro"};
+/* análisis de la cartera para el resumen: patrimonio neto en USD al oficial de hoy */
+function carteraPanel(){
+  const tc = usdHoy(), H = (S.inversiones||[]).map(h => Object.assign({}, h, {px: pxOf(h)}));
+  const inv = H.reduce((a,h) => a + h.px.v, 0), cost = H.reduce((a,h) => a + (+h.costo||0), 0), res = inv - cost;
+  const Q = (S.cheques||[]).filter(q => !q.cobrado).sort((a,b) => a.vencimiento < b.vencimiento ? -1 : 1);
+  const qNom = Q.reduce((a,q) => a + (+q.nominal||0), 0), qPag = Q.reduce((a,q) => a + (+q.pagado||0), 0);
+  const tna = qPag ? Q.reduce((a,q) => a + chqTNA(q) * (+q.pagado||0), 0) / qPag : 0;
+  const liq = (cfg().saldos||[]).reduce((a,x) => a + (+x.importe||0), 0) / tc;
+  const ps = cuentaSaldo(), deuda = ps.USD + ps.ARS / tc, chq = qNom / tc;
+  if (!H.length && !Q.length && !(S.cuenta||[]).length) return "";
+  const neto = liq + inv + chq - deuda, act = liq + inv + chq;
+  const segs = [["Líquido", liq, "var(--ter)"], ["Inversiones", inv, "var(--ink)"], ["Cheques", chq, "#0A7281"]].filter(x => x[1] > 0);
+  const F = v => fUSD(v), next30 = Q.filter(q => daysTo(q.vencimiento) <= 30), n30 = next30.reduce((a,q) => a + (+q.nominal||0), 0);
+  const best = H.filter(h => +h.costo > 0).map(h => [h, (h.px.v - h.costo) / h.costo]).sort((a,b) => b[1]-a[1]);
+  const top = best[0], worst = best.length > 1 ? best[best.length-1] : null;
+  const chqSem = (Q.reduce((a,q) => a + ((+q.nominal||0) - (+q.pagado||0)) * Math.min(1, 30 / chqDias(q)), 0)) / tc;
+  const brokers = {}; H.forEach(h => brokers[h.broker] = (brokers[h.broker]||0) + h.px.v);
+  const topB = Object.entries(brokers).sort((a,b) => b[1]-a[1])[0];
+  return `<section class="panel s12" aria-labelledby="h-pat">
+    <div class="ph"><h2 id="h-pat">Patrimonio y cartera</h2><button class="btn ghost" data-act="view" data-v="cartera">Ver cartera</button></div>
+    <div class="pat">
+      <div class="pat-head"><span class="lbl">Patrimonio neto</span><b class="big">${F(neto)}</b>
+        <p>Líquido ${F(liq)} + inversiones ${F(inv)} + cheques ${F(chq)}${deuda > 0 ? ` − deuda con papá ${F(deuda)}` : ""}. Pesos pasados al oficial de hoy.</p>
+        ${act > 0 ? `<div class="alloc" role="img" aria-label="${esc(segs.map(x => x[0] + " " + pct(x[1]/act)).join(", "))}">${segs.map(x => `<i style="width:${(x[1]/act*100).toFixed(2)}%;background:${x[2]}"></i>`).join("")}</div>
+        <div class="alloc-key">${segs.map(x => `<span><i style="background:${x[2]}"></i>${x[0]} <b>${pct(x[1]/act)}</b></span>`).join("")}${deuda > 0 ? `<span><i style="background:var(--red)"></i>Deuda <b>${pct(deuda/act)}</b></span>` : ""}</div>` : ""}
+      </div>
+      <div class="pat-cols">
+        <button class="pat-col" data-act="view" data-v="inversiones"><span class="lbl">Inversiones</span><b>${F(inv)}</b>
+          <span class="${res>=0?"pos":"neg"}">${res>=0?"+":"−"}${F(Math.abs(res))} · ${cost ? pct(res/cost,1) : "—"}</span>
+          <small>${top ? `Mejor: ${esc(top[0].ticker)} ${pct(top[1],0)}` : "Sin posiciones"}${worst && worst[1] < 0 ? ` · peor: ${esc(worst[0].ticker)} ${pct(worst[1],0)}` : ""}${topB && inv ? `<br>${esc(topB[0])} concentra ${pct(topB[1]/inv)}` : ""}</small></button>
+        <button class="pat-col" data-act="view" data-v="cheques"><span class="lbl">Cheques</span><b>${F(chq)}</b>
+          <span class="pos">+${F((qNom - qPag)/tc)} a cobrar · TNA ${pct(tna,1)}</span>
+          <small>${Q.length ? `Próximo: ${esc(Q[0].librador||"cheque")} el ${ddmm(Q[0].vencimiento)}<br>${next30.length} vence${next30.length===1?"":"n"} en 30 días · ${ars(n30)}<br>Nominal en cartera ${ars(qNom)}` : "Nada en cartera"}<br>Rinden unos ${F(chqSem)} por mes</small></button>
+        <button class="pat-col" data-act="view" data-v="papa"><span class="lbl">Cuenta con papá</span><b class="${deuda>0.5?"neg":""}">${deuda > 0.5 ? F(deuda) : deuda < -0.5 ? "Te debe " + F(-deuda) : "A mano"}</b>
+          <span>${[ps.USD ? fmt(ps.USD,"USD") : "", ps.ARS ? ars(ps.ARS) : ""].filter(Boolean).join(" + ") || "sin saldo"}</span>
+          <small>${deuda > 0 && act > 0 ? `Equivale al ${pct(deuda/act)} de tus activos` : "No suma a tus gastos"}${deuda > 0 && liq > 0 ? `<br>${liq >= deuda ? "Te alcanza con lo líquido para saldarla" : `Con lo líquido cubrís el ${pct(liq/deuda)}`}` : ""}</small></button>
+      </div>
+    </div></section>`;
+}
 function subTabs(){
   const qa = chqAlert().length;
   return `<nav class="subtabs" aria-label="Cartera">${[["inversiones","Inversiones"],["cheques","Cheques"],["papa","Papá"]].map(([k,l]) => `<button data-act="view" data-v="${k}" ${S.view===k?'aria-current="page"':""}>${l}${k==="cheques"&&qa?`<span class="badge">${qa}</span>`:""}</button>`).join("")}</nav>`;

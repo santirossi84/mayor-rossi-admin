@@ -24,6 +24,7 @@ Se publica sola en Vercel con cada git push a main.
 - Resumen PDF: botón en el encabezado; arma la vista #print del período elegido y abre la impresión del navegador.
 - Los retiros en efectivo cuentan como sueldo pero no se facturan.
 - Gastos con importe negativo = ingresos o reintegros (intereses, comisiones cobradas).
+- Resumen › Patrimonio y cartera: patrimonio neto en USD al oficial de hoy (líquido de Ajustes + inversiones + nominal de cheques − deuda con papá), composición y tres tarjetas que llevan a cada subsección.
 - Pestaña Cartera: agrupa Inversiones, Cheques y Papá como subsecciones (vistas inversiones/cheques/papa, la última abierta queda en localStorage "mr:csub").
 - Inversiones (data.inversiones): posiciones {broker, tipo cedear/accion/cripto/lecap/fci/efectivo/otro, ticker, cantidad, costo USD, precio manual}. Precios online: cripto en Binance (USDT), CEDEARs y acciones en data912 en pesos ÷ MEP de dolarapi; cache en localStorage "mayor_rossi_px" 15 min. LECAP/FCI/otro se valúan con el valor manual. Falta: importar el CSV de operaciones de Cocos.
 - Cheques (data.cheques): {fecha compra, librador, pagado, nominal, vencimiento, cobrado}. TNA = (nominal/pagado − 1) × 365 / días. Alerta y badge si vence en 7 días o está vencido sin cobrar.
