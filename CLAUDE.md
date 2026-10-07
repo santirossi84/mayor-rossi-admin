@@ -16,14 +16,19 @@ Se publica sola en Vercel con cada git push a main.
 - Modo demo con datos inventados: botón en la pantalla de acceso o la URL con #demo. Sirve para mostrar la app en el portfolio.
 
 ## Reglas de negocio
-- Montos guardados en pesos. La vista se muestra en USD o ARS con el TC mensual cargado en Ajustes (BNA vendedor). Lo impositivo (ARCA, Monotributo) siempre en pesos.
+- Montos guardados en pesos. La vista se muestra en USD o ARS. Lo impositivo (ARCA, Monotributo) siempre en pesos.
+- Cotización: dólar oficial BNA, venta, de cada día (api.argentinadatos.com histórico + dolarapi.com para hoy), cacheada en localStorage "mayor_rossi_tc" por 6 horas. Cada operación se convierte con el valor de su fecha (fin de semana = último hábil anterior). config.tcManual[mes] fija un mes a mano; config.tc es el respaldo viejo y solo se usa sin conexión.
 - Sueldo a retirar: objetivo mensual (hoy $ 1.500.000). Libro de retiros: subtotal del mes, diferencia contra el objetivo y diferencia acumulada. El acumulado negativo es lo que queda por retirar.
+- Plan de retiro: en el mes en curso, lo que falta (incluido el arrastre) dividido por las semanas que quedan, y el ritmo parejo esperado a hoy.
+- ARCA en lote: selección múltiple de transferencias pendientes, copiar lista (fecha, cliente, importe separados por tab) y marcar facturadas juntas.
+- Resumen PDF: botón en el encabezado; arma la vista #print del período elegido y abre la impresión del navegador.
 - Los retiros en efectivo cuentan como sueldo pero no se facturan.
 - Gastos con importe negativo = ingresos o reintegros (intereses, comisiones cobradas).
 - Monotributo: escala vigente desde agosto 2026 en la constante MONO de index.html; actualizarla en cada ajuste semestral.
 
 ## Estilo visual
 Pautas de interfaz de Apple: tipografía del sistema (SF Pro), colores del sistema, tarjetas blancas sobre #F5F5F7, barra lateral translúcida que en el teléfono pasa a barra de pestañas flotante, anillo estilo Actividad para el sueldo del mes.
+Modo claro y oscuro con tokens CSS (:root, prefers-color-scheme y data-theme); preferencia en Ajustes › Apariencia, guardada en localStorage "mr:theme". Los gráficos SVG toman los colores del tema desde el objeto K (readK al renderizar). El PDF siempre sale en fondo blanco.
 
 ## Forma de trabajo
 - Windows y PowerShell. Las carpetas de usuario están en F:\Users\Usuario, no en C:.
