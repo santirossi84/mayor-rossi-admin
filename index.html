@@ -68,8 +68,9 @@ button{cursor:pointer}
 .brandmark{display:flex;align-items:center;gap:10px;flex:none;color:var(--ink);text-decoration:none}
 .brandmark img{display:block;height:40px;width:auto}
 .brandmark span{font:400 22px/1 var(--fx);letter-spacing:.01em;text-transform:uppercase;white-space:nowrap}
-.rail{flex:1;display:flex;justify-content:center;gap:4px;min-width:0}
-.rail button{position:relative;display:inline-flex;align-items:center;gap:6px;height:64px;padding:0 12px;border:0;background:none;color:var(--ink);font-size:16px;font-weight:500;white-space:nowrap}
+.rail{flex:1;display:flex;justify-content:center;gap:0;min-width:0}
+@media (max-width:1240px) and (min-width:901px){.rail button{font-size:15px;padding:0 8px}.rail button::after{left:8px;right:8px}}
+.rail button{position:relative;display:inline-flex;align-items:center;gap:6px;height:64px;padding:0 10px;border:0;background:none;color:var(--ink);font-size:16px;font-weight:500;white-space:nowrap}
 .rail button svg{display:none}
 .rail button::after{content:"";position:absolute;left:12px;right:12px;bottom:14px;height:2px;background:var(--ink);transform:scaleX(0);transition:transform .2s}
 .rail button:hover::after{transform:scaleX(.6)}
@@ -80,7 +81,7 @@ button{cursor:pointer}
 
 .main{flex:1;min-width:0;width:100%;max-width:1440px;margin:0 auto;padding-inline:var(--gut);padding-block:0 64px}
 .hud{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 20px;padding-block:40px 20px}
-.brand h1{margin:0;font:400 clamp(56px,8vw,112px)/.88 var(--fx);text-transform:uppercase;letter-spacing:-.005em}
+.brand h1{margin:0;font:400 clamp(48px,8vw,112px)/.88 var(--fx);text-transform:uppercase;letter-spacing:-.005em;overflow-wrap:anywhere}
 .brand p{margin:10px 0 0;color:var(--sec);font-size:16px;font-weight:500}
 .chip{display:inline-flex;align-items:center;gap:7px;height:28px;padding:0 12px;border:0;border-radius:var(--pill);background:var(--bg);font-size:12px;font-weight:500;color:var(--ink);white-space:nowrap}
 .chip .dot{width:7px;height:7px;border-radius:50%;background:var(--ter)}
@@ -345,6 +346,37 @@ td .note{display:block;font-size:13px;color:var(--sec);font-weight:400;margin-to
 .gate .btn.ghost{color:#fff;padding:0}
 .gate .err{color:#FF6B6B}
 
+/* inversiones, cheques, papá */
+.camp.inv h2{font-size:clamp(44px,9vw,120px)}
+.alloc{display:flex;height:12px;margin:4px 0 18px;background:var(--fill)}
+.alloc i{display:block;height:100%}
+.alloc-key{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:13px;color:var(--sec)}
+.alloc-key span{display:inline-flex;align-items:center;gap:8px}
+.alloc-key i{width:10px;height:10px}
+.alloc-key b{color:var(--ink);font-weight:600}
+.src{font-size:11px;font-weight:500;color:var(--ter);text-transform:uppercase;letter-spacing:.04em}
+.due{display:grid;gap:0}
+.due .row{display:grid;grid-template-columns:76px minmax(0,1fr) auto;gap:16px;align-items:center;padding:14px 0;border-top:1px solid var(--sep)}
+.due .row:first-child{border-top:0}
+.due .when{font:400 28px/1 var(--fx);text-transform:uppercase}
+.due .when small{display:block;margin-top:4px;font:500 12px/1.3 Inter,"Helvetica Neue",Arial,sans-serif;text-transform:none;color:var(--sec)}
+.due .row.late .when small{color:var(--red)}
+.due .who b{display:block;font-weight:600}
+.due .who span{font-size:13px;color:var(--sec)}
+.due .row.late .when,.due .row.late .who span{color:var(--red)}
+.due .amt{text-align:right}
+.due .amt b{display:block;font-weight:600}
+.due .amt span{font-size:12px;color:var(--green)}
+.cal{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.cal div{padding:16px;background:var(--fill)}
+.cal span{display:block;font-size:12px;color:var(--sec);text-transform:capitalize}
+.cal b{display:block;margin-top:6px;font:400 24px/1 var(--fx)}
+.cal small{font-size:12px;color:var(--sec)}
+@media (max-width:820px){.cal{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.ledger td.cg{color:var(--ink)}
+.ledger td.pg{color:var(--green)}
+.pill-cur{display:inline-block;min-width:38px;padding:2px 8px;border:1px solid var(--sep2);border-radius:var(--pill);font-size:11px;font-weight:600;text-align:center}
+
 /* móvil */
 @media (max-width:900px){
   .nav{height:auto;flex-wrap:wrap;gap:0;padding-top:12px}
@@ -402,6 +434,9 @@ td .note{display:block;font-size:13px;color:var(--sec);font-weight:400;margin-to
       <button data-act="view" data-v="gastos">Gastos</button>
       <button data-act="view" data-v="arca">ARCA<span class="badge" id="arcaBadge"></span></button>
       <button data-act="view" data-v="comisiones">Cobros 5%</button>
+      <button data-act="view" data-v="inversiones">Inversiones</button>
+      <button data-act="view" data-v="cheques">Cheques<span class="badge" id="chqBadge"></span></button>
+      <button data-act="view" data-v="papa">Papá</button>
       <button data-act="view" data-v="ajustes">Ajustes</button>
     </nav>
     <button class="btn primary" data-act="print" aria-label="Resumen PDF"><svg viewBox="0 0 24 24"><path d="M7 9V3h10v6M7 18H4v-7h16v7h-3M7 14h10v7H7z"/></svg><span class="hide-sm">Resumen PDF</span></button>
@@ -453,7 +488,7 @@ function readK(){ try { const cs = getComputedStyle(document.documentElement), v
   K.ink = v("--ink") || K.ink; K.sec = v("--sec") || K.sec; K.ter = v("--ter") || K.ter; K.card = v("--card") || K.card; K.g = v("--g") || K.g; } catch(e){} }
 const ls = {get(k){try{return localStorage.getItem("mr:"+k)}catch(e){return null}}, set(k,v){try{localStorage.setItem("mr:"+k,v)}catch(e){}}};
 const S = {
-  retiros:[], gastos:[], comisiones:[], config:null,
+  retiros:[], gastos:[], comisiones:[], inversiones:[], cheques:[], cuenta:[], config:null,
   mode:"loading", rev:0, clave:"", sync:"", dl:true, pendingImport:null,
   cur: ls.get("cur")==="ARS"?"ARS":"USD",
   view: "cabina", sel:null,
@@ -461,8 +496,9 @@ const S = {
   chat:[], chatBusy:false, ctl:null
 };
 const SELF = new Set();
-const VIEWS = ["cabina","retiros","gastos","arca","comisiones","ajustes"];
-const TITLES = {cabina:"Resumen",retiros:"Retiros",gastos:"Gastos",arca:"ARCA",comisiones:"Cobros 5%",ajustes:"Ajustes"};
+const VIEWS = ["cabina","retiros","gastos","arca","comisiones","inversiones","cheques","papa","ajustes"];
+const TITLES = {cabina:"Resumen",retiros:"Retiros",gastos:"Gastos",arca:"ARCA",comisiones:"Cobros 5%",inversiones:"Inversiones",cheques:"Cheques",papa:"Cuenta con papá",ajustes:"Ajustes"};
+const NOPER = ["inversiones","cheques","papa"];
 if (VIEWS.includes(location.hash.slice(1))) S.view = location.hash.slice(1);
 else { const v = ls.get("view"); if (VIEWS.includes(v)) S.view = v; }
 
@@ -526,6 +562,47 @@ async function loadTC(){
   try { localStorage.setItem("mayor_rossi_tc", JSON.stringify({days:TCD.days, today:TCD.today, at:TCD.at})); } catch(e){}
   if (S.mode !== "loading") render();
 }
+/* precios de inversiones: cripto en Binance, CEDEARs y acciones en data912 (ARS ÷ MEP) */
+const PXK = "mayor_rossi_px", AUTO = ["cedear","accion","cripto"], STABLE = ["USDT","USDC","DAI","FDUSD","USD"];
+const PX = {p:{}, mep:0, at:0, busy:false, fail:""};
+try { const c = JSON.parse(localStorage.getItem(PXK) || "null"); if (c) Object.assign(PX, c, {busy:false}); } catch(e){}
+const pxKey = h => (h.tipo === "cripto" ? "C:" : h.tipo === "accion" ? "A:" : "D:") + String(h.ticker||"").toUpperCase().trim();
+function pxOf(h){
+  const t = String(h.ticker||"").toUpperCase().trim();
+  if (+h.precio > 0) return {v: AUTO.includes(h.tipo) ? +h.precio * (+h.cantidad||0) : +h.precio, src:"manual"};
+  if (h.tipo === "cripto" && STABLE.includes(t)) return {v:+h.cantidad||0, src:"estable"};
+  const p = PX.p[pxKey(h)];
+  if (AUTO.includes(h.tipo) && p > 0) return {v: p * (+h.cantidad||0), src:"online"};
+  return {v: +h.costo||0, src:"sin precio"};
+}
+async function loadPX(force){
+  const H = S.inversiones || []; if (!H.length || PX.busy) return;
+  if (!force && Date.now() - PX.at < 15*60e3 && H.filter(h => AUTO.includes(h.tipo) && !(+h.precio>0)).every(h => PX.p[pxKey(h)] > 0 || STABLE.includes(String(h.ticker).toUpperCase()))) return;
+  PX.busy = true; PX.fail = ""; const jobs = [], j = u => fetch(u, {cache:"no-store"}).then(r => { if (!r.ok) throw 0; return r.json(); });
+  const cr = [...new Set(H.filter(h => h.tipo === "cripto").map(h => String(h.ticker).toUpperCase().trim()).filter(t => t && !STABLE.includes(t)))];
+  if (cr.length) jobs.push(j("https://api.binance.com/api/v3/ticker/price?symbols=" + encodeURIComponent(JSON.stringify(cr.map(t => t + "USDT"))))
+    .then(a => a.forEach(x => PX.p["C:" + x.symbol.replace(/USDT$/,"")] = +x.price)).catch(() => PX.fail = "cripto"));
+  const ar = H.some(h => h.tipo === "cedear" || h.tipo === "accion");
+  if (ar){
+    jobs.push(j("https://dolarapi.com/v1/dolares/bolsa").then(o => { if (+o.venta > 0) PX.mep = +o.venta; }).catch(() => {}));
+    const pull = (u, p) => j(u).then(a => a.forEach(x => { const v = +(x.c || x.px_ask || x.px_bid); if (x.symbol && v > 0) PX.p[p + ":ARS:" + x.symbol] = v; }));
+    if (H.some(h => h.tipo === "cedear")) jobs.push(pull("https://data912.com/live/arg_cedears", "D").catch(() => PX.fail = PX.fail ? "todo" : "cedears"));
+    if (H.some(h => h.tipo === "accion")) jobs.push(pull("https://data912.com/live/arg_stocks", "A").catch(() => PX.fail = PX.fail ? "todo" : "acciones"));
+  }
+  await Promise.all(jobs);
+  if (PX.mep > 0) for (const k of Object.keys(PX.p)) { const m = /^([DA]):ARS:(.+)$/.exec(k); if (m) PX.p[m[1] + ":" + m[2]] = PX.p[k] / PX.mep; }
+  PX.at = Date.now(); PX.busy = false;
+  try { const keep = {}; for (const k of Object.keys(PX.p)) if (!k.includes(":ARS:") && H.some(h => pxKey(h) === k)) keep[k] = PX.p[k]; localStorage.setItem(PXK, JSON.stringify({p:keep, mep:PX.mep, at:PX.at})); } catch(e){}
+  render();
+}
+const usdHoy = () => TCD.today || tcFor(CUR_YM);
+const fromUSD = v => S.cur === "USD" ? v : v * usdHoy();
+const fUSD = v => fmt(fromUSD(v));
+const daysTo = f => Math.round((new Date(f + "T12:00:00") - new Date(NOW.toISOString().slice(0,10) + "T12:00:00")) / 864e5);
+const chqDias = q => Math.max(1, Math.round((new Date(q.vencimiento+"T12:00:00") - new Date(q.fecha+"T12:00:00"))/864e5));
+const chqTNA = q => (+q.nominal/+q.pagado - 1) * 365 / chqDias(q);
+const chqAlert = () => (S.cheques||[]).filter(q => !q.cobrado && daysTo(q.vencimiento) <= 7);
+function cuentaSaldo(){ const s = {ARS:0, USD:0}; for (const m of S.cuenta||[]) s[m.moneda === "USD" ? "USD" : "ARS"] += (m.tipo === "pago" ? -1 : 1) * (+m.importe||0); return s; }
 const val = (ars, ym) => S.cur === "USD" ? ars / tcFor(ym) : ars;
 const nf0 = new Intl.NumberFormat("es-AR",{maximumFractionDigits:0});
 const nf2 = new Intl.NumberFormat("es-AR",{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -602,7 +679,30 @@ function demoData(){
     if (mi % 2 === 0) C.push({id:"d"+(id++), fecha:m+"-10", cliente:cli[Math.floor(rnd()*cli.length)], importe:Math.round(150000+rnd()*500000), tasa:.05, facturado:true, compensado: mi < 6, compensadoFecha: mi < 6 ? addM(m,1)+"-05" : "", nota:""});
   });
   const tc = {}; ms.forEach((m,i) => tc[m] = 1400 + i*20);
-  return {R, G, C, cfg:{objetivo:1500000, tc, saldos:[{nombre:"Billetera",importe:180000},{nombre:"Efectivo",importe:250000},{nombre:"Broker (USD MEP)",importe:2100000}], monotributo:"A"}};
+  const iso = d => d.toISOString().slice(0,10), dd = n => { const x = new Date(NOW); x.setDate(x.getDate()+n); return iso(x); };
+  const I = [
+    {id:"di1", broker:"Cocos", tipo:"cedear", ticker:"SPY", cantidad:120, costo:1850, precio:0, fecha:dd(-240), nota:""},
+    {id:"di2", broker:"Cocos", tipo:"cedear", ticker:"MELI", cantidad:40, costo:880, precio:0, fecha:dd(-200), nota:""},
+    {id:"di3", broker:"Cocos", tipo:"cedear", ticker:"NVDA", cantidad:90, costo:610, precio:0, fecha:dd(-150), nota:""},
+    {id:"di4", broker:"Cocos", tipo:"lecap", ticker:"S30J7", cantidad:1, costo:1200, precio:1262, fecha:dd(-60), nota:"Valor actual cargado a mano"},
+    {id:"di5", broker:"Binance", tipo:"cripto", ticker:"BTC", cantidad:.021, costo:1300, precio:0, fecha:dd(-300), nota:""},
+    {id:"di6", broker:"Binance", tipo:"cripto", ticker:"ETH", cantidad:.35, costo:900, precio:0, fecha:dd(-280), nota:""},
+    {id:"di7", broker:"Lemon", tipo:"cripto", ticker:"USDT", cantidad:640, costo:640, precio:0, fecha:dd(-90), nota:""},
+    {id:"di8", broker:"Cocos", tipo:"fci", ticker:"Cocos Ahorro", cantidad:1, costo:500, precio:507, fecha:dd(-30), nota:""}];
+  const Q = [
+    {id:"dq1", fecha:dd(-75), librador:"Corralón Del Sur", pagado:1880000, nominal:2000000, vencimiento:dd(-5), cobrado:true, cobradoFecha:dd(-4), nota:""},
+    {id:"dq2", fecha:dd(-40), librador:"Distribuidora Norte", pagado:2780000, nominal:3000000, vencimiento:dd(3), cobrado:false, cobradoFecha:"", nota:""},
+    {id:"dq3", fecha:dd(-20), librador:"Agro Pampa SA", pagado:1385000, nominal:1500000, vencimiento:dd(25), cobrado:false, cobradoFecha:"", nota:""},
+    {id:"dq4", fecha:dd(-10), librador:"Metalúrgica Río", pagado:4540000, nominal:5000000, vencimiento:dd(58), cobrado:false, cobradoFecha:"", nota:""},
+    {id:"dq5", fecha:dd(-3), librador:"Transportes Andes", pagado:1800000, nominal:2000000, vencimiento:dd(94), cobrado:false, cobradoFecha:"", nota:""}];
+  const P = [
+    {id:"dp1", fecha:dd(-34), tipo:"cargo", concepto:"Pasajes Madrid", importe:1420, moneda:"USD", nota:"Visa de papá"},
+    {id:"dp2", fecha:dd(-30), tipo:"cargo", concepto:"Hotel Lisboa", importe:610, moneda:"USD", nota:""},
+    {id:"dp3", fecha:dd(-22), tipo:"cargo", concepto:"Seguro de viaje", importe:185000, moneda:"ARS", nota:""},
+    {id:"dp4", fecha:dd(-12), tipo:"cargo", concepto:"Cenas y traslados", importe:340000, moneda:"ARS", nota:""},
+    {id:"dp5", fecha:dd(-6), tipo:"pago", concepto:"Transferencia", importe:300000, moneda:"ARS", nota:""},
+    {id:"dp6", fecha:dd(-2), tipo:"pago", concepto:"Dólares en efectivo", importe:1000, moneda:"USD", nota:""}];
+  return {R, G, C, I, Q, P, cfg:{objetivo:1500000, tc, saldos:[{nombre:"Billetera",importe:180000},{nombre:"Efectivo",importe:250000},{nombre:"Broker (USD MEP)",importe:2100000}], monotributo:"A"}};
 }
 
 /* ===================== gráficos ===================== */
@@ -691,6 +791,9 @@ function renderChrome(M, ms){
   document.title = (TITLES[S.view] || "Resumen") + " · Santiago Rossi";
   const pend = S.retiros.filter(r => r.tipo !== "efectivo" && !r.facturado).length;
   $("#arcaBadge").textContent = pend ? String(pend) : "";
+  const qa = chqAlert().length; $("#chqBadge").textContent = qa ? String(qa) : "";
+  $("#scale").hidden = NOPER.includes(S.view);
+  if (NOPER.includes(S.view)) $("#sub").textContent = S.view === "inversiones" ? "Cocos, Binance, Lemon y más · en dólares" : S.view === "cheques" ? "Mesa de cheques · compras y vencimientos" : "Consumos de tarjeta y liquidaciones";
   document.querySelectorAll("[data-act=cur]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.c === S.cur)));
   document.querySelectorAll(".rail [data-act=view]").forEach(b => { if (b.dataset.v === S.view) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
   const obj = cfg().objetivo || 1;
@@ -702,7 +805,7 @@ function renderChrome(M, ms){
   const empty = !S.retiros.length && !S.gastos.length && !S.comisiones.length;
   $("#banner").innerHTML = S.mode === "demo"
     ? `<div class="banner"><b>Demo</b><span>Estás viendo datos de ejemplo inventados. Podés cargar, editar y borrar: nada se guarda.</span><button class="btn" data-act="exitDemo">Salir de la demo</button></div>`
-    : empty && S.view !== "ajustes" ? `<div class="banner info"><b>Todavía no hay datos</b><span>Importá tu respaldo desde Ajustes o cargá tu primer retiro.</span><button class="btn" data-act="view" data-v="ajustes">Ir a Ajustes</button></div>` : "";
+    : empty && S.view !== "ajustes" && !NOPER.includes(S.view) ? `<div class="banner info"><b>Todavía no hay datos</b><span>Importá tu respaldo desde Ajustes o cargá tu primer retiro.</span><button class="btn" data-act="view" data-v="ajustes">Ir a Ajustes</button></div>` : "";
 }
 
 /* ===================== vistas ===================== */
@@ -840,6 +943,11 @@ function signals(M, ms){
   if (pend.length){ const tot = pend.reduce((a,r) => a + (+r.importe||0), 0); const days = Math.round((NOW - new Date(pend[0].fecha+"T12:00:00"))/864e5);
     out.push(`<div class="sig ${days>45?"crit":"warn"}"><span class="bar"></span><p>${pend.length} transferencias sin facturar por ${ars(tot)}<small>la más antigua es de ${esc(pend[0].cliente)}, hace ${days} días</small></p><button class="btn" data-act="view" data-v="arca">Facturar</button></div>`); }
   else out.push(`<div class="sig ok"><span class="bar"></span><p>Todas las transferencias están facturadas<small>nada pendiente en ARCA</small></p><span></span></div>`);
+  const qa = chqAlert().sort((a,b) => a.vencimiento < b.vencimiento ? -1 : 1);
+  if (qa.length){ const late = qa.filter(q => daysTo(q.vencimiento) < 0).length, tot = qa.reduce((a,q) => a + (+q.nominal||0), 0);
+    out.push(`<div class="sig ${late?"crit":"warn"}"><span class="bar"></span><p>${qa.length} cheque${qa.length>1?"s":""} ${late?"vencido o por vencer":"vence esta semana"} · ${ars(tot)}<small>${esc(qa[0].librador||"cheque")} vence el ${ddmm(qa[0].vencimiento)}</small></p><button class="btn ghost" data-act="view" data-v="cheques">Ver</button></div>`); }
+  const ps = cuentaSaldo();
+  if (ps.ARS > 0 || ps.USD > 0) out.push(`<div class="sig info"><span class="bar"></span><p>Le debés a papá ${[ps.USD > 0 ? fmt(ps.USD,"USD") : "", ps.ARS > 0 ? ars(ps.ARS) : ""].filter(Boolean).join(" + ")}<small>consumos de tarjeta menos lo que ya le pagaste</small></p><button class="btn ghost" data-act="view" data-v="papa">Ver</button></div>`);
   const fw = factWindow(), cat = cfg().monotributo || "A", tope = MONO[cat][0], use = fw.tot/tope, pc = fitCat(fw.proj);
   out.push(`<div class="sig ${use>.85||pc>cat?"crit":use>.6?"warn":"info"}"><span class="bar"></span><p>Monotributo cat. ${cat}: usaste ${pct(use)} del tope anual<small>proyección a 12 meses ${ars(fw.proj)} → encaja en cat. ${pc}</small></p><button class="btn ghost" data-act="view" data-v="arca">Ver</button></div>`);
   const cm = at(M, CUR_YM), obj = cfg().objetivo, day = NOW.getDate(), dim = new Date(NOW.getFullYear(), NOW.getMonth()+1, 0).getDate();
@@ -879,7 +987,7 @@ function retRows(){
     <td>${r.tipo === "efectivo" ? `<span class="na">no aplica</span>` : `<button class="sw" role="switch" aria-checked="${!!r.facturado}" aria-label="Facturado en ARCA: ${esc(r.cliente)}" data-act="fac" data-id="${esc(r.id)}"></button>`}</td>
     <td>${acts("retiros", r.id)}</td></tr>`).join("");
 }
-const COLN = {retiros:"retiro", gastos:"gasto", comisiones:"cobro"};
+const COLN = {retiros:"retiro", gastos:"gasto", comisiones:"cobro", inversiones:"posición", cheques:"cheque", cuenta:"movimiento"};
 function acts(col, id){ const n = COLN[col] || "registro"; return `<div class="acts"><button class="ib" data-act="edit" data-col="${col}" data-id="${esc(id)}" aria-label="Editar ${n}"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button><button class="ib" data-act="del" data-col="${col}" data-id="${esc(id)}" aria-label="Borrar ${n}"><svg viewBox="0 0 24 24"><path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button></div>`; }
 function vRetiros(M, ms){
   const SM = selMonths(ms);
@@ -1041,6 +1149,115 @@ function vComis(M, ms){
   </section>`;
 }
 
+const BRC = ["INK","#0A7281","#ED1AA0","#9E9EA0","#BEAFFD","#1EAA52","#707072"];
+const TIPOL = {cedear:"CEDEAR", accion:"Acción", cripto:"Cripto", lecap:"LECAP / bono", fci:"FCI", efectivo:"Efectivo", otro:"Otro"};
+function vInversiones(){
+  const H = (S.inversiones||[]).map(h => Object.assign({}, h, {px: pxOf(h)}));
+  const tot = H.reduce((a,h) => a + h.px.v, 0), cost = H.reduce((a,h) => a + (+h.costo||0), 0), res = tot - cost;
+  const Q = (S.cheques||[]).filter(q => !q.cobrado), qPag = Q.reduce((a,q) => a + valD(+q.pagado||0, q.fecha), 0), qNom = Q.reduce((a,q) => a + (+q.nominal||0), 0);
+  const P = cuentaSaldo();
+  const by = {}; H.forEach(h => { const b = h.broker || "Otro"; by[b] = (by[b]||0) + h.px.v; });
+  const brs = Object.entries(by).sort((a,b) => b[1]-a[1]), col = i => BRC[i % BRC.length] === "INK" ? K.ink : BRC[i % BRC.length];
+  const pxNote = PX.busy ? "Actualizando precios…" : PX.at ? `Precios ${new Date(PX.at).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"})}${PX.mep?` · MEP $ ${nf0.format(PX.mep)}`:""}${PX.fail?" · algunos precios no respondieron":""}` : "Sin precios online todavía";
+  const sorted = H.slice().sort((a,b) => b.px.v - a.px.v);
+  return `<section class="camp inv" aria-label="Valor de la cartera">
+    <div><div class="eyebrow">Cartera de inversión · ${H.length} posiciones</div>
+      <h2>${fUSD(tot)}</h2>
+      <p>${cost ? `${res >= 0 ? "Ganás" : "Perdés"} ${fUSD(Math.abs(res))} (${pct(res/cost,1)}) sobre ${fUSD(cost)} invertidos.` : "Cargá tus posiciones para ver el resultado."} Valores en ${S.cur === "USD" ? "dólares" : "pesos al oficial de hoy"}.</p>
+      <div class="stats"><div><span>Cheques en cartera</span><b>${ars(qNom)}</b></div><div><span>Le debés a papá</span><b>${P.USD ? fmt(P.USD,"USD") : ""}${P.USD && P.ARS ? " + " : ""}${P.ARS || !P.USD ? ars(P.ARS) : ""}</b></div><div><span>Precios</span><b style="font-size:14px;font-weight:500">${esc(pxNote)}</b></div></div></div>
+    <button class="btn" data-act="pxRefresh">Actualizar precios</button></section>
+  <div class="strip">
+    <div class="panel"><span class="lbl">Valor actual</span><b class="num">${fUSD(tot)}</b></div>
+    <div class="panel"><span class="lbl">Invertido</span><b class="num">${fUSD(cost)}</b></div>
+    <div class="panel"><span class="lbl">Resultado</span><b class="num ${res>=0?"pos":"neg"}">${res>=0?"+":""}${fUSD(res)}</b></div>
+    <div class="panel"><span class="lbl">Cheques (costo)</span><b class="num">${fmt(qPag)}</b></div>
+  </div>
+  <section class="panel" aria-labelledby="h-alloc"><div class="ph"><h2 id="h-alloc">Por broker</h2><span class="meta">${brs.length} cuentas</span></div>
+    ${tot > 0 ? `<div class="alloc" role="img" aria-label="${esc(brs.map(([b,v]) => b + " " + pct(v/tot)).join(", "))}">${brs.map(([b,v],i) => `<i style="width:${(v/tot*100).toFixed(2)}%;background:${col(i)}"></i>`).join("")}</div>
+    <div class="alloc-key">${brs.map(([b,v],i) => `<span><i style="background:${col(i)}"></i>${esc(b)} <b>${fUSD(v)}</b> ${pct(v/tot)}</span>`).join("")}</div>` : `<div class="empty"><b>Sin posiciones</b>Cargá lo que tenés en Cocos, Binance o Lemon.</div>`}
+  </section>
+  <section class="panel" aria-labelledby="h-pos" style="margin-top:8px">
+    <div class="ph"><h2 id="h-pos">Posiciones</h2><button class="btn primary" data-act="new" data-col="inversiones"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Nueva posición</button></div>
+    <div class="tw"><table><thead><tr><th>Activo</th><th>Broker</th><th class="r">Cantidad</th><th class="r">Precio</th><th class="r">Valor</th><th class="r">Invertido</th><th class="r">Resultado</th><th><span class="sr">Acciones</span></th></tr></thead><tbody>
+    ${sorted.length ? sorted.map(h => { const r = h.px.v - (+h.costo||0), unit = AUTO.includes(h.tipo) && +h.cantidad ? h.px.v / +h.cantidad : 0;
+      return `<tr><td><b>${esc(h.ticker)}</b><span class="note">${esc(TIPOL[h.tipo]||h.tipo)}${h.nota?" · "+esc(h.nota):""}</span></td><td>${esc(h.broker)}</td>
+      <td class="m r">${AUTO.includes(h.tipo) ? nf2.format(+h.cantidad||0).replace(/,00$/,"") : "—"}</td>
+      <td class="m r">${unit ? fUSD(unit) : "—"}<span class="note src">${esc(h.px.src)}</span></td>
+      <td class="m r"><b>${fUSD(h.px.v)}</b></td><td class="m r">${fUSD(+h.costo||0)}</td>
+      <td class="m r ${r>=0?"pos":"neg"}">${r>=0?"+":""}${fUSD(r)}<span class="note">${+h.costo ? pct(r/+h.costo,1) : ""}</span></td>
+      <td>${acts("inversiones", h.id)}</td></tr>`; }).join("") : `<tr><td colspan="8"><div class="empty"><b>Sin posiciones</b>Tocá «Nueva posición» para empezar.</div></td></tr>`}
+    </tbody></table></div>
+    <p class="foot-note">Cripto: precio de Binance en USDT. CEDEARs y acciones: precio en pesos de BYMA (data912) dividido por el dólar MEP. LECAPs, FCI y lo que no tenga precio online se valúan con el valor que cargás a mano.</p>
+  </section>`;
+}
+
+function vCheques(){
+  const L = (S.cheques||[]).slice().sort((a,b) => a.vencimiento < b.vencimiento ? -1 : 1);
+  const open = L.filter(q => !q.cobrado), done = L.filter(q => q.cobrado);
+  const nom = open.reduce((a,q) => a + (+q.nominal||0), 0), pag = open.reduce((a,q) => a + (+q.pagado||0), 0);
+  const tnaW = pag ? open.reduce((a,q) => a + chqTNA(q) * (+q.pagado||0), 0) / pag : 0;
+  const gan = done.reduce((a,q) => a + valD((+q.nominal||0) - (+q.pagado||0), q.vencimiento), 0);
+  const cal = {}; open.forEach(q => { const m = ymOf(q.vencimiento); cal[m] = cal[m] || {n:0, v:0}; cal[m].n++; cal[m].v += +q.nominal||0; });
+  const calK = Object.keys(cal).sort().slice(0, 6);
+  const row = q => { const d = daysTo(q.vencimiento), late = d < 0;
+    return `<div class="row ${late || d <= 3 ? "late" : ""}"><div class="when">${ddmm(q.vencimiento)}<small>${late ? `vencido hace ${-d} d` : d === 0 ? "vence hoy" : `en ${d} días`}</small></div>
+      <div class="who"><b>${esc(q.librador || "Cheque")}</b><span>comprado ${ddmm(q.fecha)} · ${chqDias(q)} días · TNA ${pct(chqTNA(q),1)}</span></div>
+      <div class="amt"><b>${ars(+q.nominal||0)}</b><span>+${ars((+q.nominal||0)-(+q.pagado||0))}</span></div></div>`; };
+  return `<div class="strip">
+    <div class="panel"><span class="lbl">En cartera (nominal)</span><b class="num">${fmt(valD(nom, CUR_YM+"-01"))}</b></div>
+    <div class="panel"><span class="lbl">Ganancia a cobrar</span><b class="num pos">${fmt(valD(nom - pag, CUR_YM+"-01"))}</b></div>
+    <div class="panel"><span class="lbl">TNA promedio</span><b class="num">${pct(tnaW,1)}</b></div>
+    <div class="panel"><span class="lbl">Ganado (cobrados)</span><b class="num pz">${fmt(gan)}</b></div>
+  </div>
+  <div class="grid">
+    <section class="panel s7" aria-labelledby="h-due"><div class="ph"><h2 id="h-due">Próximos vencimientos</h2><span class="meta">${open.length} sin cobrar</span></div>
+      <div class="due">${open.length ? open.map(row).join("") : `<div class="empty"><b>Nada por cobrar</b>Cargá los cheques que compres en la mesa.</div>`}</div></section>
+    <section class="panel s5" aria-labelledby="h-cal" style="align-self:start"><div class="ph"><h2 id="h-cal">Calendario</h2><span class="meta">nominal por mes</span></div>
+      ${calK.length ? `<div class="cal" style="grid-template-columns:repeat(2,minmax(0,1fr))">${calK.map(m => `<div><span>${esc(ymLong(m))}</span><b>${compact(cal[m].v, "ARS")}</b><small>${cal[m].n} cheque${cal[m].n>1?"s":""}</small></div>`).join("")}</div>` : `<div class="empty"><b>Sin vencimientos</b></div>`}</section>
+  </div>
+  <section class="panel" aria-labelledby="h-chq" style="margin-top:8px">
+    <div class="ph"><h2 id="h-chq">Mesa de cheques</h2><button class="btn primary" data-act="new" data-col="cheques"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Nuevo cheque</button></div>
+    <div class="tw"><table><thead><tr><th>Compra</th><th>Librador</th><th class="r">Pagado</th><th class="r">Nominal</th><th>Vence</th><th class="r">Ganancia</th><th class="r">TNA</th><th>Cobrado</th><th><span class="sr">Acciones</span></th></tr></thead><tbody>
+    ${L.length ? L.slice().reverse().map(q => `<tr><td class="d">${ddmm(q.fecha)}</td><td>${esc(q.librador||"—")}${q.nota?`<span class="note">${esc(q.nota)}</span>`:""}</td>
+      <td class="m r">${ars(+q.pagado||0)}</td><td class="m r">${ars(+q.nominal||0)}</td><td class="d ${!q.cobrado && daysTo(q.vencimiento) < 0 ? "neg" : ""}">${ddmm(q.vencimiento)}/${q.vencimiento.slice(2,4)}</td>
+      <td class="m r pos">${ars((+q.nominal||0)-(+q.pagado||0))}</td><td class="m r">${pct(chqTNA(q),1)}</td>
+      <td><button class="sw" role="switch" aria-checked="${!!q.cobrado}" data-act="qcob" data-id="${esc(q.id)}" aria-label="Cobrado: ${esc(q.librador||"cheque")}"></button></td>
+      <td>${acts("cheques", q.id)}</td></tr>`).join("") : `<tr><td colspan="9"><div class="empty"><b>Sin cheques</b>Cargá fecha de compra, monto pagado, nominal y vencimiento.</div></td></tr>`}
+    </tbody></table></div>
+    <p class="foot-note">TNA = (nominal ÷ pagado − 1) × 365 ÷ días. La ganancia de cada cheque se pasa a dólares con el oficial del día de cobro.</p>
+  </section>`;
+}
+
+function vPapa(){
+  const L = (S.cuenta||[]).slice().sort((a,b) => a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : 0);
+  const run = {ARS:0, USD:0}; const rows = L.map(m => { const c = m.moneda === "USD" ? "USD" : "ARS"; run[c] += (m.tipo === "pago" ? -1 : 1) * (+m.importe||0); return Object.assign({}, m, {saldo: run[c], c}); }).reverse();
+  const sal = cuentaSaldo(), totUSD = sal.USD + sal.ARS / usdHoy();
+  const cg = L.filter(m => m.tipo !== "pago"), pg = L.filter(m => m.tipo === "pago");
+  const sum = (A, c) => A.filter(m => (m.moneda === "USD" ? "USD" : "ARS") === c).reduce((a,m) => a + (+m.importe||0), 0);
+  const big = totUSD > 0.5 ? `Le debés<br>${fUSD(totUSD)}` : totUSD < -0.5 ? `Te debe<br>${fUSD(-totUSD)}` : `Están<br>a mano`;
+  return `<section class="camp" aria-label="Saldo con papá">
+    <div><div class="eyebrow">Cuenta corriente con papá · no suma a tus gastos</div>
+      <h2>${big}</h2>
+      <p>Pesos y dólares se llevan por separado; el total se pasa ${S.cur === "USD" ? "a dólares" : "a pesos"} con el oficial de hoy ($ ${nf0.format(usdHoy())}).</p>
+      <div class="stats"><div><span>Saldo en pesos</span><b>${ars(sal.ARS)}</b></div><div><span>Saldo en dólares</span><b>${fmt(sal.USD, "USD")}</b></div><div><span>Movimientos</span><b>${L.length}</b></div></div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="newPapa" data-t="cargo">Nuevo consumo</button><button class="btn" data-act="newPapa" data-t="pago">Registrar pago</button></div></section>
+  <div class="strip">
+    <div class="panel"><span class="lbl">Consumos en pesos</span><b class="num">${ars(sum(cg,"ARS"))}</b></div>
+    <div class="panel"><span class="lbl">Consumos en dólares</span><b class="num">${fmt(sum(cg,"USD"),"USD")}</b></div>
+    <div class="panel"><span class="lbl">Pagado en pesos</span><b class="num pos">${ars(sum(pg,"ARS"))}</b></div>
+    <div class="panel"><span class="lbl">Pagado en dólares</span><b class="num pos">${fmt(sum(pg,"USD"),"USD")}</b></div>
+  </div>
+  <section class="panel" aria-labelledby="h-papa">
+    <div class="ph"><h2 id="h-papa">Movimientos</h2><div style="display:flex;gap:8px"><button class="btn ghost" data-act="liquidar">Liquidar saldo</button><button class="btn primary" data-act="newPapa" data-t="cargo"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Nuevo consumo</button></div></div>
+    <div class="tw"><table class="ledger"><thead><tr><th>Fecha</th><th>Concepto</th><th>Moneda</th><th class="r">Consumo</th><th class="r">Pago</th><th class="r">Saldo</th><th><span class="sr">Acciones</span></th></tr></thead><tbody>
+    ${rows.length ? rows.map(m => `<tr><td class="d">${ddmm(m.fecha)}/${m.fecha.slice(2,4)}</td><td>${esc(m.concepto||"—")}${m.nota?`<span class="note">${esc(m.nota)}</span>`:""}</td><td><span class="pill-cur">${m.c}</span></td>
+      <td class="m r cg">${m.tipo !== "pago" ? fmt(+m.importe||0, m.c) : ""}</td><td class="m r pg">${m.tipo === "pago" ? fmt(+m.importe||0, m.c) : ""}</td>
+      <td class="m r ${m.saldo > 0 ? "neg" : "pos"}">${fmt(m.saldo, m.c)}</td><td>${acts("cuenta", m.id)}</td></tr>`).join("") : `<tr><td colspan="7"><div class="empty"><b>Sin movimientos</b>Cargá los consumos de la tarjeta de papá y los pagos que le hacés.</div></td></tr>`}
+    </tbody></table></div>
+    <p class="foot-note">Saldo positivo (rojo) = le debés. «Liquidar saldo» arma el pago por lo que queda en cada moneda.</p>
+  </section>`;
+}
+
 function vCopiloto(){
   return `<section class="panel" aria-labelledby="h-cop">
     <div class="ph"><h2 id="h-cop">Copiloto financiero</h2><span class="meta" id="copMeta">responde con tus números del tablero</span></div>
@@ -1076,7 +1293,7 @@ function vAjustes(ms){
       ${S.pendingImport ? `<div class="banner"><b>¿Reemplazar tus datos?</b><span>El archivo trae ${S.pendingImport.retiros.length} retiros, ${S.pendingImport.gastos.length} gastos y ${S.pendingImport.comisiones.length} cobros. Lo que hay ahora se reemplaza por completo.</span><button class="btn primary" data-act="impOk">Reemplazar</button><button class="btn" data-act="impNo">Cancelar</button></div>` : ""}
       <div class="l pills"><button class="btn" data-act="backup">Descargar respaldo .json</button>
         <button class="btn" type="button" data-act="pickImp">Importar respaldo .json</button><input type="file" id="impFile" accept=".json,application/json" hidden>
-        <button class="btn" data-act="exp" data-col="retiros">Retiros .csv</button><button class="btn" data-act="exp" data-col="gastos">Gastos .csv</button><button class="btn" data-act="exp" data-col="comisiones">Cobros 5% .csv</button></div>
+        <button class="btn" data-act="exp" data-col="retiros">Retiros .csv</button><button class="btn" data-act="exp" data-col="gastos">Gastos .csv</button><button class="btn" data-act="exp" data-col="comisiones">Cobros 5% .csv</button><button class="btn" data-act="exp" data-col="inversiones">Inversiones .csv</button><button class="btn" data-act="exp" data-col="cheques">Cheques .csv</button><button class="btn" data-act="exp" data-col="cuenta">Papá .csv</button></div>
       <p class="foot-note">El respaldo .json guarda todo: retiros, gastos, cobros y ajustes. Los .csv se abren en Excel o Google Sheets.</p></section>
     ${S.mode === "live" ? `<section class="panel s12" aria-labelledby="h-ses"><div class="ph"><h2 id="h-ses">Sesión</h2></div><div class="l pills"><button class="btn danger" data-act="logout">Cerrar sesión en este dispositivo</button></div><p class="foot-note">Tus datos quedan en la nube; para volver a entrar necesitás la clave.</p></section>` : ""}
   </div>`;
@@ -1095,7 +1312,8 @@ function render(force){
   renderChrome(M, ms);
   const v = $("#view");
   v.innerHTML = S.view === "retiros" ? vRetiros(M, ms) : S.view === "gastos" ? vGastos(M, ms) : S.view === "arca" ? vArca(M, ms)
-    : S.view === "comisiones" ? vComis(M, ms) : S.view === "ajustes" ? vAjustes(ms) : vCabina(M, ms);
+    : S.view === "comisiones" ? vComis(M, ms) : S.view === "inversiones" ? vInversiones() : S.view === "cheques" ? vCheques() : S.view === "papa" ? vPapa()
+    : S.view === "ajustes" ? vAjustes(ms) : vCabina(M, ms);
 }
 document.addEventListener("focusout", () => setTimeout(() => { if (pendingRender && !( $("#view").contains(document.activeElement) && document.activeElement.matches("input,select,textarea"))) render(); }, 0));
 
@@ -1111,7 +1329,7 @@ async function saveCfg(next){ S.config = next; changed(); }
 /* ===================== sincronización con la nube ===================== */
 const API = "/api/datos", CACHE = "mayor_rossi_v1", KEY = "mayor_rossi_clave";
 let saveT = null, saving = false, dirty = false;
-const snapshot = () => ({retiros:S.retiros, gastos:S.gastos, comisiones:S.comisiones, config:S.config || DEF_CFG});
+const snapshot = () => ({retiros:S.retiros, gastos:S.gastos, comisiones:S.comisiones, inversiones:S.inversiones, cheques:S.cheques, cuenta:S.cuenta, config:S.config || DEF_CFG});
 function cacheLocal(){ try { localStorage.setItem(CACHE, JSON.stringify({rev:S.rev, data:snapshot()})); } catch(e){} }
 function setSync(t){ S.sync = t; const st = $("#status"); if (!st || S.mode !== "live") return;
   st.className = "chip " + (t === "Guardado" ? "live" : t === "Guardando…" ? "busy" : "bad"); st.lastElementChild.textContent = t; }
@@ -1135,10 +1353,11 @@ function load(doc){
   S.rev = +(doc && doc.rev) || 0;
   S.retiros = Array.isArray(d.retiros) ? d.retiros : []; S.gastos = Array.isArray(d.gastos) ? d.gastos : [];
   S.comisiones = Array.isArray(d.comisiones) ? d.comisiones : []; S.config = d.config || null;
-  cacheLocal(); render(true);
+  for (const k of ["inversiones","cheques","cuenta"]) S[k] = Array.isArray(d[k]) ? d[k] : [];
+  cacheLocal(); render(true); loadPX();
 }
 function logout(msg){ try { localStorage.removeItem(KEY); localStorage.removeItem(CACHE); } catch(e){}
-  S.clave = ""; S.mode = "loading"; S.retiros = []; S.gastos = []; S.comisiones = []; S.config = null; showGate(msg || ""); }
+  S.clave = ""; S.mode = "loading"; S.retiros = []; S.gastos = []; S.comisiones = []; S.inversiones = []; S.cheques = []; S.cuenta = []; S.config = null; showGate(msg || ""); }
 function showGate(msg){ $("#gate").hidden = false; $("#gateErr").textContent = msg || ""; setTimeout(() => $("#gateKey").focus(), 50); }
 async function enter(clave){
   S.clave = clave;
@@ -1161,10 +1380,13 @@ const clean = r => { const o = Object.assign({}, r); delete o.id; return o; };
 /* ===================== formulario ===================== */
 function openForm(col, id){
   const rec = id ? listOf(col).find(r => r.id === id) : null, today = NOW.toISOString().slice(0,10);
-  const r = rec || {fecha: S.sel && S.sel !== "all" && S.sel !== CUR_YM ? S.sel+"-01" : today, importe:"", tipo:"transferencia", facturado:false, tasa:.05, compensado:false, categoria:"", nota:""};
+  const NEWC = ["inversiones","cheques","cuenta"].includes(col);
+  const r = rec || Object.assign({fecha: !NEWC && S.sel && S.sel !== "all" && S.sel !== CUR_YM ? S.sel+"-01" : today, importe:"", tipo:"transferencia", facturado:false, tasa:.05, compensado:false, categoria:"", nota:""},
+    col === "cuenta" ? {tipo: openForm.papa || "cargo", moneda:"ARS", concepto:""} : col === "inversiones" ? {tipo:"cedear", broker:"Cocos", ticker:"", cantidad:"", costo:"", precio:""} : col === "cheques" ? {librador:"", pagado:"", nominal:"", vencimiento:""} : {}, openForm.pre || {});
+  openForm.papa = null; openForm.pre = null;
   const clients = [...new Set([...S.retiros, ...S.comisiones].map(x => x.cliente).filter(Boolean))].sort();
   const cats = [...new Set([...Object.keys(CATC), ...S.gastos.map(g => g.categoria).filter(Boolean)])];
-  const title = {retiros:"retiro", gastos:"gasto", comisiones:"cobro con comisión"}[col];
+  const title = {retiros:"retiro", gastos:"gasto", comisiones:"cobro con comisión", inversiones:"posición", cheques:"cheque", cuenta: r.tipo === "pago" ? "pago a papá" : "consumo de papá"}[col];
   let fields = `<div class="f2"><div class="f"><label for="fFecha">Fecha</label><input id="fFecha" type="date" required value="${esc(r.fecha)}"></div>
     <div class="f"><label for="fImp">Importe (ARS)</label><input id="fImp" type="number" step="0.01" required value="${r.importe===""?"":+r.importe}" inputmode="decimal"></div></div>`;
   if (col === "retiros") fields += `<div class="f"><label for="fCli">Cliente</label><input id="fCli" list="dlCli" required value="${esc(r.cliente||"")}" autocomplete="off"><datalist id="dlCli">${clients.map(c => `<option value="${esc(c)}">`).join("")}</datalist></div>
@@ -1176,6 +1398,25 @@ function openForm(col, id){
     <div class="f2"><div class="f"><label for="fTasa">Comisión (%)</label><input id="fTasa" type="number" step="0.1" min="0" value="${((+r.tasa||.05)*100).toFixed(1)}"></div>
     <div class="f"><label for="fCompF">Fecha de compensación</label><input id="fCompF" type="date" value="${esc(r.compensadoFecha||"")}"></div></div>
     <label class="chk"><input id="fFac" type="checkbox" ${r.facturado?"checked":""}> Facturado</label><label class="chk"><input id="fComp" type="checkbox" ${r.compensado?"checked":""}> Compensado</label>`;
+  const num = v => v === "" || v === undefined ? "" : +v;
+  if (col === "cheques") fields = `<div class="f"><label for="fLib">Librador</label><input id="fLib" value="${esc(r.librador||"")}" autocomplete="off"></div>
+    <div class="f2"><div class="f"><label for="fFecha">Fecha de compra</label><input id="fFecha" type="date" required value="${esc(r.fecha)}"></div>
+    <div class="f"><label for="fVto">Vencimiento</label><input id="fVto" type="date" required value="${esc(r.vencimiento||"")}"></div></div>
+    <div class="f2"><div class="f"><label for="fImp">Pagado (ARS)</label><input id="fImp" type="number" step="0.01" required value="${num(r.pagado)}" inputmode="decimal"></div>
+    <div class="f"><label for="fNom">Nominal (ARS)</label><input id="fNom" type="number" step="0.01" required value="${num(r.nominal)}" inputmode="decimal"></div></div>
+    <label class="chk"><input id="fCob" type="checkbox" ${r.cobrado?"checked":""}> Ya está cobrado</label>`;
+  if (col === "cuenta") fields = `<div class="f"><label for="fTipo">Tipo</label><select id="fTipo"><option value="cargo" ${r.tipo!=="pago"?"selected":""}>Consumo de papá (le debo)</option><option value="pago" ${r.tipo==="pago"?"selected":""}>Pago a papá (liquidación)</option></select></div>
+    <div class="f"><label for="fCon">Concepto</label><input id="fCon" required value="${esc(r.concepto||"")}" autocomplete="off"></div>
+    <div class="f2"><div class="f"><label for="fFecha">Fecha</label><input id="fFecha" type="date" required value="${esc(r.fecha)}"></div>
+    <div class="f"><label for="fMon">Moneda</label><select id="fMon"><option value="ARS" ${r.moneda!=="USD"?"selected":""}>Pesos</option><option value="USD" ${r.moneda==="USD"?"selected":""}>Dólares</option></select></div></div>
+    <div class="f"><label for="fImp">Importe</label><input id="fImp" type="number" step="0.01" required value="${num(r.importe)}" inputmode="decimal"></div>`;
+  if (col === "inversiones") fields = `<div class="f2"><div class="f"><label for="fTic">Activo / ticker</label><input id="fTic" required value="${esc(r.ticker||"")}" autocomplete="off" placeholder="SPY, BTC, S30J7…"></div>
+    <div class="f"><label for="fBro">Broker</label><input id="fBro" list="dlBro" required value="${esc(r.broker||"")}" autocomplete="off"><datalist id="dlBro">${[...new Set(["Cocos","Binance","Lemon",...(S.inversiones||[]).map(h => h.broker)])].map(b => `<option value="${esc(b)}">`).join("")}</datalist></div></div>
+    <div class="f2"><div class="f"><label for="fTipo">Tipo</label><select id="fTipo">${Object.entries(TIPOL).map(([k,v]) => `<option value="${k}" ${r.tipo===k?"selected":""}>${v}</option>`).join("")}</select></div>
+    <div class="f"><label for="fCant">Cantidad</label><input id="fCant" type="number" step="any" value="${num(r.cantidad)}" inputmode="decimal"></div></div>
+    <div class="f2"><div class="f"><label for="fImp">Invertido (USD)</label><input id="fImp" type="number" step="0.01" required value="${num(r.costo)}" inputmode="decimal"></div>
+    <div class="f"><label for="fPx">Valor manual (USD)</label><input id="fPx" type="number" step="any" value="${+r.precio>0?+r.precio:""}" inputmode="decimal"><small>CEDEAR, acción o cripto: precio por unidad, solo si no querés el online. LECAP, FCI u otro: valor actual total.</small></div></div>
+    <div class="f"><label for="fFecha">Fecha de alta</label><input id="fFecha" type="date" required value="${esc(r.fecha)}"></div>`;
   fields += `<div class="f"><label for="fNota">Nota</label><textarea id="fNota">${esc(r.nota||"")}</textarea></div>`;
   $("#layer").innerHTML = `<div class="scrim" data-act="close"></div><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle">
     <div class="stripes" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
@@ -1183,12 +1424,13 @@ function openForm(col, id){
     <form class="form" id="frm" novalidate>${fields}<div class="err" id="fErr"></div>
     <div class="foot"><button type="button" class="btn ghost" data-act="close">Cancelar</button><button type="submit" class="btn primary">${id ? "Guardar cambios" : "Agregar"}</button></div></form></aside>`;
   formOpener = document.activeElement;
-  const frm = $("#frm"); setTimeout(() => (col === "gastos" ? $("#fCon") : $("#fCli") || $("#fImp")).focus(), 30);
+  const frm = $("#frm"); setTimeout(() => (col === "gastos" || col === "cuenta" ? $("#fCon") : col === "cheques" ? $("#fLib") : col === "inversiones" ? $("#fTic") : $("#fCli") || $("#fImp")).focus(), 30);
   frm.addEventListener("submit", async ev => {
     ev.preventDefault();
     const g = s => frm.querySelector(s), fecha = g("#fFecha").value, imp = parseFloat(String(g("#fImp").value).replace(",","."));
     if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return $("#fErr").textContent = "Cargá una fecha válida.";
-    if (!isFinite(imp) || imp === 0) return $("#fErr").textContent = "El importe tiene que ser un número distinto de cero.";
+    if (!isFinite(imp) || (imp === 0 && col !== "inversiones")) return $("#fErr").textContent = "El importe tiene que ser un número distinto de cero.";
+    if (NEWC && imp < 0) return $("#fErr").textContent = "El importe no puede ser negativo.";
     let data;
     if (col === "retiros"){ const cli = g("#fCli").value.trim(); if (!cli) return $("#fErr").textContent = "Falta el cliente.";
       if (imp < 0) return $("#fErr").textContent = "Un retiro no puede ser negativo.";
@@ -1197,8 +1439,19 @@ function openForm(col, id){
       data = {fecha, concepto:con, importe:imp, categoria:cat, nota:g("#fNota").value.trim()}; }
     if (col === "comisiones"){ const cli = g("#fCli").value.trim(); if (!cli) return $("#fErr").textContent = "Falta el cliente.";
       const comp = g("#fComp").checked; data = {fecha, cliente:cli, importe:imp, tasa:(parseFloat(g("#fTasa").value)||5)/100, facturado:g("#fFac").checked, compensado:comp, compensadoFecha: comp ? (g("#fCompF").value || NOW.toISOString().slice(0,10)) : "", nota:g("#fNota").value.trim()}; }
+    if (col === "cheques"){ const vto = g("#fVto").value, nom = parseFloat(String(g("#fNom").value).replace(",","."));
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(vto)) return $("#fErr").textContent = "Cargá la fecha de vencimiento.";
+      if (vto <= fecha) return $("#fErr").textContent = "El vencimiento tiene que ser posterior a la compra.";
+      if (!isFinite(nom) || nom < imp) return $("#fErr").textContent = "El nominal tiene que ser mayor o igual a lo pagado.";
+      const cob = g("#fCob").checked; data = {fecha, librador:g("#fLib").value.trim(), pagado:imp, nominal:nom, vencimiento:vto, cobrado:cob, cobradoFecha: cob ? (rec && rec.cobradoFecha || vto) : "", nota:g("#fNota").value.trim()}; }
+    if (col === "cuenta"){ const con = g("#fCon").value.trim(); if (!con) return $("#fErr").textContent = "Falta el concepto.";
+      data = {fecha, tipo:g("#fTipo").value, concepto:con, importe:imp, moneda:g("#fMon").value, nota:g("#fNota").value.trim()}; }
+    if (col === "inversiones"){ const tic = g("#fTic").value.trim(), bro = g("#fBro").value.trim(); if (!tic || !bro) return $("#fErr").textContent = "Completá activo y broker.";
+      const tipo = g("#fTipo").value, cant = parseFloat(String(g("#fCant").value).replace(",",".")) || 0, px = parseFloat(String(g("#fPx").value).replace(",",".")) || 0;
+      if (AUTO.includes(tipo) && !(cant > 0)) return $("#fErr").textContent = "Cargá la cantidad.";
+      data = {fecha, ticker: tipo === "fci" || tipo === "otro" ? tic : tic.toUpperCase(), broker:bro, tipo, cantidad:cant, costo:imp, precio:px, nota:g("#fNota").value.trim()}; }
     const btn = frm.querySelector("[type=submit]"); btn.disabled = true;
-    try { await put(col, id || newId(col[0]), data); closeForm(); toast(id ? "Cambios guardados" : "Agregado"); if (!id && S.sel !== "all" && ymOf(fecha) !== S.sel){ S.sel = ymOf(fecha); render(true); } }
+    try { await put(col, id || newId(col.slice(0,2)), data); closeForm(); toast(id ? "Cambios guardados" : "Agregado"); if (col === "inversiones") loadPX(true); if (!id && !NEWC && S.sel !== "all" && ymOf(fecha) !== S.sel){ S.sel = ymOf(fecha); render(true); } }
     catch(e){ btn.disabled = false; $("#fErr").textContent = errMsg(e); }
   });
 }
@@ -1220,6 +1473,9 @@ RESUMEN MENSUAL:
 ${lines.join("\n")}
 TRANSFERENCIAS SIN FACTURAR:
 ${pend.join("\n") || "ninguna"}
+INVERSIONES (USD): ${(S.inversiones||[]).map(h => `${h.ticker} [${h.broker}] valor ${Math.round(pxOf(h).v)} costo ${Math.round(+h.costo||0)}`).join("; ") || "sin datos"}
+CHEQUES SIN COBRAR (ARS): ${(S.cheques||[]).filter(q => !q.cobrado).map(q => `${q.librador} pagado ${q.pagado} nominal ${q.nominal} vence ${q.vencimiento}`).join("; ") || "ninguno"}
+CUENTA CON PAPÁ (no son gastos): saldo ARS ${Math.round(cuentaSaldo().ARS)}, USD ${Math.round(cuentaSaldo().USD)}
 GASTOS (detalle):
 ${gas.join("\n")}`.slice(0, 60000);
 }
@@ -1299,7 +1555,7 @@ function printResumen(){
 /* ===================== export ===================== */
 async function exportCSV(col){
   const L = listOf(col).slice().sort((a,b) => a.fecha < b.fecha ? -1 : 1);
-  const cols = col === "retiros" ? ["fecha","cliente","importe","tipo","facturado","nota"] : col === "gastos" ? ["fecha","concepto","importe","categoria","nota"] : ["fecha","cliente","importe","tasa","facturado","compensado","compensadoFecha","nota"];
+  const cols = col === "inversiones" ? ["fecha","broker","tipo","ticker","cantidad","costo","precio","nota"] : col === "cheques" ? ["fecha","librador","pagado","nominal","vencimiento","cobrado","cobradoFecha","nota"] : col === "cuenta" ? ["fecha","tipo","concepto","moneda","importe","nota"] : col === "retiros" ? ["fecha","cliente","importe","tipo","facturado","nota"] : col === "gastos" ? ["fecha","concepto","importe","categoria","nota"] : ["fecha","cliente","importe","tasa","facturado","compensado","compensadoFecha","nota"];
   const q = v => { v = v === undefined || v === null ? "" : String(v); return /[",;\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; };
   const csv = "\uFEFF" + [cols.join(";"), ...L.map(r => cols.map(k => q(typeof r[k] === "number" ? String(r[k]).replace(".",",") : r[k])).join(";"))].join("\n");
   download(`santiago-rossi-${col}-${NOW.toISOString().slice(0,10)}.csv`, csv, "text/csv;charset=utf-8");
@@ -1327,6 +1583,12 @@ document.addEventListener("click", async ev => {
   if (a === "fac"){ const r = S.retiros.find(x => x.id === el.dataset.id); if (!r) return; el.disabled = true;
     try { await patch("retiros", r.id, {facturado: !r.facturado}); if (!r.facturado && S.mode !== "demo") toast("Marcada como facturada"); } catch(e){ el.disabled = false; toast(errMsg(e), true); } return; }
   if (a === "cfac"){ const r = S.comisiones.find(x => x.id === el.dataset.id); if (!r) return; try { await patch("comisiones", r.id, {facturado: !r.facturado}); } catch(e){ toast(errMsg(e), true); } return; }
+  if (a === "qcob"){ const q = S.cheques.find(x => x.id === el.dataset.id); if (!q) return; patch("cheques", q.id, {cobrado: !q.cobrado, cobradoFecha: q.cobrado ? "" : NOW.toISOString().slice(0,10)}); if (!q.cobrado) toast("Cheque cobrado"); return; }
+  if (a === "newPapa"){ openForm.papa = el.dataset.t; openForm("cuenta"); return; }
+  if (a === "liquidar"){ const s = cuentaSaldo(); const c = s.USD > 0 && !(s.ARS > 0) ? "USD" : "ARS"; if (!(s[c] > 0)){ toast("No hay saldo para liquidar"); return; }
+    openForm.papa = "pago"; openForm.pre = {moneda:c, importe:Math.round(s[c]*100)/100, concepto:"Liquidación"}; openForm("cuenta");
+    if (s.ARS > 0 && s.USD > 0) toast("Primero pesos; después liquidá los dólares"); return; }
+  if (a === "pxRefresh"){ loadPX(true); render(true); return; }
   if (a === "comp"){ try { await patch("comisiones", el.dataset.id, {compensado:true, compensadoFecha: NOW.toISOString().slice(0,10)}); toast("Marcado como compensado"); } catch(e){ toast(errMsg(e), true); } return; }
   if (a === "copy"){ const r = S.retiros.find(x => x.id === el.dataset.id); if (!r) return; const txt = `${r.cliente} — ${ddmm(r.fecha)}/${r.fecha.slice(0,4)} — $ ${nf2.format(+r.importe||0)}`;
     try { await navigator.clipboard.writeText(txt); toast("Copiado: " + txt); } catch(e){ toast(txt); } return; }
@@ -1336,7 +1598,7 @@ document.addEventListener("click", async ev => {
   if (a === "exp"){ exportCSV(el.dataset.col); return; }
   if (a === "backup"){ download(`santiago-rossi-respaldo-${NOW.toISOString().slice(0,10)}.json`, JSON.stringify(snapshot(), null, 1), "application/json"); return; }
   if (a === "impNo"){ S.pendingImport = null; render(true); return; }
-  if (a === "impOk"){ const d = S.pendingImport; S.pendingImport = null; S.retiros = d.retiros; S.gastos = d.gastos; S.comisiones = d.comisiones; if (d.config) S.config = d.config; S.sel = null; changed(); toast("Datos importados"); return; }
+  if (a === "impOk"){ const d = S.pendingImport; S.pendingImport = null; S.retiros = d.retiros; S.gastos = d.gastos; S.comisiones = d.comisiones; S.inversiones = d.inversiones; S.cheques = d.cheques; S.cuenta = d.cuenta; if (d.config) S.config = d.config; S.sel = null; changed(); toast("Datos importados"); return; }
   if (a === "logout"){ logout(); return; }
   if (a === "theme"){ const t = el.dataset.t; ls.set("theme", t); if (t === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.setAttribute("data-theme", t); render(true); return; }
   if (a === "print"){ printResumen(); return; }
@@ -1348,7 +1610,7 @@ document.addEventListener("click", async ev => {
   if (a === "facLote"){ const n = SELF.size; S.retiros.forEach(r => { if (SELF.has(r.id)) r.facturado = true; }); SELF.clear(); changed(); toast(`${n} marcada${n>1?"s":""} como facturada${n>1?"s":""}`); return; }
   if (a === "sync"){ if (S.mode === "live" && S.sync !== "Guardado"){ dirty = true; setSync("Guardando…"); flush(); } return; }
   if (a === "demo"){ $("#gate").hidden = true; startDemo(); return; }
-  if (a === "exitDemo"){ S.mode = "loading"; S.retiros = []; S.gastos = []; S.comisiones = []; S.config = null; boot(); return; }
+  if (a === "exitDemo"){ S.mode = "loading"; S.retiros = []; S.gastos = []; S.comisiones = []; S.inversiones = []; S.cheques = []; S.cuenta = []; S.config = null; boot(); return; }
   if (a === "addSaldo"){ const c = cfg(); saveCfg(Object.assign({}, c, {saldos:[...(c.saldos||[]), {nombre:"Nueva cuenta", importe:0}]})); return; }
   if (a === "rmSaldo"){ const c = cfg(); const s = (c.saldos||[]).slice(); s.splice(+el.dataset.i, 1); saveCfg(Object.assign({}, c, {saldos:s})); return; }
 });
@@ -1366,7 +1628,8 @@ document.addEventListener("change", ev => {
       const ok = o && ["retiros","gastos","comisiones"].every(k => Array.isArray(o[k]));
       if (!ok) throw new Error();
       const fix = (L, p) => L.map((r, i) => Object.assign({id: r.id || p + i + Date.now().toString(36)}, r));
-      S.pendingImport = {retiros:fix(o.retiros,"r"), gastos:fix(o.gastos,"g"), comisiones:fix(o.comisiones,"c"), config:o.config || null}; render(true);
+      const opt = (k, p) => Array.isArray(o[k]) ? fix(o[k], p) : (S[k] || []);
+      S.pendingImport = {retiros:fix(o.retiros,"r"), gastos:fix(o.gastos,"g"), comisiones:fix(o.comisiones,"c"), inversiones:opt("inversiones","in"), cheques:opt("cheques","ch"), cuenta:opt("cuenta","cu"), config:o.config || null}; render(true);
     }).catch(() => toast("Ese archivo no es un respaldo de Santiago Rossi.", true)); t.value = ""; return; }
   if (t.dataset.cfg){ const v = t.dataset.cfg === "objetivo" ? Math.max(0, +t.value || 0) : t.value; saveCfg(Object.assign({}, c, {[t.dataset.cfg]: v})); }
   else if (t.dataset.tc){ const tc = Object.assign({}, c.tcManual||{}); const v = +t.value; if (v > 0) tc[t.dataset.tc] = v; else delete tc[t.dataset.tc]; saveCfg(Object.assign({}, c, {tcManual:tc})); }
@@ -1378,7 +1641,7 @@ document.addEventListener("change", ev => {
 function startDemo(){
   if (S.mode === "demo") return;
   S.sync = "";
-  const d = demoData(); S.retiros = d.R; S.gastos = d.G; S.comisiones = d.C; S.config = d.cfg; S.mode = "demo"; render(true);
+  const d = demoData(); S.retiros = d.R; S.gastos = d.G; S.comisiones = d.C; S.inversiones = d.I; S.cheques = d.Q; S.cuenta = d.P; S.config = d.cfg; S.mode = "demo"; render(true); loadPX();
 }
 function boot(){
   if (/^#?demo$/.test(location.hash) || /[?&]demo\b/.test(location.search)){ startDemo(); return; }

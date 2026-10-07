@@ -9,7 +9,7 @@ Se publica sola en Vercel con cada git push a main.
 - package.json: dependencia @vercel/blob.
 
 ## Datos
-- Blob privado, archivo mayor-rossi/datos.json con {rev, updatedAt, data: {retiros, gastos, comisiones, config}}. Copia diaria en mayor-rossi/historial/.
+- Blob privado, archivo mayor-rossi/datos.json con {rev, updatedAt, data: {retiros, gastos, comisiones, inversiones, cheques, cuenta, config}}. Copia diaria en mayor-rossi/historial/.
 - Control de concurrencia por rev (409 devuelve la versión del servidor). Copia local en localStorage "mayor_rossi_v1"; la clave en "mayor_rossi_clave".
 - Variables en Vercel: MAYOR_CLAVE, BLOB_READ_WRITE_TOKEN (la crea Vercel al conectar el Blob). Nunca escribir la clave en el código ni en el repo.
 - Los nombres de clientes nunca van al repo: la carga inicial se hace importando un respaldo .json desde Ajustes.
@@ -24,6 +24,9 @@ Se publica sola en Vercel con cada git push a main.
 - Resumen PDF: botón en el encabezado; arma la vista #print del período elegido y abre la impresión del navegador.
 - Los retiros en efectivo cuentan como sueldo pero no se facturan.
 - Gastos con importe negativo = ingresos o reintegros (intereses, comisiones cobradas).
+- Inversiones (data.inversiones): posiciones {broker, tipo cedear/accion/cripto/lecap/fci/efectivo/otro, ticker, cantidad, costo USD, precio manual}. Precios online: cripto en Binance (USDT), CEDEARs y acciones en data912 en pesos ÷ MEP de dolarapi; cache en localStorage "mayor_rossi_px" 15 min. LECAP/FCI/otro se valúan con el valor manual. Falta: importar el CSV de operaciones de Cocos.
+- Cheques (data.cheques): {fecha compra, librador, pagado, nominal, vencimiento, cobrado}. TNA = (nominal/pagado − 1) × 365 / días. Alerta y badge si vence en 7 días o está vencido sin cobrar.
+- Cuenta con papá (data.cuenta): {fecha, tipo cargo/pago, concepto, importe, moneda ARS/USD}. Saldo por moneda; total con el oficial de hoy. No cuenta como gasto.
 - Monotributo: escala vigente desde agosto 2026 en la constante MONO de index.html; actualizarla en cada ajuste semestral.
 
 ## Estilo visual
