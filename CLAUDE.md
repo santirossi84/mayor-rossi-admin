@@ -10,7 +10,7 @@ Se publica sola en Vercel con cada git push a main.
 - package.json: dependencia @vercel/blob.
 
 ## Datos
-- Blob privado, archivo mayor-rossi/datos.json con {rev, updatedAt, data: {retiros, gastos, comisiones, inversiones, cheques, cuenta, cocos, config}}. Copia diaria en mayor-rossi/historial/.
+- Blob privado, archivo mayor-rossi/datos.json con {rev, updatedAt, data: {retiros, gastos, comisiones, inversiones, cheques, cuenta, cocos, movs, config}}. Copia diaria en mayor-rossi/historial/.
 - Control de concurrencia por rev (409 devuelve la versión del servidor). Copia local en localStorage "mayor_rossi_v1"; la clave en "mayor_rossi_clave".
 - Variables en Vercel: MAYOR_CLAVE, BLOB_READ_WRITE_TOKEN (la crea Vercel al conectar el Blob). Nunca escribir la clave en el código ni en el repo.
 - Los nombres de clientes nunca van al repo: la carga inicial se hace importando un respaldo .json desde Ajustes.
@@ -27,7 +27,8 @@ Se publica sola en Vercel con cada git push a main.
 - Gastos con importe negativo = ingresos o reintegros (intereses, comisiones cobradas).
 - Categorías de gastos (CATS): súper, salidas, suscripciones, transporte, cuidado personal, salud, deporte y outdoor, ropa y equipo, compras al exterior, impuestos, bancos, ingresos, varios. Las viejas de la planilla se reorganizan una sola vez con «Ver propuesta» en Gastos (reglas CATRULES por concepto); al aplicar queda config.catsV2 = true.
 - Resumen › Patrimonio y cartera: patrimonio neto en USD al oficial de hoy (líquido de Ajustes + inversiones + nominal de cheques − deuda con papá), composición y tres tarjetas que llevan a cada subsección.
-- Pestaña Cartera: agrupa Inversiones, Cheques y Papá como subsecciones (vistas inversiones/cheques/papa, la última abierta queda en localStorage "mr:csub").
+- Pestaña Cartera: agrupa Cuentas, Inversiones, Cheques y Papá como subsecciones (vistas cuentas/inversiones/cheques/papa, la última abierta queda en localStorage "mr:csub").
+- Cuentas (config.cuentas [{id, nombre, moneda ARS/USD, inicial}]; si no existe se arma desde config.saldos o con Efectivo, Billetera Mutual, Cocos pesos y Cocos dólares). Saldo = inicial + movimientos de ctaMovs(): retiros (cta), gastos (cta), cheques (ctaPago al comprar, ctaCobro o ctaPago al cobrar), pagos a papá (cta) y data.movs (transferencias entre cuentas, con «destino» si cambian de moneda). montoCta = monto exacto en la moneda de la cuenta; si falta se convierte con el oficial del día. «Ajustar saldo» corrige inicial sin tocar movimientos. Registros sin cuenta no mueven saldos.
 - Inversiones (data.inversiones): posiciones {broker, tipo cedear/accion/cripto/lecap/fci/efectivo/otro, ticker, cantidad, costo USD, precio manual}. Precios online por /api/precios: cripto en Binance (USDT), CEDEARs y acciones en data912 en pesos ÷ MEP; cache en localStorage "mayor_rossi_px" 15 min. LECAP/FCI/otro manuales se valúan con el valor manual.
 - Cocos (data.cocos): movimientos importados del CSV «movimientos_cuenta» (separador ;, números es-AR, fechas dd-mm-aaaa), sin duplicar por nroTicket-nroComprobante. Las posiciones salen de los movimientos con costo promedio en USD; lo que está en pesos va al oficial (del día para el costo, de hoy para el valor). FCI: precio por 1000 cuotapartes; bonos/letras/ON: por 100 VN; letras vencidas quedan en cero. Compra ARS + venta USD de una ON («Registracion») = compra de MEP, no posición. La tenencia previa al CSV se estima con el mínimo necesario y se corrige con «Ajustar tenencia» (config.cocosAj[ticker] = cantidad inicial).
 - Cheques (data.cheques): {fecha compra, librador, pagado, nominal, vencimiento, cobrado}. TNA = (nominal/pagado − 1) × 365 / días. Alerta y badge si vence en 7 días o está vencido sin cobrar.

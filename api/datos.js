@@ -62,7 +62,7 @@ export async function PUT(request) {
   if (!data || !Array.isArray(data.retiros) || !Array.isArray(data.gastos) || !Array.isArray(data.comisiones)) {
     return json({ error: 'Formato de datos invalido' }, 400);
   }
-  for (const k of ['inversiones', 'cheques', 'cuenta', 'cocos']) {
+  for (const k of ['inversiones', 'cheques', 'cuenta', 'cocos', 'movs']) {
     if (data[k] !== undefined && !Array.isArray(data[k])) return json({ error: 'Formato de datos invalido: ' + k }, 400);
   }
   try {

@@ -432,6 +432,17 @@ td .note{display:block;font-size:13px;color:var(--sec);font-weight:400;margin-to
   .pos-r{grid-template-columns:minmax(0,1fr) auto;gap:6px 12px}.pos-w{grid-column:1 / -1;order:3}.pos-x{grid-column:1 / -1;order:4;justify-content:flex-start;margin-top:-4px}}
 @media (max-width:700px){.camp-acts{flex-direction:row;flex-wrap:wrap}}
 
+.ctas{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-bottom:0}
+.cta-c{display:grid;gap:6px;padding:20px;background:var(--fill)}
+.cta-h{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600}
+.cta-c > b{font:400 34px/1 var(--fx)}
+.cta-c small{font-size:12px;color:var(--sec)}
+.cta-a{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+.hint{display:block;margin:-6px 0 14px;font-size:12px;color:var(--sec)}
+
+.sm-only{display:none}
+@media (max-width:700px){.lg2 th:nth-child(3),.lg2 td:nth-child(3),.lg2 th:nth-child(4),.lg2 td:nth-child(4){display:none}.lg2 .sm-only{display:block}.lg2 th,.lg2 td{padding-inline:4px}.lg2 td{font-size:14px}.lg2 td.d{white-space:nowrap}.lg2 td:last-child .btn{padding:0 6px;font-size:13px}.lg2 .acts .ib:last-child{display:none}}
+
 /* móvil */
 @media (max-width:900px){
   .nav{height:auto;flex-wrap:wrap;gap:0;padding-top:12px}
@@ -565,7 +576,7 @@ function readK(){ try { const cs = getComputedStyle(document.documentElement), v
   K.ink = v("--ink") || K.ink; K.sec = v("--sec") || K.sec; K.ter = v("--ter") || K.ter; K.card = v("--card") || K.card; K.g = v("--g") || K.g; } catch(e){} }
 const ls = {get(k){try{return localStorage.getItem("mr:"+k)}catch(e){return null}}, set(k,v){try{localStorage.setItem("mr:"+k,v)}catch(e){}}};
 const S = {
-  retiros:[], gastos:[], comisiones:[], inversiones:[], cheques:[], cuenta:[], cocos:[], config:null,
+  retiros:[], gastos:[], comisiones:[], inversiones:[], cheques:[], cuenta:[], cocos:[], movs:[], config:null,
   mode:"loading", rev:0, clave:"", sync:"", dl:true, pendingImport:null,
   cur: ls.get("cur")==="ARS"?"ARS":"USD",
   view: "cabina", sel:null,
@@ -573,10 +584,10 @@ const S = {
   chat:[], chatBusy:false, ctl:null
 };
 const SELF = new Set();
-const VIEWS = ["cabina","retiros","gastos","arca","comisiones","inversiones","cheques","papa","ajustes"];
-const TITLES = {cabina:"Resumen",retiros:"Retiros",gastos:"Gastos",arca:"ARCA",comisiones:"Cobros 5%",inversiones:"Cartera",cheques:"Cartera",papa:"Cartera",ajustes:"Ajustes"};
-const NOPER = ["inversiones","cheques","papa"];
-if (location.hash === "#cartera") S.view = "inversiones";
+const VIEWS = ["cabina","retiros","gastos","arca","comisiones","cuentas","inversiones","cheques","papa","ajustes"];
+const TITLES = {cabina:"Resumen",retiros:"Retiros",gastos:"Gastos",arca:"ARCA",comisiones:"Cobros 5%",cuentas:"Cartera",inversiones:"Cartera",cheques:"Cartera",papa:"Cartera",ajustes:"Ajustes"};
+const NOPER = ["cuentas","inversiones","cheques","papa"];
+if (location.hash === "#cartera") S.view = "cuentas";
 else if (VIEWS.includes(location.hash.slice(1))) S.view = location.hash.slice(1);
 else { const v = ls.get("view"); if (VIEWS.includes(v)) S.view = v; }
 
@@ -754,6 +765,39 @@ async function loadPX(force){
   try { const keep = {}; for (const k of Object.keys(PX.p)) if (!k.includes(":ARS:") && H.some(h => pxKey(h) === k)) keep[k] = PX.p[k]; localStorage.setItem(PXK, JSON.stringify({p:keep, mep:PX.mep, at:PX.at})); } catch(e){}
   render();
 }
+/* ---------- cuentas: saldos que se mueven solos con cada operación ---------- */
+const DEF_CTAS = [{id:"efectivo", nombre:"Efectivo", moneda:"ARS", inicial:0}, {id:"mutual", nombre:"Billetera Mutual", moneda:"ARS", inicial:0},
+  {id:"cocos-ars", nombre:"Cocos pesos", moneda:"ARS", inicial:0}, {id:"cocos-usd", nombre:"Cocos dólares", moneda:"USD", inicial:0}];
+function ctas(){ const c = cfg(); if (Array.isArray(c.cuentas)) return c.cuentas;
+  const s = c.saldos || []; return s.length ? s.map((x,i) => ({id:"s"+i, nombre:x.nombre, moneda:"ARS", inicial:+x.importe||0})) : DEF_CTAS; }
+const ctaOf = id => ctas().find(c => c.id === id);
+const ctaFind = re => (ctas().find(c => re.test(c.nombre)) || {}).id || "";
+function saveCtas(list){ S.config = Object.assign({}, cfg(), {cuentas:list}); changed(); }
+const convF = (v, from, to, f) => from === to ? v : from === "ARS" ? v / tcDay(f) : v * tcDay(f);
+/* todos los movimientos que tocan una cuenta, de cualquier módulo; monto en la moneda de la cuenta */
+function ctaMovs(){
+  const out = [];
+  const add = (id, fecha, monto, mon, concepto, origen, view, exact, ref) => { const c = ctaOf(id); if (!c || !fecha) return;
+    const m = exact !== undefined && exact !== null && exact !== "" ? +exact : convF(+monto||0, mon, c.moneda, fecha); if (!m) return;
+    out.push({cta:id, fecha, monto:m, mon:c.moneda, concepto, origen, view, ref}); };
+  S.retiros.forEach(r => r.cta && add(r.cta, r.fecha, +r.importe, "ARS", (r.tipo === "efectivo" ? "Retiro en efectivo" : "Transferencia de " + (r.cliente||"cliente")), "Retiro", "retiros", r.montoCta, r.id));
+  S.gastos.forEach(g => g.cta && add(g.cta, g.fecha, -(+g.importe), "ARS", g.concepto, +g.importe < 0 ? "Ingreso" : "Gasto", "gastos", g.montoCta === undefined || g.montoCta === "" ? undefined : -g.montoCta, g.id));
+  (S.cheques||[]).forEach(q => { if (q.ctaPago) add(q.ctaPago, q.fecha, -(+q.pagado), "ARS", "Compra de cheque " + (q.librador||""), "Cheque", "cheques", undefined, q.id);
+    const cc = q.ctaCobro || q.ctaPago; if (q.cobrado && cc) add(cc, q.cobradoFecha || q.vencimiento, +q.nominal, "ARS", "Cobro de cheque " + (q.librador||""), "Cheque", "cheques", undefined, q.id); });
+  (S.cuenta||[]).forEach(m => m.tipo === "pago" && m.cta && add(m.cta, m.fecha, -(+m.importe), m.moneda === "USD" ? "USD" : "ARS", "Pago a papá · " + (m.concepto||""), "Papá", "papa", m.montoCta === undefined || m.montoCta === "" ? undefined : -m.montoCta, m.id));
+  (S.movs||[]).forEach(v => { const a = ctaOf(v.desde), b = ctaOf(v.hacia); if (!a || !b) return;
+    add(v.desde, v.fecha, -(+v.importe), a.moneda, `A ${b.nombre}${v.nota ? " · " + v.nota : ""}`, "Entre cuentas", "cuentas", undefined, v.id);
+    add(v.hacia, v.fecha, +v.importe, a.moneda, `Desde ${a.nombre}${v.nota ? " · " + v.nota : ""}`, "Entre cuentas", "cuentas", v.destino || undefined, v.id); });
+  return out.sort((a,b) => a.fecha < b.fecha ? 1 : a.fecha > b.fecha ? -1 : 0);
+}
+function ctaSaldos(){ const mv = ctaMovs(), o = {}; ctas().forEach(c => o[c.id] = +c.inicial||0); mv.forEach(m => { if (m.cta in o) o[m.cta] += m.monto; }); return o; }
+const liquidUSD = () => { const sb = ctaSaldos(); return ctas().reduce((a,c) => a + (c.moneda === "USD" ? sb[c.id] : sb[c.id] / usdHoy()), 0); };
+const fCta = (v, mon) => mon === S.cur ? fmt(v) : fmt(mon === "ARS" ? v / usdHoy() : v * usdHoy());
+/* selector de cuenta para los formularios; «montoCta» aparece cuando la cuenta está en otra moneda */
+function ctaField(sel, label, id = "fCta", mc){
+  return `<div class="f"><label for="${id}">${label}</label><select id="${id}" data-ctasel><option value="">No mueve saldos</option>${ctas().map(c => `<option value="${esc(c.id)}" data-mon="${c.moneda}" ${c.id === sel ? "selected" : ""}>${esc(c.nombre)} · ${c.moneda}</option>`).join("")}</select></div>`
+    + (mc !== undefined ? `<div class="f" id="${id}McW" hidden><label for="${id}Mc">Monto en la moneda de la cuenta</label><input id="${id}Mc" type="number" step="0.01" inputmode="decimal" value="${mc === "" || mc === undefined || mc === null ? "" : Math.abs(+mc)}"><small>Opcional. Vacío = se convierte con el oficial del día.</small></div>` : "");
+}
 const usdHoy = () => TCD.today || tcFor(CUR_YM);
 const fromUSD = v => S.cur === "USD" ? v : v * usdHoy();
 const fUSD = v => fmt(fromUSD(v));
@@ -869,7 +913,15 @@ function demoData(){
     {id:"dp4", fecha:dd(-12), tipo:"cargo", concepto:"Cenas y traslados", importe:340000, moneda:"ARS", nota:""},
     {id:"dp5", fecha:dd(-6), tipo:"pago", concepto:"Transferencia", importe:300000, moneda:"ARS", nota:""},
     {id:"dp6", fecha:dd(-2), tipo:"pago", concepto:"Dólares en efectivo", importe:1000, moneda:"USD", nota:""}];
-  return {R, G, C, I, Q, P, K:KX, cfg:{objetivo:1500000, tc, saldos:[{nombre:"Billetera",importe:180000},{nombre:"Efectivo",importe:250000},{nombre:"Broker (USD MEP)",importe:2100000}], monotributo:"A"}};
+  const cut = addM(CUR_YM, -1) + "-01";
+  R.forEach(r => { if (r.fecha >= cut) r.cta = r.tipo === "efectivo" ? "efectivo" : "mutual"; });
+  G.forEach((g, i) => { if (g.fecha >= cut) g.cta = i % 3 === 0 ? "efectivo" : "mutual"; });
+  Q.forEach(q => { if (q.fecha >= dd(-45)) q.ctaPago = "mutual"; });
+  P.forEach(m => { if (m.tipo === "pago") m.cta = m.moneda === "USD" ? "cocos-usd" : "mutual"; });
+  const V = [{id:"dv1", fecha:dd(-9), desde:"mutual", hacia:"cocos-ars", importe:450000, destino:"", nota:"Para invertir"}, {id:"dv2", fecha:dd(-8), desde:"cocos-ars", hacia:"cocos-usd", importe:300000, destino:200, nota:"MEP"}];
+  const cuentas = [{id:"efectivo", nombre:"Efectivo", moneda:"ARS", inicial:350000}, {id:"mutual", nombre:"Billetera Mutual", moneda:"ARS", inicial:9800000},
+    {id:"cocos-ars", nombre:"Cocos pesos", moneda:"ARS", inicial:120000}, {id:"cocos-usd", nombre:"Cocos dólares", moneda:"USD", inicial:1450}];
+  return {R, G, C, I, Q, P, K:KX, V, cfg:{objetivo:1500000, tc, saldos:[], cuentas, monotributo:"A"}};
 }
 
 /* ===================== gráficos ===================== */
@@ -960,7 +1012,7 @@ function renderChrome(M, ms){
   $("#arcaBadge").textContent = pend ? String(pend) : "";
   const qa = chqAlert().length; $("#chqBadge").textContent = qa ? String(qa) : "";
   $("#scale").hidden = NOPER.includes(S.view);
-  if (NOPER.includes(S.view)) $("#sub").textContent = "Inversiones, mesa de cheques y cuenta con papá";
+  if (NOPER.includes(S.view)) $("#sub").textContent = "Cuentas, inversiones, cheques y cuenta con papá";
   document.querySelectorAll("[data-act=cur]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.c === S.cur)));
   document.querySelectorAll(".rail [data-act=view]").forEach(b => { if (b.dataset.v === S.view || (b.dataset.v === "cartera" && NOPER.includes(S.view))) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
   const obj = cfg().objetivo || 1;
@@ -1042,7 +1094,7 @@ function vCabina(M, ms){
 
     <section class="panel s7" aria-labelledby="h-sig"><div class="ph"><h2 id="h-sig">Señales</h2><span class="meta">calculadas sobre tus datos</span></div>
       <div class="signals">${signals(M, ms)}</div></section>
-    <section class="panel s5" aria-labelledby="h-sal"><div class="ph"><h2 id="h-sal">Saldos y ritmo</h2><button class="btn ghost" data-act="view" data-v="ajustes">Editar</button></div>
+    <section class="panel s5" aria-labelledby="h-sal"><div class="ph"><h2 id="h-sal">Saldos y ritmo</h2><button class="btn ghost" data-act="view" data-v="cuentas">Ver cuentas</button></div>
       ${saldos(M, ms)}</section>
   </div>`;
 }
@@ -1131,12 +1183,11 @@ function signals(M, ms){
   return out.join("");
 }
 function saldos(M, ms){
-  const c = cfg(), list = c.saldos || [], tm = S.sel === "all" ? ms[ms.length-1] : S.sel;
-  const tot = list.reduce((a,s) => a + (+s.importe||0), 0);
+  const list = ctas(), sb = ctaSaldos(), tm = S.sel === "all" ? ms[ms.length-1] : S.sel;
   const done = ms.filter(m => m < CUR_YM && (at(M,m).ret || at(M,m).gas));
   const avg = f => done.length ? done.reduce((a,m) => a + f(cv(at(M,m))), 0)/done.length : 0;
   const aR = avg(o => o.ret), aG = avg(o => o.gas), aA = avg(o => o.ret + o.ing - o.gas);
-  return `<div class="saldos">${list.length ? list.map(s => `<div><span>${esc(s.nombre)}</span><b class="num">${money(+s.importe||0, CUR_YM)}</b></div>`).join("") + `<div><span class="lbl">Total líquido</span><b class="num pz">${money(tot, CUR_YM)}</b></div>` : `<div class="empty"><b>Sin cuentas</b>Cargá tus saldos en Ajustes.</div>`}</div>
+  return `<div class="saldos">${list.map(c => `<div><span>${esc(c.nombre)}</span><b class="num ${sb[c.id] < 0 ? "neg" : ""}">${fCta(sb[c.id], c.moneda)}</b></div>`).join("") + `<div><span class="lbl">Total líquido</span><b class="num pz">${fUSD(liquidUSD())}</b></div>`}</div>
   <div class="rate"><div><span class="lbl">Retiro prom.</span><b class="num">${compact(aR)}</b></div><div><span class="lbl">Gasto prom.</span><b class="num">${compact(aG)}</b></div><div><span class="lbl">Ahorro prom.</span><b class="num ${aA>=0?"pos":"neg"}">${compact(aA)}</b></div></div>
   <p class="foot-note">Promedios sobre ${done.length} meses cerrados · ahorro proyectado 12 meses ${fmt(aA*12)}</p>`;
 }
@@ -1156,7 +1207,7 @@ function retRows(){
     <td>${r.tipo === "efectivo" ? `<span class="na">no aplica</span>` : `<button class="sw" role="switch" aria-checked="${!!r.facturado}" aria-label="Facturado en ARCA: ${esc(r.cliente)}" data-act="fac" data-id="${esc(r.id)}"></button>`}</td>
     <td>${acts("retiros", r.id)}</td></tr>`).join("");
 }
-const COLN = {retiros:"retiro", gastos:"gasto", comisiones:"cobro", inversiones:"posición", cheques:"cheque", cuenta:"movimiento"};
+const COLN = {retiros:"retiro", gastos:"gasto", comisiones:"cobro", inversiones:"posición", cheques:"cheque", cuenta:"movimiento", movs:"movimiento"};
 function acts(col, id){ const n = COLN[col] || "registro"; return `<div class="acts"><button class="ib" data-act="edit" data-col="${col}" data-id="${esc(id)}" aria-label="Editar ${n}"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button><button class="ib" data-act="del" data-col="${col}" data-id="${esc(id)}" aria-label="Borrar ${n}"><svg viewBox="0 0 24 24"><path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/></svg></button></div>`; }
 function vRetiros(M, ms){
   const SM = selMonths(ms);
@@ -1328,9 +1379,9 @@ function carteraPanel(){
   const Q = (S.cheques||[]).filter(q => !q.cobrado).sort((a,b) => a.vencimiento < b.vencimiento ? -1 : 1);
   const qNom = Q.reduce((a,q) => a + (+q.nominal||0), 0), qPag = Q.reduce((a,q) => a + (+q.pagado||0), 0);
   const tna = qPag ? Q.reduce((a,q) => a + chqTNA(q) * (+q.pagado||0), 0) / qPag : 0;
-  const liq = (cfg().saldos||[]).reduce((a,x) => a + (+x.importe||0), 0) / tc;
+  const liq = liquidUSD();
   const ps = cuentaSaldo(), deuda = ps.USD + ps.ARS / tc, chq = qNom / tc;
-  if (!H.length && !Q.length && !(S.cuenta||[]).length) return "";
+  if (!H.length && !Q.length && !(S.cuenta||[]).length && !liq) return "";
   const neto = liq + inv + chq - deuda, act = liq + inv + chq;
   const segs = [["Líquido", liq, "var(--ter)"], ["Inversiones", inv, "var(--ink)"], ["Cheques", chq, "#0A7281"]].filter(x => x[1] > 0);
   const F = v => fUSD(v), next30 = Q.filter(q => daysTo(q.vencimiento) <= 30), n30 = next30.reduce((a,q) => a + (+q.nominal||0), 0);
@@ -1360,9 +1411,36 @@ function carteraPanel(){
       </div>
     </div></section>`;
 }
+function vCuentas(){
+  const L = ctas(), sb = ctaSaldos(), mv = ctaMovs(), liq = liquidUSD(), f = S.fCta || "todas";
+  const rows = mv.filter(m => f === "todas" || m.cta === f).slice(0, 80);
+  const mes = mv.filter(m => m.fecha.slice(0,7) === CUR_YM), toU = m => m.mon === "USD" ? m.monto : m.monto / usdHoy();
+  const ent = mes.filter(m => m.monto > 0 && m.origen !== "Entre cuentas").reduce((a,m) => a + toU(m), 0), sal = mes.filter(m => m.monto < 0 && m.origen !== "Entre cuentas").reduce((a,m) => a + toU(m), 0);
+  return `<section class="camp inv" aria-label="Plata disponible">
+    <div><div class="eyebrow">Plata disponible · ${L.length} cuentas</div>
+      <h2>${fUSD(liq)}</h2>
+      <p>Cada retiro, gasto, cheque y pago a papá que cargás con una cuenta mueve su saldo. Los pesos se muestran ${S.cur === "USD" ? "en dólares al oficial de hoy" : "tal cual"}.</p>
+      <div class="stats"><div><span>Entró en ${MESL[NOW.getMonth()].toLowerCase()}</span><b>+${fUSD(ent)}</b></div><div><span>Salió en ${MESL[NOW.getMonth()].toLowerCase()}</span><b>−${fUSD(-sal)}</b></div><div><span>Movimientos registrados</span><b>${mv.length}</b></div></div></div>
+    <div class="camp-acts"><button class="btn" data-act="new" data-col="movs">Mover entre cuentas</button><button class="btn ghost-inv" data-act="ctaNew">Nueva cuenta</button></div></section>
+  <div class="ctas">${L.map(c => { const v = sb[c.id] || 0, n = mv.filter(m => m.cta === c.id).length;
+    return `<div class="cta-c"><div class="cta-h"><span>${esc(c.nombre)}</span><span class="pill-cur">${c.moneda}</span></div>
+      <b class="${v < 0 ? "neg" : ""}">${fmt(v, c.moneda)}</b><small>${c.moneda !== S.cur ? fCta(v, c.moneda) + " · " : ""}${n} movimiento${n===1?"":"s"}</small>
+      <div class="cta-a"><button class="btn ghost" data-act="ctaAj" data-id="${esc(c.id)}">Ajustar saldo</button><button class="ib" data-act="ctaEdit" data-id="${esc(c.id)}" aria-label="Editar ${esc(c.nombre)}"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4"/></svg></button></div></div>`; }).join("")}</div>
+  <section class="panel" aria-labelledby="h-mv" style="margin-top:8px">
+    <div class="ph"><h2 id="h-mv">Movimientos</h2><span class="meta">de todos los módulos</span></div>
+    <div class="bar-row"><div class="l pills"><button class="pill" data-act="fcta" data-f="todas" aria-pressed="${f==="todas"}">Todas</button>${L.map(c => `<button class="pill" data-act="fcta" data-f="${esc(c.id)}" aria-pressed="${f===c.id}">${esc(c.nombre)}</button>`).join("")}</div></div>
+    <div class="tw"><table class="lg2"><thead><tr><th>Fecha</th><th>Concepto</th><th>Origen</th><th>Cuenta</th><th class="r">Importe</th><th><span class="sr">Acciones</span></th></tr></thead><tbody>
+    ${rows.length ? rows.map(m => `<tr><td class="d">${ddmm(m.fecha)}/${m.fecha.slice(2,4)}</td><td>${esc(m.concepto)}<span class="note sm-only">${esc(m.origen)} · ${esc((ctaOf(m.cta)||{}).nombre||"")}</span></td><td><span class="tag">${esc(m.origen)}</span></td><td>${esc((ctaOf(m.cta)||{}).nombre||"")}</td>
+      <td class="m r ${m.monto>=0?"pos":""}">${m.monto>=0?"+":"−"}${fmt(Math.abs(m.monto), m.mon)}</td>
+      <td>${m.view === "cuentas" ? acts("movs", m.ref) : `<button class="btn ghost" data-act="view" data-v="${m.view}">Ver</button>`}</td></tr>`).join("")
+      : `<tr><td colspan="6"><div class="empty"><b>Sin movimientos todavía</b>Al cargar un retiro, gasto, cheque o pago a papá elegí la cuenta y aparece acá. Para arrancar, tocá «Ajustar saldo» en cada cuenta y cargá lo que tenés hoy.</div></td></tr>`}
+    </tbody></table></div>
+    <p class="foot-note">«Ajustar saldo» fija lo que hay hoy en la cuenta; desde ahí suma y resta cada operación nueva. Los registros viejos sin cuenta no mueven nada.</p>
+  </section>`;
+}
 function subTabs(){
   const qa = chqAlert().length;
-  return `<nav class="subtabs" aria-label="Cartera">${[["inversiones","Inversiones"],["cheques","Cheques"],["papa","Papá"]].map(([k,l]) => `<button data-act="view" data-v="${k}" ${S.view===k?'aria-current="page"':""}>${l}${k==="cheques"&&qa?`<span class="badge">${qa}</span>`:""}</button>`).join("")}</nav>`;
+  return `<nav class="subtabs" aria-label="Cartera">${[["cuentas","Cuentas"],["inversiones","Inversiones"],["cheques","Cheques"],["papa","Papá"]].map(([k,l]) => `<button data-act="view" data-v="${k}" ${S.view===k?'aria-current="page"':""}>${l}${k==="cheques"&&qa?`<span class="badge">${qa}</span>`:""}</button>`).join("")}</nav>`;
 }
 function vInversiones(){
   const H = holdings(), st = cocosStats();
@@ -1503,8 +1581,8 @@ function vAjustes(ms){
         <div class="f"><label for="cObj">Objetivo de retiro mensual (ARS)</label><input id="cObj" type="number" min="0" step="1000" value="${+c.objetivo||0}" data-cfg="objetivo"><small>Es la línea punteada del perfil y la base del altímetro.</small></div>
         <div class="f"><label for="cCat">Categoría de Monotributo</label><select id="cCat" data-cfg="monotributo">${ks.map(k => `<option value="${k}" ${k===c.monotributo?"selected":""}>${k} · tope ${compact(MONO[k][0],"ARS")} · cuota ${ars(MONO[k][1])}</option>`).join("")}</select></div>
       </div></section>
-    <section class="panel s6" aria-labelledby="h-sld"><div class="ph"><h2 id="h-sld">Saldos de cuentas (ARS)</h2><button class="btn" data-act="addSaldo">Agregar cuenta</button></div>
-      <div class="form">${(c.saldos||[]).map((s,i) => `<div class="srow"><input aria-label="Nombre de la cuenta" id="sN${i}" value="${esc(s.nombre)}" data-saldo="${i}" data-k="nombre" class="search" style="width:100%"><input aria-label="Saldo" id="sV${i}" type="number" step="0.01" value="${+s.importe||0}" data-saldo="${i}" data-k="importe" class="search" style="width:100%"><button class="ib" data-act="rmSaldo" data-i="${i}" aria-label="Quitar cuenta"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>`).join("") || `<div class="empty"><b>Sin cuentas</b>Agregá billetera, efectivo o broker para ver tu total líquido.</div>`}</div></section>
+    <section class="panel s6" aria-labelledby="h-sld"><div class="ph"><h2 id="h-sld">Cuentas y saldos</h2><button class="btn" data-act="view" data-v="cuentas">Ir a Cuentas</button></div>
+      <p class="sub" style="margin:0">Efectivo, Billetera Mutual, Cocos y las que sumes viven en Cartera › Cuentas. Ahí ajustás el saldo de hoy y cada operación lo actualiza sola.</p></section>
     <section class="panel s12" aria-labelledby="h-tc"><div class="ph"><h2 id="h-tc">Cotización del dólar</h2><span class="meta">${TCD.keys.length ? "automática · " + TCD.keys.length + " días cargados" : "sin conexión: se usan los últimos valores"}</span></div>
       <div class="tcgrid">${tms.map(m => `<div class="f"><label for="tc-${m}">${ymLabel(m)}${tcManual(m) ? " · a mano" : ""}</label><input id="tc-${m}" type="number" min="1" step="1" value="${tcManual(m) || ""}" placeholder="${TCD.avg[m] ? "prom. " + nf0.format(TCD.avg[m]) : nf0.format(tcFor(m))}" data-tc="${m}"></div>`).join("")}</div>
       <p class="foot-note">Cada retiro y cada gasto se pasa a dólares con el oficial BNA vendedor de su propio día (fuente: argentinadatos y dolarapi). El número gris es el promedio del mes. Si escribís un valor, ese mes usa tu cotización fija; borralo para volver a la automática.</p></section>
@@ -1534,7 +1612,7 @@ function render(force){
   renderChrome(M, ms);
   const v = $("#view");
   v.innerHTML = S.view === "retiros" ? vRetiros(M, ms) : S.view === "gastos" ? vGastos(M, ms) : S.view === "arca" ? vArca(M, ms)
-    : S.view === "comisiones" ? vComis(M, ms) : NOPER.includes(S.view) ? subTabs() + (S.view === "inversiones" ? vInversiones() : S.view === "cheques" ? vCheques() : vPapa())
+    : S.view === "comisiones" ? vComis(M, ms) : NOPER.includes(S.view) ? subTabs() + (S.view === "cuentas" ? vCuentas() : S.view === "inversiones" ? vInversiones() : S.view === "cheques" ? vCheques() : vPapa())
     : S.view === "ajustes" ? vAjustes(ms) : vCabina(M, ms);
   const stb = document.querySelector(".subtabs"), sta = stb && stb.querySelector("[aria-current]"); if (sta) stb.scrollLeft = Math.max(0, sta.offsetLeft - stb.offsetLeft - 16);
 }
@@ -1552,7 +1630,7 @@ async function saveCfg(next){ S.config = next; changed(); }
 /* ===================== sincronización con la nube ===================== */
 const API = "/api/datos", CACHE = "mayor_rossi_v1", KEY = "mayor_rossi_clave";
 let saveT = null, saving = false, dirty = false;
-const snapshot = () => ({retiros:S.retiros, gastos:S.gastos, comisiones:S.comisiones, inversiones:S.inversiones, cheques:S.cheques, cuenta:S.cuenta, cocos:S.cocos, config:S.config || DEF_CFG});
+const snapshot = () => ({retiros:S.retiros, gastos:S.gastos, comisiones:S.comisiones, inversiones:S.inversiones, cheques:S.cheques, cuenta:S.cuenta, cocos:S.cocos, movs:S.movs, config:S.config || DEF_CFG});
 function cacheLocal(){ try { localStorage.setItem(CACHE, JSON.stringify({rev:S.rev, data:snapshot()})); } catch(e){} }
 function setSync(t){ S.sync = t; const st = $("#status"); if (!st || S.mode !== "live") return;
   st.className = "chip " + (t === "Guardado" ? "live" : t === "Guardando…" ? "busy" : "bad"); st.lastElementChild.textContent = t; }
@@ -1576,11 +1654,11 @@ function load(doc){
   S.rev = +(doc && doc.rev) || 0;
   S.retiros = Array.isArray(d.retiros) ? d.retiros : []; S.gastos = Array.isArray(d.gastos) ? d.gastos : [];
   S.comisiones = Array.isArray(d.comisiones) ? d.comisiones : []; S.config = d.config || null;
-  for (const k of ["inversiones","cheques","cuenta","cocos"]) S[k] = Array.isArray(d[k]) ? d[k] : [];
+  for (const k of ["inversiones","cheques","cuenta","cocos","movs"]) S[k] = Array.isArray(d[k]) ? d[k] : [];
   cacheLocal(); render(true); loadPX();
 }
 function logout(msg){ try { localStorage.removeItem(KEY); localStorage.removeItem(CACHE); } catch(e){}
-  S.clave = ""; S.mode = "loading"; S.retiros = []; S.gastos = []; S.comisiones = []; S.inversiones = []; S.cheques = []; S.cuenta = []; S.cocos = []; S.config = null; showGate(msg || ""); }
+  S.clave = ""; S.mode = "loading"; S.retiros = []; S.gastos = []; S.comisiones = []; S.inversiones = []; S.cheques = []; S.cuenta = []; S.cocos = []; S.movs = []; S.config = null; showGate(msg || ""); }
 function showGate(msg){ $("#gate").hidden = false; $("#gateErr").textContent = msg || ""; setTimeout(() => $("#gateKey").focus(), 50); }
 async function enter(clave){
   S.clave = clave;
@@ -1603,13 +1681,13 @@ const clean = r => { const o = Object.assign({}, r); delete o.id; return o; };
 /* ===================== formulario ===================== */
 function openForm(col, id){
   const rec = id ? listOf(col).find(r => r.id === id) : null, today = NOW.toISOString().slice(0,10);
-  const NEWC = ["inversiones","cheques","cuenta"].includes(col);
+  const NEWC = ["inversiones","cheques","cuenta","movs"].includes(col);
   const r = rec || Object.assign({fecha: !NEWC && S.sel && S.sel !== "all" && S.sel !== CUR_YM ? S.sel+"-01" : today, importe:"", tipo:"transferencia", facturado:false, tasa:.05, compensado:false, categoria:"", nota:""},
     col === "cuenta" ? {tipo: openForm.papa || "cargo", moneda:"ARS", concepto:""} : col === "inversiones" ? {tipo:"cedear", broker:"Cocos", ticker:"", cantidad:"", costo:"", precio:""} : col === "cheques" ? {librador:"", pagado:"", nominal:"", vencimiento:""} : {}, openForm.pre || {});
   openForm.papa = null; openForm.pre = null;
   const clients = [...new Set([...S.retiros, ...S.comisiones].map(x => x.cliente).filter(Boolean))].sort();
   const cats = [...new Set([...CATS, ...S.gastos.map(g => g.categoria).filter(g => g && !OLDCAT.includes(g))])];
-  const title = {retiros:"retiro", gastos:"gasto", comisiones:"cobro con comisión", inversiones:"posición", cheques:"cheque", cuenta: r.tipo === "pago" ? "pago a papá" : "consumo de papá"}[col];
+  const title = {retiros:"retiro", gastos:"gasto", comisiones:"cobro con comisión", inversiones:"posición", cheques:"cheque", movs:"movimiento entre cuentas", cuenta: r.tipo === "pago" ? "pago a papá" : "consumo de papá"}[col];
   let fields = `<div class="f2"><div class="f"><label for="fFecha">Fecha</label><input id="fFecha" type="date" required value="${esc(r.fecha)}"></div>
     <div class="f"><label for="fImp">Importe (ARS)</label><input id="fImp" type="number" step="0.01" required value="${r.importe===""?"":+r.importe}" inputmode="decimal"></div></div>`;
   if (col === "retiros") fields += `<div class="f"><label for="fCli">Cliente</label><input id="fCli" list="dlCli" required value="${esc(r.cliente||"")}" autocomplete="off"><datalist id="dlCli">${clients.map(c => `<option value="${esc(c)}">`).join("")}</datalist></div>
@@ -1622,6 +1700,12 @@ function openForm(col, id){
     <div class="f"><label for="fCompF">Fecha de compensación</label><input id="fCompF" type="date" value="${esc(r.compensadoFecha||"")}"></div></div>
     <label class="chk"><input id="fFac" type="checkbox" ${r.facturado?"checked":""}> Facturado</label><label class="chk"><input id="fComp" type="checkbox" ${r.compensado?"checked":""}> Compensado</label>`;
   const num = v => v === "" || v === undefined ? "" : +v;
+  if (col === "movs"){ const L = ctas(), d0 = r.desde || ctaFind(/efectivo/i), h0 = r.hacia || (L.find(c => c.id !== d0) || {}).id;
+    fields = `<div class="f2"><div class="f"><label for="fFecha">Fecha</label><input id="fFecha" type="date" required value="${esc(r.fecha)}"></div>
+    <div class="f"><label for="fImp">Sale (moneda de origen)</label><input id="fImp" type="number" step="0.01" required value="${r.importe===""?"":+r.importe}" inputmode="decimal"></div></div>
+    <div class="f2"><div class="f"><label for="fDes">Desde</label><select id="fDes">${L.map(c => `<option value="${esc(c.id)}" data-mon="${c.moneda}" ${c.id===d0?"selected":""}>${esc(c.nombre)} · ${c.moneda}</option>`).join("")}</select></div>
+    <div class="f"><label for="fHac">Hacia</label><select id="fHac">${L.map(c => `<option value="${esc(c.id)}" data-mon="${c.moneda}" ${c.id===h0?"selected":""}>${esc(c.nombre)} · ${c.moneda}</option>`).join("")}</select></div></div>
+    <div class="f" id="fDstW"><label for="fDst">Entra (moneda de destino)</label><input id="fDst" type="number" step="0.01" value="${r.destino ? +r.destino : ""}" inputmode="decimal"><small id="fDstH">Si cambiás pesos por dólares, cargá cuánto entró; ves el tipo de cambio que te quedó.</small></div>`; }
   if (col === "cheques") fields = `<div class="f"><label for="fLib">Librador</label><input id="fLib" value="${esc(r.librador||"")}" autocomplete="off"></div>
     <div class="f2"><div class="f"><label for="fFecha">Fecha de compra</label><input id="fFecha" type="date" required value="${esc(r.fecha)}"></div>
     <div class="f"><label for="fVto">Vencimiento</label><input id="fVto" type="date" required value="${esc(r.vencimiento||"")}"></div></div>
@@ -1640,6 +1724,11 @@ function openForm(col, id){
     <div class="f2"><div class="f"><label for="fImp">Invertido (USD)</label><input id="fImp" type="number" step="0.01" required value="${num(r.costo)}" inputmode="decimal"></div>
     <div class="f"><label for="fPx">Valor manual (USD)</label><input id="fPx" type="number" step="any" value="${+r.precio>0?+r.precio:""}" inputmode="decimal"><small>CEDEAR, acción o cripto: precio por unidad, solo si no querés el online. LECAP, FCI u otro: valor actual total.</small></div></div>
     <div class="f"><label for="fFecha">Fecha de alta</label><input id="fFecha" type="date" required value="${esc(r.fecha)}"></div>`;
+  const defCta = (rec ? null : (col === "retiros" ? ctaFind(/mutual|billetera/i) : col === "gastos" ? (ls.get("ctaG") || ctaFind(/mutual|billetera/i)) : col === "cheques" ? (ls.get("ctaQ") || ctaFind(/mutual|billetera/i)) : col === "cuenta" ? ctaFind(/mutual|billetera/i) : ""));
+  if (col === "retiros") fields += ctaField(rec ? r.cta : defCta, "Entra a la cuenta", "fCta", r.montoCta ?? "");
+  if (col === "gastos") fields += ctaField(rec ? r.cta : defCta, "Sale de la cuenta", "fCta", r.montoCta ?? "");
+  if (col === "cuenta") fields += `<div id="papaCta">${ctaField(rec ? r.cta : defCta, "Sale de la cuenta (solo pagos)", "fCta", r.montoCta ?? "")}</div>`;
+  if (col === "cheques") fields += `<div class="f2">${ctaField(rec ? r.ctaPago : defCta, "Pagado desde", "fCtaP")}${ctaField(rec ? (r.ctaCobro || "") : "", "Se acredita en", "fCtaC")}</div><small class="hint">Si «Se acredita en» queda vacío, el cobro vuelve a la cuenta de pago.</small>`;
   fields += `<div class="f"><label for="fNota">Nota</label><textarea id="fNota">${esc(r.nota||"")}</textarea></div>`;
   $("#layer").innerHTML = `<div class="scrim" data-act="close"></div><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle">
     <div class="stripes" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
@@ -1647,7 +1736,21 @@ function openForm(col, id){
     <form class="form" id="frm" novalidate>${fields}<div class="err" id="fErr"></div>
     <div class="foot"><button type="button" class="btn ghost" data-act="close">Cancelar</button><button type="submit" class="btn primary">${id ? "Guardar cambios" : "Agregar"}</button></div></form></aside>`;
   formOpener = document.activeElement;
-  const frm = $("#frm"); setTimeout(() => (col === "gastos" || col === "cuenta" ? $("#fCon") : col === "cheques" ? $("#fLib") : col === "inversiones" ? $("#fTic") : $("#fCli") || $("#fImp")).focus(), 30);
+  const frm = $("#frm");
+  if (col === "movs"){ const upd = () => { const a = frm.querySelector("#fDes").selectedOptions[0].dataset.mon, b = frm.querySelector("#fHac").selectedOptions[0].dataset.mon, w = frm.querySelector("#fDstW");
+      w.hidden = a === b; const x = parseFloat(frm.querySelector("#fImp").value), y = parseFloat(frm.querySelector("#fDst").value);
+      if (!w.hidden && x > 0 && y > 0) frm.querySelector("#fDstH").textContent = `Tipo de cambio: $ ${nf2.format(a === "ARS" ? x/y : y/x)} por dólar.`; };
+    frm.addEventListener("input", upd); frm.addEventListener("change", upd); upd(); }
+  const recMon = () => col === "cuenta" ? (frm.querySelector("#fMon")?.value || "ARS") : "ARS";
+  const syncCta = () => { const s1 = frm.querySelector("#fCta"), w = frm.querySelector("#fCtaMcW"); if (s1 && w){ const o = s1.selectedOptions[0]; w.hidden = !(o && o.dataset.mon && o.dataset.mon !== recMon()); }
+    const pc = frm.querySelector("#papaCta"); if (pc) pc.hidden = frm.querySelector("#fTipo")?.value !== "pago"; };
+  let ctaTouched = !!rec;
+  frm.addEventListener("change", e => { if (e.target.id === "fCta") ctaTouched = true;
+    if (!ctaTouched && col === "retiros" && e.target.id === "fTipo") frm.querySelector("#fCta").value = e.target.value === "efectivo" ? ctaFind(/efectivo/i) : ctaFind(/mutual|billetera/i);
+    if (!ctaTouched && col === "cuenta" && e.target.id === "fMon") frm.querySelector("#fCta").value = e.target.value === "USD" ? (ctas().find(c => c.moneda === "USD") || {}).id || "" : ctaFind(/mutual|billetera/i);
+    syncCta(); });
+  syncCta();
+  setTimeout(() => (col === "gastos" || col === "cuenta" ? $("#fCon") : col === "cheques" ? $("#fLib") : col === "inversiones" ? $("#fTic") : $("#fCli") || $("#fImp")).focus(), 30);
   frm.addEventListener("submit", async ev => {
     ev.preventDefault();
     const g = s => frm.querySelector(s), fecha = g("#fFecha").value, imp = parseFloat(String(g("#fImp").value).replace(",","."));
@@ -1662,6 +1765,10 @@ function openForm(col, id){
       data = {fecha, concepto:con, importe:imp, categoria:cat, nota:g("#fNota").value.trim()}; }
     if (col === "comisiones"){ const cli = g("#fCli").value.trim(); if (!cli) return $("#fErr").textContent = "Falta el cliente.";
       const comp = g("#fComp").checked; data = {fecha, cliente:cli, importe:imp, tasa:(parseFloat(g("#fTasa").value)||5)/100, facturado:g("#fFac").checked, compensado:comp, compensadoFecha: comp ? (g("#fCompF").value || NOW.toISOString().slice(0,10)) : "", nota:g("#fNota").value.trim()}; }
+    if (col === "movs"){ const de = g("#fDes").value, ha = g("#fHac").value; if (de === ha) return $("#fErr").textContent = "Elegí dos cuentas distintas.";
+      if (imp < 0) return $("#fErr").textContent = "El importe tiene que ser positivo.";
+      const dst = parseFloat(String(g("#fDst").value).replace(",","."));
+      data = {fecha, desde:de, hacia:ha, importe:imp, destino: ctaOf(de).moneda !== ctaOf(ha).moneda && isFinite(dst) && dst > 0 ? dst : "", nota:g("#fNota").value.trim()}; }
     if (col === "cheques"){ const vto = g("#fVto").value, nom = parseFloat(String(g("#fNom").value).replace(",","."));
       if (!/^\d{4}-\d{2}-\d{2}$/.test(vto)) return $("#fErr").textContent = "Cargá la fecha de vencimiento.";
       if (vto <= fecha) return $("#fErr").textContent = "El vencimiento tiene que ser posterior a la compra.";
@@ -1673,6 +1780,12 @@ function openForm(col, id){
       const tipo = g("#fTipo").value, cant = parseFloat(String(g("#fCant").value).replace(",",".")) || 0, px = parseFloat(String(g("#fPx").value).replace(",",".")) || 0;
       if (AUTO.includes(tipo) && !(cant > 0)) return $("#fErr").textContent = "Cargá la cantidad.";
       data = {fecha, ticker: tipo === "fci" || tipo === "otro" ? tic : tic.toUpperCase(), broker:bro, tipo, cantidad:cant, costo:imp, precio:px, nota:g("#fNota").value.trim()}; }
+    if (data && ["retiros","gastos","cuenta"].includes(col)){ const c = g("#fCta").value; data.cta = c; const w = g("#fCtaMcW"), mc = parseFloat(String(g("#fCtaMc")?.value||"").replace(",","."));
+      if (c && w && !w.hidden && isFinite(mc) && mc > 0) data.montoCta = col === "gastos" && imp < 0 ? -mc : mc; else delete data.montoCta;
+      if (col === "cuenta" && data.tipo !== "pago"){ data.cta = ""; delete data.montoCta; }
+      if (col === "gastos" && c) ls.set("ctaG", c); }
+    if (data && col === "cheques"){ data.ctaPago = g("#fCtaP").value; data.ctaCobro = g("#fCtaC").value; if (data.ctaPago) ls.set("ctaQ", data.ctaPago); }
+    if (data && col === "movs"){ /* armado arriba */ }
     const btn = frm.querySelector("[type=submit]"); btn.disabled = true;
     try { await put(col, id || newId(col.slice(0,2)), data); closeForm(); toast(id ? "Cambios guardados" : "Agregado"); if (col === "inversiones") loadPX(true); if (!id && !NEWC && S.sel !== "all" && ymOf(fecha) !== S.sel){ S.sel = ymOf(fecha); render(true); } }
     catch(e){ btn.disabled = false; $("#fErr").textContent = errMsg(e); }
@@ -1691,7 +1804,7 @@ function context(){
   const gas = S.gastos.slice().sort((a,b) => a.fecha < b.fecha ? -1 : 1).map(g => `${g.fecha} ${g.concepto} [${g.categoria}] ARS ${g.importe}`);
   return `Datos del tablero personal (hoy ${NOW.toISOString().slice(0,10)}).
 Objetivo de retiro mensual: ARS ${c.objetivo}. Monotributo categoría ${c.monotributo} (tope anual ARS ${MONO[c.monotributo][0]}, cuota ARS ${MONO[c.monotributo][1]}). Facturado últimos 12 meses ARS ${Math.round(fw.tot)}, proyección anual ARS ${Math.round(fw.proj)}.
-Saldos: ${(c.saldos||[]).map(s => s.nombre+" ARS "+s.importe).join(", ") || "sin datos"}.
+Saldos de cuentas: ${ctas().map(x => x.nombre + " " + x.moneda + " " + Math.round(ctaSaldos()[x.id])).join(", ") || "sin datos"}.
 RESUMEN MENSUAL:
 ${lines.join("\n")}
 TRANSFERENCIAS SIN FACTURAR:
@@ -1791,7 +1904,7 @@ async function exportCSV(col){
 document.addEventListener("click", async ev => {
   const el = ev.target.closest("[data-act]"); if (!el) return;
   const a = el.dataset.act;
-  if (a === "view"){ S.view = el.dataset.v === "cartera" ? (NOPER.includes(ls.get("csub")) ? ls.get("csub") : "inversiones") : el.dataset.v; if (NOPER.includes(S.view)) ls.set("csub", S.view); ls.set("view", S.view); try { history.replaceState(null, "", "#"+S.view); } catch(e){} render(true); window.scrollTo({top:0}); if (S.view === "copiloto") setTimeout(() => $("#ask") && $("#ask").focus(), 30); return; }
+  if (a === "view"){ S.view = el.dataset.v === "cartera" ? (NOPER.includes(ls.get("csub")) ? ls.get("csub") : "cuentas") : el.dataset.v; if (NOPER.includes(S.view)) ls.set("csub", S.view); ls.set("view", S.view); try { history.replaceState(null, "", "#"+S.view); } catch(e){} render(true); window.scrollTo({top:0}); if (S.view === "copiloto") setTimeout(() => $("#ask") && $("#ask").focus(), 30); return; }
   if (a === "sel"){ S.sel = el.dataset.m; if (S.view === "copiloto"){ S.view = "cabina"; } render(true); return; }
   if (a === "cur"){ S.cur = el.dataset.c; ls.set("cur", S.cur); render(true); return; }
   if (a === "donut"){ S.donut = el.dataset.d; render(true); return; }
@@ -1809,7 +1922,7 @@ document.addEventListener("click", async ev => {
   if (a === "fac"){ const r = S.retiros.find(x => x.id === el.dataset.id); if (!r) return; el.disabled = true;
     try { await patch("retiros", r.id, {facturado: !r.facturado}); if (!r.facturado && S.mode !== "demo") toast("Marcada como facturada"); } catch(e){ el.disabled = false; toast(errMsg(e), true); } return; }
   if (a === "cfac"){ const r = S.comisiones.find(x => x.id === el.dataset.id); if (!r) return; try { await patch("comisiones", r.id, {facturado: !r.facturado}); } catch(e){ toast(errMsg(e), true); } return; }
-  if (a === "qcob"){ const q = S.cheques.find(x => x.id === el.dataset.id); if (!q) return; patch("cheques", q.id, {cobrado: !q.cobrado, cobradoFecha: q.cobrado ? "" : NOW.toISOString().slice(0,10)}); if (!q.cobrado) toast("Cheque cobrado"); return; }
+  if (a === "qcob"){ const q = S.cheques.find(x => x.id === el.dataset.id); if (!q) return; patch("cheques", q.id, {cobrado: !q.cobrado, cobradoFecha: q.cobrado ? "" : NOW.toISOString().slice(0,10)}); if (!q.cobrado){ const cc = ctaOf(q.ctaCobro || q.ctaPago); toast(cc ? `Cheque cobrado · +${ars(+q.nominal||0)} en ${cc.nombre}` : "Cheque cobrado"); } return; }
   if (a === "newPapa"){ openForm.papa = el.dataset.t; openForm("cuenta"); return; }
   if (a === "liquidar"){ const s = cuentaSaldo(); const c = s.USD > 0 && !(s.ARS > 0) ? "USD" : "ARS"; if (!(s[c] > 0)){ toast("No hay saldo para liquidar"); return; }
     openForm.papa = "pago"; openForm.pre = {moneda:c, importe:Math.round(s[c]*100)/100, concepto:"Liquidación"}; openForm("cuenta");
@@ -1823,6 +1936,27 @@ document.addEventListener("click", async ev => {
       <div class="foot"><button type="button" class="btn ghost" data-act="close">Cancelar</button><button type="button" class="btn primary" data-act="catApply">Aplicar a ${plan.length} gastos</button></div></aside>`;
     setTimeout(() => $("#layer .btn.primary").focus(), 30); return; }
   if (a === "catApply"){ const plan = catPlan(); plan.forEach(([g,k]) => g.categoria = k); S.config = Object.assign({}, cfg(), {catsV2:true}); closeForm(); S.fGas = "todas"; changed(); toast(`${plan.length} gastos reorganizados`); return; }
+  if (a === "fcta"){ S.fCta = el.dataset.f; render(true); return; }
+  if (a === "ctaAj" || a === "ctaEdit" || a === "ctaNew"){ const c = a === "ctaNew" ? {id:"", nombre:"", moneda:"ARS", inicial:0} : ctaOf(el.dataset.id); if (!c) return; formOpener = el;
+    const sb = ctaSaldos(), cur = c.id ? sb[c.id] : 0, used = c.id && ctaMovs().some(m => m.cta === c.id);
+    $("#layer").innerHTML = `<div class="scrim" data-act="close"></div><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+      <h3 id="dTitle">${a === "ctaNew" ? "Nueva cuenta" : a === "ctaAj" ? "Saldo de " + esc(c.nombre) : "Editar cuenta"}</h3>
+      <p class="sub" style="margin:0 0 18px">${a === "ctaAj" ? `Hoy la app calcula ${fmt(cur, c.moneda)}. Cargá lo que realmente tenés y se corrige el punto de partida; los movimientos no se tocan.` : "Billetera, efectivo, banco o broker. La moneda no se puede cambiar si ya tiene movimientos."}</p>
+      <form class="form" id="ctaFrm">${a === "ctaAj" ? `<div class="f"><label for="fSal">Saldo real hoy (${c.moneda})</label><input id="fSal" type="number" step="0.01" value="${Math.round(cur*100)/100}" inputmode="decimal"></div>`
+        : `<div class="f"><label for="fCn">Nombre</label><input id="fCn" required value="${esc(c.nombre)}" autocomplete="off"></div>
+           <div class="f"><label for="fCm">Moneda</label><select id="fCm" ${used ? "disabled" : ""}><option value="ARS" ${c.moneda==="ARS"?"selected":""}>Pesos</option><option value="USD" ${c.moneda==="USD"?"selected":""}>Dólares</option></select></div>
+           ${a === "ctaNew" ? `<div class="f"><label for="fSal">Saldo de hoy</label><input id="fSal" type="number" step="0.01" value="0" inputmode="decimal"></div>` : ""}`}
+      <div class="err" id="fErr"></div><div class="foot">${a === "ctaEdit" ? `<button type="button" class="btn ghost" data-act="ctaDel" data-id="${esc(c.id)}">${used ? "Quitar (tiene movimientos)" : "Quitar cuenta"}</button>` : `<button type="button" class="btn ghost" data-act="close">Cancelar</button>`}<button type="submit" class="btn primary">Guardar</button></div></form></aside>`;
+    $("#ctaFrm").addEventListener("submit", e => { e.preventDefault(); const L = ctas().map(x => Object.assign({}, x));
+      if (a === "ctaAj"){ const v = parseFloat(String($("#fSal").value).replace(",",".")); if (!isFinite(v)) return $("#fErr").textContent = "Cargá un número.";
+        const x = L.find(y => y.id === c.id); x.inicial = (+x.inicial||0) + (v - cur); saveCtas(L); closeForm(); toast("Saldo ajustado"); return; }
+      const nom = $("#fCn").value.trim(); if (!nom) return $("#fErr").textContent = "Poné un nombre.";
+      if (a === "ctaNew"){ const v = parseFloat(String($("#fSal").value).replace(",",".")) || 0; L.push({id:newId("ct"), nombre:nom, moneda:$("#fCm").value, inicial:v}); }
+      else { const x = L.find(y => y.id === c.id); x.nombre = nom; if (!used) x.moneda = $("#fCm").value; }
+      saveCtas(L); closeForm(); toast("Cuenta guardada"); });
+    setTimeout(() => ($("#fSal") || $("#fCn")).focus(), 30); return; }
+  if (a === "ctaDel"){ if (!el.classList.contains("armed")){ el.classList.add("armed"); el.textContent = "¿Seguro? Tocá de nuevo"; return; }
+    saveCtas(ctas().filter(x => x.id !== el.dataset.id)); closeForm(); toast("Cuenta quitada"); return; }
   if (a === "pickCocos"){ $("#cocosFile").click(); return; }
   if (a === "cocosOk"){ const n = S.pendingCocos || []; S.pendingCocos = null; S.cocos = [...(S.cocos||[]), ...n]; closeForm(); changed(); loadPX(true); toast(`${n.length} movimientos de Cocos importados`); return; }
   if (a === "cocosAj"){ const k = el.dataset.k, h = cocosPos().find(x => x.ticker === k); if (!h) return; formOpener = el;
@@ -1845,7 +1979,7 @@ document.addEventListener("click", async ev => {
   if (a === "exp"){ exportCSV(el.dataset.col); return; }
   if (a === "backup"){ download(`santiago-rossi-respaldo-${NOW.toISOString().slice(0,10)}.json`, JSON.stringify(snapshot(), null, 1), "application/json"); return; }
   if (a === "impNo"){ S.pendingImport = null; render(true); return; }
-  if (a === "impOk"){ const d = S.pendingImport; S.pendingImport = null; S.retiros = d.retiros; S.gastos = d.gastos; S.comisiones = d.comisiones; S.inversiones = d.inversiones; S.cheques = d.cheques; S.cuenta = d.cuenta; S.cocos = d.cocos; if (d.config) S.config = d.config; S.sel = null; changed(); toast("Datos importados"); return; }
+  if (a === "impOk"){ const d = S.pendingImport; S.pendingImport = null; S.retiros = d.retiros; S.gastos = d.gastos; S.comisiones = d.comisiones; S.inversiones = d.inversiones; S.cheques = d.cheques; S.cuenta = d.cuenta; S.cocos = d.cocos; S.movs = d.movs; if (d.config) S.config = d.config; S.sel = null; changed(); toast("Datos importados"); return; }
   if (a === "logout"){ logout(); return; }
   if (a === "theme"){ const t = el.dataset.t; ls.set("theme", t); if (t === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.setAttribute("data-theme", t); render(true); return; }
   if (a === "print"){ printResumen(); return; }
@@ -1857,7 +1991,7 @@ document.addEventListener("click", async ev => {
   if (a === "facLote"){ const n = SELF.size; S.retiros.forEach(r => { if (SELF.has(r.id)) r.facturado = true; }); SELF.clear(); changed(); toast(`${n} marcada${n>1?"s":""} como facturada${n>1?"s":""}`); return; }
   if (a === "sync"){ if (S.mode === "live" && S.sync !== "Guardado"){ dirty = true; setSync("Guardando…"); flush(); } return; }
   if (a === "demo"){ $("#gate").hidden = true; startDemo(); return; }
-  if (a === "exitDemo"){ S.mode = "loading"; S.retiros = []; S.gastos = []; S.comisiones = []; S.inversiones = []; S.cheques = []; S.cuenta = []; S.cocos = []; S.config = null; boot(); return; }
+  if (a === "exitDemo"){ S.mode = "loading"; S.retiros = []; S.gastos = []; S.comisiones = []; S.inversiones = []; S.cheques = []; S.cuenta = []; S.cocos = []; S.movs = []; S.config = null; boot(); return; }
   if (a === "addSaldo"){ const c = cfg(); saveCfg(Object.assign({}, c, {saldos:[...(c.saldos||[]), {nombre:"Nueva cuenta", importe:0}]})); return; }
   if (a === "rmSaldo"){ const c = cfg(); const s = (c.saldos||[]).slice(); s.splice(+el.dataset.i, 1); saveCfg(Object.assign({}, c, {saldos:s})); return; }
 });
@@ -1888,7 +2022,7 @@ document.addEventListener("change", ev => {
       if (!ok) throw new Error();
       const fix = (L, p) => L.map((r, i) => Object.assign({id: r.id || p + i + Date.now().toString(36)}, r));
       const opt = (k, p) => Array.isArray(o[k]) ? fix(o[k], p) : (S[k] || []);
-      S.pendingImport = {retiros:fix(o.retiros,"r"), gastos:fix(o.gastos,"g"), comisiones:fix(o.comisiones,"c"), inversiones:opt("inversiones","in"), cheques:opt("cheques","ch"), cuenta:opt("cuenta","cu"), cocos:Array.isArray(o.cocos) ? o.cocos : (S.cocos || []), config:o.config || null}; render(true);
+      S.pendingImport = {retiros:fix(o.retiros,"r"), gastos:fix(o.gastos,"g"), comisiones:fix(o.comisiones,"c"), inversiones:opt("inversiones","in"), cheques:opt("cheques","ch"), cuenta:opt("cuenta","cu"), cocos:Array.isArray(o.cocos) ? o.cocos : (S.cocos || []), movs:opt("movs","mv"), config:o.config || null}; render(true);
     }).catch(() => toast("Ese archivo no es un respaldo de Santiago Rossi.", true)); t.value = ""; return; }
   if (t.dataset.cfg){ const v = t.dataset.cfg === "objetivo" ? Math.max(0, +t.value || 0) : t.value; saveCfg(Object.assign({}, c, {[t.dataset.cfg]: v})); }
   else if (t.dataset.tc){ const tc = Object.assign({}, c.tcManual||{}); const v = +t.value; if (v > 0) tc[t.dataset.tc] = v; else delete tc[t.dataset.tc]; saveCfg(Object.assign({}, c, {tcManual:tc})); }
@@ -1900,7 +2034,7 @@ document.addEventListener("change", ev => {
 function startDemo(){
   if (S.mode === "demo") return;
   S.sync = "";
-  const d = demoData(); S.retiros = d.R; S.gastos = d.G; S.comisiones = d.C; S.inversiones = d.I; S.cheques = d.Q; S.cuenta = d.P; S.cocos = d.K; S.config = d.cfg; S.mode = "demo"; render(true); loadPX();
+  const d = demoData(); S.retiros = d.R; S.gastos = d.G; S.comisiones = d.C; S.inversiones = d.I; S.cheques = d.Q; S.cuenta = d.P; S.cocos = d.K; S.movs = d.V; S.config = d.cfg; S.mode = "demo"; render(true); loadPX();
 }
 function boot(){
   if (/^#?demo$/.test(location.hash) || /[?&]demo\b/.test(location.search)){ startDemo(); return; }
