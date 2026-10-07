@@ -404,6 +404,34 @@ td .note{display:block;font-size:13px;color:var(--sec);font-weight:400;margin-to
 .cp-r{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--sep);font-size:14px}
 .cp-r small{color:var(--sec);white-space:nowrap}
 
+.camp-acts{display:flex;flex-direction:column;gap:8px;align-items:stretch}
+.camp .btn.ghost-inv{background:transparent;color:var(--hero-ink);box-shadow:inset 0 0 0 1px var(--hero-sec)}
+.camp .up{color:#1EAA52;font-weight:600}.camp .down{color:#FF4D4F;font-weight:600}
+.camp .warn-t{font-size:13px;font-weight:500;color:#FF8A8C}
+.mixes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px}
+.mix .lbl{display:block;margin-bottom:10px}
+.pos-list{display:grid}
+.pos-r{display:grid;grid-template-columns:minmax(0,1fr) 120px auto 88px;gap:20px;align-items:center;padding:16px 0;border-top:1px solid var(--sep)}
+.pos-r:first-child{border-top:1px solid var(--ink)}
+.pos-a{display:grid;gap:2px;min-width:0}
+.pos-a b{font:400 24px/1.05 var(--fx);text-transform:uppercase;letter-spacing:.01em;overflow-wrap:anywhere}
+.pos-a > span{font-size:13px;color:var(--sec)}
+.pos-a em{font-style:normal;font-weight:600}
+.pos-a small{font-size:12px;color:var(--sec)}
+.pos-w{height:4px;background:var(--fill)}
+.pos-w i{display:block;height:100%;background:var(--ink)}
+.pos-v{display:grid;gap:2px;text-align:right}
+.pos-v b{font-size:18px;font-weight:600}
+.pos-v span{font-size:13px;font-weight:500}
+.pos-x{display:flex;justify-content:flex-end}
+.cks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:20px}
+.cks > div{display:grid;gap:4px;padding:18px;background:var(--bg)}
+.cks b{font:400 28px/1 var(--fx)}
+.cks small{font-size:12px;color:var(--sec)}
+@media (max-width:820px){.mixes{grid-template-columns:minmax(0,1fr);gap:20px}.cks{grid-template-columns:repeat(2,minmax(0,1fr))}.cks b{font-size:22px}.cks > div{padding:14px}
+  .pos-r{grid-template-columns:minmax(0,1fr) auto;gap:6px 12px}.pos-w{grid-column:1 / -1;order:3}.pos-x{grid-column:1 / -1;order:4;justify-content:flex-start;margin-top:-4px}}
+@media (max-width:700px){.camp-acts{flex-direction:row;flex-wrap:wrap}}
+
 /* móvil */
 @media (max-width:900px){
   .nav{height:auto;flex-wrap:wrap;gap:0;padding-top:12px}
@@ -537,7 +565,7 @@ function readK(){ try { const cs = getComputedStyle(document.documentElement), v
   K.ink = v("--ink") || K.ink; K.sec = v("--sec") || K.sec; K.ter = v("--ter") || K.ter; K.card = v("--card") || K.card; K.g = v("--g") || K.g; } catch(e){} }
 const ls = {get(k){try{return localStorage.getItem("mr:"+k)}catch(e){return null}}, set(k,v){try{localStorage.setItem("mr:"+k,v)}catch(e){}}};
 const S = {
-  retiros:[], gastos:[], comisiones:[], inversiones:[], cheques:[], cuenta:[], config:null,
+  retiros:[], gastos:[], comisiones:[], inversiones:[], cheques:[], cuenta:[], cocos:[], config:null,
   mode:"loading", rev:0, clave:"", sync:"", dl:true, pendingImport:null,
   cur: ls.get("cur")==="ARS"?"ARS":"USD",
   view: "cabina", sel:null,
@@ -626,22 +654,102 @@ function pxOf(h){
   if (AUTO.includes(h.tipo) && p > 0) return {v: p * (+h.cantidad||0), src:"online"};
   return {v: +h.costo||0, src:"sin precio"};
 }
-async function loadPX(force){
-  const H = S.inversiones || []; if (!H.length || PX.busy) return;
-  if (!force && Date.now() - PX.at < 15*60e3 && H.filter(h => AUTO.includes(h.tipo) && !(+h.precio>0)).every(h => PX.p[pxKey(h)] > 0 || STABLE.includes(String(h.ticker).toUpperCase()))) return;
-  PX.busy = true; PX.fail = ""; const jobs = [], j = u => fetch(u, {cache:"no-store"}).then(r => { if (!r.ok) throw 0; return r.json(); });
-  const cr = [...new Set(H.filter(h => h.tipo === "cripto").map(h => String(h.ticker).toUpperCase().trim()).filter(t => t && !STABLE.includes(t)))];
-  if (cr.length) jobs.push(j("https://api.binance.com/api/v3/ticker/price?symbols=" + encodeURIComponent(JSON.stringify(cr.map(t => t + "USDT"))))
-    .then(a => a.forEach(x => PX.p["C:" + x.symbol.replace(/USDT$/,"")] = +x.price)).catch(() => PX.fail = "cripto"));
-  const ar = H.some(h => h.tipo === "cedear" || h.tipo === "accion");
-  if (ar){
-    jobs.push(j("https://dolarapi.com/v1/dolares/bolsa").then(o => { if (+o.venta > 0) PX.mep = +o.venta; }).catch(() => {}));
-    const pull = (u, p) => j(u).then(a => a.forEach(x => { const v = +(x.c || x.px_ask || x.px_bid); if (x.symbol && v > 0) PX.p[p + ":ARS:" + x.symbol] = v; }));
-    if (H.some(h => h.tipo === "cedear")) jobs.push(pull("https://data912.com/live/arg_cedears", "D").catch(() => PX.fail = PX.fail ? "todo" : "cedears"));
-    if (H.some(h => h.tipo === "accion")) jobs.push(pull("https://data912.com/live/arg_stocks", "A").catch(() => PX.fail = PX.fail ? "todo" : "acciones"));
+/* ---------- Cocos: movimientos importados del CSV ---------- */
+const nAR = x => { x = String(x ?? "").trim(); if (!x) return 0; const v = parseFloat(x.replace(/\./g, "").replace(",", ".")); return isFinite(v) ? v : 0; };
+const fISO = d => { const m = /^(\d{2})-(\d{2})-(\d{4})$/.exec(String(d||"").trim()); return m ? `${m[3]}-${m[2]}-${m[1]}` : ""; };
+function parseCocos(txt){
+  const L = txt.replace(/^﻿/, "").split(/\r?\n/).filter(x => x.trim()); if (!L.length) return null;
+  const H = L[0].split(";").map(x => x.trim()); const ix = k => H.indexOf(k);
+  if (ix("nroTicket") < 0 || ix("tipoOperacion") < 0 || ix("total") < 0) return null;
+  return L.slice(1).map(l => { const c = l.split(";"); const g = k => (c[ix(k)] || "").trim();
+    return {t: g("nroTicket") + "-" + g("nroComprobante"), f: fISO(g("fechaEjecucion")), op: g("tipoOperacion"), ins: g("instrumento"), mon: g("moneda") === "USD" ? "USD" : "ARS", q: nAR(g("cantidad")), px: nAR(g("precio")), tot: nAR(g("total"))}; })
+    .filter(r => r.f && r.op);
+}
+const cocosCode = ins => { const m = /\(([A-Z0-9.]+)\)\s*$/.exec(ins || ""); return m ? m[1] : (ins || "").trim(); };
+function cocosTipo(ins){ const u = (ins||"").toUpperCase();
+  if (/^FCI\b/.test(u)) return "fci"; if (/^CEDEAR\b/.test(u)) return "cedear"; if (/LETRA|LECAP|BONO|^ON\b|OBLIGAC|TESORO/.test(u)) return "lecap"; if (/^ACCION|ACCIONES/.test(u)) return "accion"; return "otro"; }
+const cocosVto = ins => { const m = /(\d{2})\/(\d{2})\/(\d{2})\b/.exec(ins||""); return m ? `20${m[3]}-${m[2]}-${m[1]}` : ""; };
+const unitOf = (tipo, px) => tipo === "fci" ? px / 1000 : tipo === "lecap" ? px / 100 : px;
+const mepHoy = () => PX.mep || usdHoy();
+const toUSDf = (v, mon, f) => mon === "USD" ? v : v / tcDay(f);
+/* posiciones a partir de los movimientos: costo promedio en USD (pesos al oficial del día); la tenencia inicial que no está en el CSV
+   se estima con lo mínimo necesario para que nunca quede negativa, o la fija Santi con «Ajustar tenencia» */
+function cocosPos(){
+  const R = (S.cocos||[]).filter(r => r.ins && r.q && !/registracion/i.test(r.op) && !/^(peso argentino|dolar especie)/i.test(r.ins))
+    .slice().sort((a,b) => a.f < b.f ? -1 : a.f > b.f ? 1 : a.t < b.t ? -1 : 1);
+  const by = {}; R.forEach(r => (by[cocosCode(r.ins)] = by[cocosCode(r.ins)] || []).push(r));
+  const aj = cfg().cocosAj || {}, out = [];
+  for (const [code, rs] of Object.entries(by)){
+    const tipo = cocosTipo(rs[0].ins), mon = rs[rs.length-1].mon, vto = cocosVto(rs[0].ins);
+    let run = 0, min = 0; rs.forEach(r => { run += r.q; if (run < min) min = run; });
+    const auto = Math.max(0, -min), q0 = aj[code] !== undefined ? Math.max(0, +aj[code]) : auto;
+    const first = rs[0], u0 = unitOf(tipo, first.px);
+    let qty = q0, cost = q0 * toUSDf(u0, first.mon, first.f), real = 0;
+    for (const r of rs){
+      const usd = toUSDf(r.tot, r.mon, r.f);
+      if (r.q > 0){ qty += r.q; cost += -usd; }
+      else { const out_ = Math.min(-r.q, qty); const avg = qty > 0 ? cost / qty : 0; real += usd - avg * out_; cost -= avg * out_; qty += r.q; if (qty < 1e-6) { qty = Math.max(qty, 0); if (qty === 0) cost = 0; } }
+    }
+    const last = rs[rs.length-1], uLast = unitOf(tipo, last.px || rs.filter(r => r.px).slice(-1)[0]?.px || 0);
+    const vencida = vto && vto < NOW.toISOString().slice(0,10);
+    if (vencida) { qty = 0; cost = 0; }
+    let v = 0, src = "último precio";
+    const on = tipo === "cedear" ? PX.p["D:" + code] : tipo === "accion" ? PX.p["A:" + code] : 0;
+    if (on > 0){ v = on * (PX.mep || usdHoy()) / usdHoy() * qty; src = "online"; }
+    else v = mon === "USD" ? uLast * qty : uLast * qty / usdHoy();
+    out.push({id:"cocos:" + code, cocos:true, broker:"Cocos", tipo, ticker:code, nombre:rs[0].ins.replace(/\s*\([A-Z0-9.]+\)\s*$/, ""), mon, cantidad:qty, costo:cost, real,
+      px:{v, src: vencida ? "vencida" : src}, estimada: aj[code] === undefined && auto > 0, q0, n: rs.length, ult: last.f});
   }
-  await Promise.all(jobs);
+  return out;
+}
+function cocosStats(){
+  const R = S.cocos || []; if (!R.length) return null;
+  const sum = (fn, k = "tot") => R.filter(fn).reduce((a,r) => a + r[k], 0);
+  const meses = {}; const M = r => (meses[r.f.slice(0,7)] = meses[r.f.slice(0,7)] || {ing:0, usd:0, ars:0, pagU:0, pagA:0});
+  R.forEach(r => { const m = M(r);
+    if (/^recibo de cobro/i.test(r.op)) m.ing += r.tot;
+    if (/^venta registracion usd/i.test(r.op)) m.usd += r.tot;
+    if (/^compra registracion ars/i.test(r.op)) m.ars += -r.tot;
+    if (/^orden de pago usd/i.test(r.op)) m.pagU += -r.tot;
+    else if (/^orden de pago/i.test(r.op)) m.pagA += -r.tot; });
+  const usd = sum(r => /^venta registracion usd/i.test(r.op)), arsMep = -sum(r => /^compra registracion ars/i.test(r.op));
+  const cauc = sum(r => /caucion/i.test(r.op));
+  const renta = sum(r => /renta y amortizacion|dividendo/i.test(r.op) && r.mon === "ARS"), rentaU = sum(r => /renta y amortizacion|dividendo/i.test(r.op) && r.mon === "USD");
+  const fs = R.map(r => r.f).sort();
+  return {n:R.length, desde:fs[0], hasta:fs[fs.length-1], ing:sum(r => /^recibo de cobro/i.test(r.op)), usd, arsMep, mep: usd ? arsMep/usd : 0,
+    pagU:-sum(r => /^orden de pago usd/i.test(r.op)), nPagU:R.filter(r => /^orden de pago usd/i.test(r.op)).length, pagA:-sum(r => /^orden de pago$/i.test(r.op)),
+    cauc, renta, rentaU, meses};
+}
+const holdings = () => [...(S.inversiones||[]).map(h => Object.assign({}, h, {px: pxOf(h)})), ...cocosPos().filter(h => h.cantidad > 1e-6)];
+
+async function loadPX(force){
+  const H = [...(S.inversiones||[]), ...cocosPos().filter(h => h.cantidad > 1e-6)]; if (!H.length || PX.busy) return;
+  const need = H.filter(h => AUTO.includes(h.tipo) && !(+h.precio>0) && !STABLE.includes(String(h.ticker).toUpperCase()));
+  if (!force && Date.now() - PX.at < 15*60e3 && PX.mep && need.every(h => PX.p[pxKey(h)] > 0)) return;
+  PX.busy = true; PX.fail = ""; render();
+  const j = u => fetch(u, {cache:"no-store"}).then(r => { if (!r.ok) throw 0; return r.json(); });
+  const cr = [...new Set(need.filter(h => h.tipo === "cripto").map(h => String(h.ticker).toUpperCase().trim()).filter(Boolean))];
+  const eq = [...new Set(need.filter(h => h.tipo === "cedear" || h.tipo === "accion").map(h => String(h.ticker).toUpperCase().trim()))];
+  const ar = (need.some(h => h.tipo === "cedear") ? "D" : "") + (need.some(h => h.tipo === "accion") ? "A" : "");
+  const put = (o) => { for (const [k,v] of Object.entries(o.cripto||{})) PX.p["C:"+k] = +v;
+    for (const [k,v] of Object.entries(o.cedears||{})) PX.p["D:ARS:"+k] = +v; for (const [k,v] of Object.entries(o.acciones||{})) PX.p["A:ARS:"+k] = +v;
+    if (+o.mep > 0) PX.mep = +o.mep; };
+  try {
+    // primero por el servidor propio (sin problemas de CORS); si no está (archivo local), directo a cada fuente
+    const o = await j(`/api/precios?cripto=${encodeURIComponent(cr.join(","))}&ar=${ar}&t=${encodeURIComponent(eq.join(","))}`); put(o);
+    if ((o.errores||[]).length) PX.fail = "algunos precios no respondieron";
+  } catch(e){
+    const jobs = [], o = {cripto:{}, cedears:{}, acciones:{}, mep:0};
+    if (cr.length) jobs.push(j("https://api.binance.com/api/v3/ticker/price?symbols=" + encodeURIComponent(JSON.stringify(cr.map(t => t + "USDT"))))
+      .then(a => a.forEach(x => o.cripto[x.symbol.replace(/USDT$/,"")] = +x.price)).catch(() => PX.fail = "algunos precios no respondieron"));
+    jobs.push(j("https://dolarapi.com/v1/dolares/bolsa").then(x => { o.mep = +x.venta || 0; }).catch(() => {}));
+    const pull = (u, d) => j(u).then(a => a.forEach(x => { const v = +(x.c || x.px_ask || x.px_bid); if (x.symbol && v > 0) o[d][x.symbol] = v; })).catch(() => PX.fail = "algunos precios no respondieron");
+    if (ar.includes("D")) jobs.push(pull("https://data912.com/live/arg_cedears", "cedears"));
+    if (ar.includes("A")) jobs.push(pull("https://data912.com/live/arg_stocks", "acciones"));
+    await Promise.all(jobs); put(o);
+  }
   if (PX.mep > 0) for (const k of Object.keys(PX.p)) { const m = /^([DA]):ARS:(.+)$/.exec(k); if (m) PX.p[m[1] + ":" + m[2]] = PX.p[k] / PX.mep; }
+  if (need.some(h => !(PX.p[pxKey(h)] > 0))) PX.fail = PX.fail || "sin precio online para " + need.filter(h => !(PX.p[pxKey(h)] > 0)).map(h => h.ticker).join(", ");
   PX.at = Date.now(); PX.busy = false;
   try { const keep = {}; for (const k of Object.keys(PX.p)) if (!k.includes(":ARS:") && H.some(h => pxKey(h) === k)) keep[k] = PX.p[k]; localStorage.setItem(PXK, JSON.stringify({p:keep, mep:PX.mep, at:PX.at})); } catch(e){}
   render();
@@ -739,7 +847,15 @@ function demoData(){
     {id:"di5", broker:"Binance", tipo:"cripto", ticker:"BTC", cantidad:.021, costo:1300, precio:0, fecha:dd(-300), nota:""},
     {id:"di6", broker:"Binance", tipo:"cripto", ticker:"ETH", cantidad:.35, costo:900, precio:0, fecha:dd(-280), nota:""},
     {id:"di7", broker:"Lemon", tipo:"cripto", ticker:"USDT", cantidad:640, costo:640, precio:0, fecha:dd(-90), nota:""},
-    {id:"di8", broker:"Cocos", tipo:"fci", ticker:"Cocos Ahorro", cantidad:1, costo:500, precio:507, fecha:dd(-30), nota:""}];
+  ];
+  const f2 = n => dd(n).split("-").reverse().join("-"), KX = [];
+  const kc = (n, op, ins, mon, q, px, tot) => KX.push({t:"dk" + KX.length, f:dd(n), op, ins, mon, q, px, tot});
+  [-62,-48,-33,-19,-5].forEach((n,i) => { kc(n, "Recibo De Cobro", "", "ARS", 0, 0, 400000 + i*50000);
+    const usd = Math.round((400000 + i*50000) / (1480 + i*12)); kc(n, "Compra Registracion ARS", "ON EJEMPLO CL.1 (EJ1O)", "ARS", 100000, 100, -(400000 + i*50000));
+    kc(n, "Venta Registracion USD", "ON EJEMPLO CL.1 (EJ1O)", "USD", -100000, 0.067, usd);
+    kc(n+1, "Liq Suscripcion Fci Usd", "FCI COCOS AHORRO CL.A U$S ESC. (COCOAUSD)", "USD", usd / (1.085 + i*.001), 1085 + i, -usd); });
+  [-55,-41,-27,-12,-2].forEach((n,i) => { kc(n, "Liq Rescate Fci Usd", "FCI COCOS AHORRO CL.A U$S ESC. (COCOAUSD)", "USD", -(60 + i*7) / 1.0862, 1086.2 + i, 60 + i*7); kc(n, "Orden De Pago Usd", "", "USD", 0, 0, -(60 + i*7)); });
+  kc(-20, "Colocador Caucion Contado", "", "ARS", 0, 0, -500000); kc(-13, "Colocador Caucion Termino", "", "ARS", 0, 0, 507400);
   const Q = [
     {id:"dq1", fecha:dd(-75), librador:"Corralón Del Sur", pagado:1880000, nominal:2000000, vencimiento:dd(-5), cobrado:true, cobradoFecha:dd(-4), nota:""},
     {id:"dq2", fecha:dd(-40), librador:"Distribuidora Norte", pagado:2780000, nominal:3000000, vencimiento:dd(3), cobrado:false, cobradoFecha:"", nota:""},
@@ -753,7 +869,7 @@ function demoData(){
     {id:"dp4", fecha:dd(-12), tipo:"cargo", concepto:"Cenas y traslados", importe:340000, moneda:"ARS", nota:""},
     {id:"dp5", fecha:dd(-6), tipo:"pago", concepto:"Transferencia", importe:300000, moneda:"ARS", nota:""},
     {id:"dp6", fecha:dd(-2), tipo:"pago", concepto:"Dólares en efectivo", importe:1000, moneda:"USD", nota:""}];
-  return {R, G, C, I, Q, P, cfg:{objetivo:1500000, tc, saldos:[{nombre:"Billetera",importe:180000},{nombre:"Efectivo",importe:250000},{nombre:"Broker (USD MEP)",importe:2100000}], monotributo:"A"}};
+  return {R, G, C, I, Q, P, K:KX, cfg:{objetivo:1500000, tc, saldos:[{nombre:"Billetera",importe:180000},{nombre:"Efectivo",importe:250000},{nombre:"Broker (USD MEP)",importe:2100000}], monotributo:"A"}};
 }
 
 /* ===================== gráficos ===================== */
@@ -1207,7 +1323,7 @@ const BRC = ["INK","#0A7281","#ED1AA0","#9E9EA0","#BEAFFD","#1EAA52","#707072"];
 const TIPOL = {cedear:"CEDEAR", accion:"Acción", cripto:"Cripto", lecap:"LECAP / bono", fci:"FCI", efectivo:"Efectivo", otro:"Otro"};
 /* análisis de la cartera para el resumen: patrimonio neto en USD al oficial de hoy */
 function carteraPanel(){
-  const tc = usdHoy(), H = (S.inversiones||[]).map(h => Object.assign({}, h, {px: pxOf(h)}));
+  const tc = usdHoy(), H = holdings();
   const inv = H.reduce((a,h) => a + h.px.v, 0), cost = H.reduce((a,h) => a + (+h.costo||0), 0), res = inv - cost;
   const Q = (S.cheques||[]).filter(q => !q.cobrado).sort((a,b) => a.vencimiento < b.vencimiento ? -1 : 1);
   const qNom = Q.reduce((a,q) => a + (+q.nominal||0), 0), qPag = Q.reduce((a,q) => a + (+q.pagado||0), 0);
@@ -1249,43 +1365,52 @@ function subTabs(){
   return `<nav class="subtabs" aria-label="Cartera">${[["inversiones","Inversiones"],["cheques","Cheques"],["papa","Papá"]].map(([k,l]) => `<button data-act="view" data-v="${k}" ${S.view===k?'aria-current="page"':""}>${l}${k==="cheques"&&qa?`<span class="badge">${qa}</span>`:""}</button>`).join("")}</nav>`;
 }
 function vInversiones(){
-  const H = (S.inversiones||[]).map(h => Object.assign({}, h, {px: pxOf(h)}));
+  const H = holdings(), st = cocosStats();
   const tot = H.reduce((a,h) => a + h.px.v, 0), cost = H.reduce((a,h) => a + (+h.costo||0), 0), res = tot - cost;
-  const Q = (S.cheques||[]).filter(q => !q.cobrado), qPag = Q.reduce((a,q) => a + valD(+q.pagado||0, q.fecha), 0), qNom = Q.reduce((a,q) => a + (+q.nominal||0), 0);
-  const P = cuentaSaldo();
-  const by = {}; H.forEach(h => { const b = h.broker || "Otro"; by[b] = (by[b]||0) + h.px.v; });
-  const brs = Object.entries(by).sort((a,b) => b[1]-a[1]), col = i => BRC[i % BRC.length] === "INK" ? K.ink : BRC[i % BRC.length];
-  const pxNote = PX.busy ? "Actualizando precios…" : PX.at ? `Precios ${new Date(PX.at).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"})}${PX.mep?` · MEP $ ${nf0.format(PX.mep)}`:""}${PX.fail?" · algunos precios no respondieron":""}` : "Sin precios online todavía";
+  const real = cocosPos().reduce((a,h) => a + (h.real||0), 0);
+  const group = key => { const g = {}; H.forEach(h => { const k = key(h); g[k] = (g[k]||0) + h.px.v; }); return Object.entries(g).sort((a,b) => b[1]-a[1]); };
+  const col = i => BRC[i % BRC.length] === "INK" ? K.ink : BRC[i % BRC.length];
+  const bar = (rows, label) => tot > 0 ? `<div class="mix"><span class="lbl">${label}</span><div class="alloc" role="img" aria-label="${esc(rows.map(([b,v]) => b + " " + pct(v/tot)).join(", "))}">${rows.map(([b,v],i) => `<i style="width:${(v/tot*100).toFixed(2)}%;background:${col(i)}"></i>`).join("")}</div>
+    <div class="alloc-key">${rows.map(([b,v],i) => `<span><i style="background:${col(i)}"></i>${esc(b)} <b>${pct(v/tot)}</b></span>`).join("")}</div></div>` : "";
+  const pxNote = PX.busy ? "Actualizando precios…" : PX.at ? `Precios de las ${new Date(PX.at).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"})}${PX.mep?` · MEP $ ${nf0.format(PX.mep)}`:""}` : "Sin precios online todavía";
   const sorted = H.slice().sort((a,b) => b.px.v - a.px.v);
+  const qtyF = h => { const q = +h.cantidad||0; return q >= 1000 ? nf0.format(q) : nf2.format(q).replace(/,00$/,""); };
+  const row = h => { const r = h.px.v - (+h.costo||0), rp = +h.costo ? r / +h.costo : 0, unit = +h.cantidad && h.tipo !== "fci" && h.tipo !== "lecap" && h.tipo !== "otro" ? h.px.v / +h.cantidad : 0;
+    const share = tot ? h.px.v / tot : 0;
+    return `<div class="pos-r">
+      <div class="pos-a"><b>${esc(h.ticker)}</b><span>${esc(TIPOL[h.tipo]||h.tipo)} · ${esc(h.broker)}${h.cocos ? ` · ${h.estimada ? `<em class="neg">tenencia inicial estimada</em>` : "desde movimientos"}` : ""}</span>
+        <small>${h.tipo === "fci" || h.tipo === "lecap" ? (h.cocos ? `${qtyF(h)} ${h.tipo === "fci" ? "cuotapartes" : "VN"}` : "valor cargado a mano") : `${qtyF(h)} × ${unit ? fUSD(unit) : "—"}`} · <span class="src">${esc(h.px.src)}</span></small></div>
+      <div class="pos-w" aria-hidden="true"><i style="width:${(share*100).toFixed(1)}%"></i></div>
+      <div class="pos-v"><b>${fUSD(h.px.v)}</b><span class="${r>=0?"pos":"neg"}">${r>=0?"+":"−"}${fUSD(Math.abs(r))} · ${pct(rp,1)}</span></div>
+      <div class="pos-x">${h.cocos ? `<button class="ib" data-act="cocosAj" data-k="${esc(h.ticker)}" aria-label="Ajustar tenencia de ${esc(h.ticker)}" title="Ajustar tenencia"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4"/></svg></button>` : acts("inversiones", h.id)}</div>
+    </div>`; };
+  const ms = st ? Object.keys(st.meses).sort() : [];
   return `<section class="camp inv" aria-label="Valor de la cartera">
     <div><div class="eyebrow">Cartera de inversión · ${H.length} posiciones</div>
       <h2>${fUSD(tot)}</h2>
-      <p>${cost ? `${res >= 0 ? "Ganás" : "Perdés"} ${fUSD(Math.abs(res))} (${pct(res/cost,1)}) sobre ${fUSD(cost)} invertidos.` : "Cargá tus posiciones para ver el resultado."} Valores en ${S.cur === "USD" ? "dólares" : "pesos al oficial de hoy"}.</p>
-      <div class="stats"><div><span>Cheques en cartera</span><b>${ars(qNom)}</b></div><div><span>Le debés a papá</span><b>${P.USD ? fmt(P.USD,"USD") : ""}${P.USD && P.ARS ? " + " : ""}${P.ARS || !P.USD ? ars(P.ARS) : ""}</b></div><div><span>Precios</span><b style="font-size:14px;font-weight:500">${esc(pxNote)}</b></div></div></div>
-    <button class="btn" data-act="pxRefresh">Actualizar precios</button></section>
-  <div class="strip">
-    <div class="panel"><span class="lbl">Valor actual</span><b class="num">${fUSD(tot)}</b></div>
-    <div class="panel"><span class="lbl">Invertido</span><b class="num">${fUSD(cost)}</b></div>
-    <div class="panel"><span class="lbl">Resultado</span><b class="num ${res>=0?"pos":"neg"}">${res>=0?"+":""}${fUSD(res)}</b></div>
-    <div class="panel"><span class="lbl">Cheques (costo)</span><b class="num">${fmt(qPag)}</b></div>
-  </div>
-  <section class="panel" aria-labelledby="h-alloc"><div class="ph"><h2 id="h-alloc">Por broker</h2><span class="meta">${brs.length} cuentas</span></div>
-    ${tot > 0 ? `<div class="alloc" role="img" aria-label="${esc(brs.map(([b,v]) => b + " " + pct(v/tot)).join(", "))}">${brs.map(([b,v],i) => `<i style="width:${(v/tot*100).toFixed(2)}%;background:${col(i)}"></i>`).join("")}</div>
-    <div class="alloc-key">${brs.map(([b,v],i) => `<span><i style="background:${col(i)}"></i>${esc(b)} <b>${fUSD(v)}</b> ${pct(v/tot)}</span>`).join("")}</div>` : `<div class="empty"><b>Sin posiciones</b>Cargá lo que tenés en Cocos, Binance o Lemon.</div>`}
-  </section>
+      <p>${cost ? `${res >= 0 ? "Ganás" : "Perdés"} <b class="${res>=0?"up":"down"}">${fUSD(Math.abs(res))} (${pct(res/cost,1)})</b> sobre ${fUSD(cost)} invertidos.` : "Cargá tus posiciones o importá los movimientos de Cocos."}</p>
+      <div class="stats"><div><span>Invertido</span><b>${fUSD(cost)}</b></div><div><span>Resultado abierto</span><b>${res>=0?"+":"−"}${fUSD(Math.abs(res))}</b></div>${Math.abs(real) >= 1 ? `<div><span>Realizado (ventas)</span><b>${real>=0?"+":"−"}${fUSD(Math.abs(real))}</b></div>` : ""}<div><span>${esc(pxNote)}</span><b>${PX.fail ? `<span class="warn-t">${esc(PX.fail)}</span>` : "&nbsp;"}</b></div></div></div>
+    <div class="camp-acts"><button class="btn" data-act="pxRefresh" ${PX.busy?"disabled":""}>${PX.busy ? "Actualizando…" : "Actualizar precios"}</button><button class="btn ghost-inv" data-act="pickCocos">Importar CSV de Cocos</button></div></section>
+  <input type="file" id="cocosFile" accept=".csv,text/csv" multiple hidden>
+  ${tot > 0 ? `<section class="panel mixes">${bar(group(h => h.broker || "Otro"), "Por broker")}${bar(group(h => TIPOL[h.tipo] || h.tipo), "Por tipo de activo")}</section>` : ""}
   <section class="panel" aria-labelledby="h-pos" style="margin-top:8px">
     <div class="ph"><h2 id="h-pos">Posiciones</h2><button class="btn primary" data-act="new" data-col="inversiones"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Nueva posición</button></div>
-    <div class="tw"><table><thead><tr><th>Activo</th><th>Broker</th><th class="r">Cantidad</th><th class="r">Precio</th><th class="r">Valor</th><th class="r">Invertido</th><th class="r">Resultado</th><th><span class="sr">Acciones</span></th></tr></thead><tbody>
-    ${sorted.length ? sorted.map(h => { const r = h.px.v - (+h.costo||0), unit = AUTO.includes(h.tipo) && +h.cantidad ? h.px.v / +h.cantidad : 0;
-      return `<tr><td><b>${esc(h.ticker)}</b><span class="note">${esc(TIPOL[h.tipo]||h.tipo)}${h.nota?" · "+esc(h.nota):""}</span></td><td>${esc(h.broker)}</td>
-      <td class="m r">${AUTO.includes(h.tipo) ? nf2.format(+h.cantidad||0).replace(/,00$/,"") : "—"}</td>
-      <td class="m r">${unit ? fUSD(unit) : "—"}<span class="note src">${esc(h.px.src)}</span></td>
-      <td class="m r"><b>${fUSD(h.px.v)}</b></td><td class="m r">${fUSD(+h.costo||0)}</td>
-      <td class="m r ${r>=0?"pos":"neg"}">${r>=0?"+":""}${fUSD(r)}<span class="note">${+h.costo ? pct(r/+h.costo,1) : ""}</span></td>
-      <td>${acts("inversiones", h.id)}</td></tr>`; }).join("") : `<tr><td colspan="8"><div class="empty"><b>Sin posiciones</b>Tocá «Nueva posición» para empezar.</div></td></tr>`}
+    <div class="pos-list">${sorted.length ? sorted.map(row).join("") : `<div class="empty"><b>Sin posiciones</b>Importá el CSV de Cocos o cargá a mano lo que tenés en Binance y Lemon.</div>`}</div>
+    <p class="foot-note">Cripto: Binance en USDT. CEDEARs: precio de BYMA en pesos. Fondos y bonos de Cocos: último valor de cuotaparte o precio de tus movimientos. Lo que está en pesos se pasa a dólares con el oficial (el de cada compra para el costo, el de hoy para el valor), así el resultado no mezcla la brecha con el MEP.</p>
+  </section>
+  ${st ? `<section class="panel" aria-labelledby="h-cocos" style="margin-top:8px">
+    <div class="ph"><h2 id="h-cocos">Cuenta Cocos · movimientos</h2><span class="meta">${st.n} movimientos · ${ddmm(st.desde)}/${st.desde.slice(2,4)} al ${ddmm(st.hasta)}/${st.hasta.slice(2,4)}</span></div>
+    <div class="cks">
+      <div><span class="lbl">Pesos que ingresaste</span><b>${ars(st.ing)}</b><small>transferencias a Cocos</small></div>
+      <div><span class="lbl">Dólares MEP comprados</span><b>${fmt(st.usd,"USD")}</b><small>${st.mep ? `a $ ${nf0.format(st.mep)} promedio` : "sin compras"}</small></div>
+      <div><span class="lbl">Pagos en dólares</span><b>${fmt(st.pagU,"USD")}</b><small>${st.nPagU} órdenes de pago${ms.length ? ` · ${fmt(st.pagU/ms.length,"USD")} por mes` : ""}</small></div>
+      <div><span class="lbl">Intereses de cauciones</span><b class="pos">${ars(st.cauc)}</b><small>${st.renta || st.rentaU ? `y ${[st.renta ? ars(st.renta) : "", st.rentaU ? fmt(st.rentaU,"USD") : ""].filter(Boolean).join(" + ")} cobrados por rentas y vencimientos` : "colocaciones a plazo"}</small></div>
+    </div>
+    <div class="tw"><table><thead><tr><th>Mes</th><th class="r">Ingresaste</th><th class="r">Compraste USD</th><th class="r">MEP</th><th class="r">Pagos USD</th><th class="r">Pagos ARS</th></tr></thead><tbody>
+      ${ms.slice().reverse().map(m => { const o = st.meses[m]; return `<tr><td>${esc(ymLong(m))}</td><td class="m r">${o.ing ? ars(o.ing) : "—"}</td><td class="m r">${o.usd ? fmt(o.usd,"USD") : "—"}</td><td class="m r">${o.usd ? "$ " + nf0.format(o.ars/o.usd) : "—"}</td><td class="m r">${o.pagU ? fmt(o.pagU,"USD") : "—"}</td><td class="m r">${o.pagA ? ars(o.pagA) : "—"}</td></tr>`; }).join("")}
     </tbody></table></div>
-    <p class="foot-note">Cripto: precio de Binance en USDT. CEDEARs y acciones: precio en pesos de BYMA (data912) dividido por el dólar MEP. LECAPs, FCI y lo que no tenga precio online se valúan con el valor que cargás a mano.</p>
-  </section>`;
+    <p class="foot-note">Las compras y ventas de la ON contra dólares se toman como compra de dólares MEP, no como posición. Si un fondo ya lo tenías antes del primer movimiento del CSV, la tenencia inicial se estima; tocá el lápiz para cargar cuántas cuotapartes tenés hoy.</p>
+  </section>` : ""}`;
 }
 
 function vCheques(){
@@ -1390,7 +1515,7 @@ function vAjustes(ms){
       ${S.pendingImport ? `<div class="banner"><b>¿Reemplazar tus datos?</b><span>El archivo trae ${S.pendingImport.retiros.length} retiros, ${S.pendingImport.gastos.length} gastos y ${S.pendingImport.comisiones.length} cobros. Lo que hay ahora se reemplaza por completo.</span><button class="btn primary" data-act="impOk">Reemplazar</button><button class="btn" data-act="impNo">Cancelar</button></div>` : ""}
       <div class="l pills"><button class="btn" data-act="backup">Descargar respaldo .json</button>
         <button class="btn" type="button" data-act="pickImp">Importar respaldo .json</button><input type="file" id="impFile" accept=".json,application/json" hidden>
-        <button class="btn" data-act="exp" data-col="retiros">Retiros .csv</button><button class="btn" data-act="exp" data-col="gastos">Gastos .csv</button><button class="btn" data-act="exp" data-col="comisiones">Cobros 5% .csv</button><button class="btn" data-act="exp" data-col="inversiones">Inversiones .csv</button><button class="btn" data-act="exp" data-col="cheques">Cheques .csv</button><button class="btn" data-act="exp" data-col="cuenta">Papá .csv</button></div>
+        <button class="btn" data-act="exp" data-col="retiros">Retiros .csv</button><button class="btn" data-act="exp" data-col="gastos">Gastos .csv</button><button class="btn" data-act="exp" data-col="comisiones">Cobros 5% .csv</button><button class="btn" data-act="exp" data-col="inversiones">Inversiones .csv</button><button class="btn" data-act="exp" data-col="cheques">Cheques .csv</button><button class="btn" data-act="exp" data-col="cuenta">Papá .csv</button><button class="btn" data-act="exp" data-col="cocos">Cocos .csv</button></div>
       <p class="foot-note">El respaldo .json guarda todo: retiros, gastos, cobros y ajustes. Los .csv se abren en Excel o Google Sheets.</p></section>
     ${S.mode === "live" ? `<section class="panel s12" aria-labelledby="h-ses"><div class="ph"><h2 id="h-ses">Sesión</h2></div><div class="l pills"><button class="btn danger" data-act="logout">Cerrar sesión en este dispositivo</button></div><p class="foot-note">Tus datos quedan en la nube; para volver a entrar necesitás la clave.</p></section>` : ""}
   </div>`;
@@ -1427,7 +1552,7 @@ async function saveCfg(next){ S.config = next; changed(); }
 /* ===================== sincronización con la nube ===================== */
 const API = "/api/datos", CACHE = "mayor_rossi_v1", KEY = "mayor_rossi_clave";
 let saveT = null, saving = false, dirty = false;
-const snapshot = () => ({retiros:S.retiros, gastos:S.gastos, comisiones:S.comisiones, inversiones:S.inversiones, cheques:S.cheques, cuenta:S.cuenta, config:S.config || DEF_CFG});
+const snapshot = () => ({retiros:S.retiros, gastos:S.gastos, comisiones:S.comisiones, inversiones:S.inversiones, cheques:S.cheques, cuenta:S.cuenta, cocos:S.cocos, config:S.config || DEF_CFG});
 function cacheLocal(){ try { localStorage.setItem(CACHE, JSON.stringify({rev:S.rev, data:snapshot()})); } catch(e){} }
 function setSync(t){ S.sync = t; const st = $("#status"); if (!st || S.mode !== "live") return;
   st.className = "chip " + (t === "Guardado" ? "live" : t === "Guardando…" ? "busy" : "bad"); st.lastElementChild.textContent = t; }
@@ -1451,11 +1576,11 @@ function load(doc){
   S.rev = +(doc && doc.rev) || 0;
   S.retiros = Array.isArray(d.retiros) ? d.retiros : []; S.gastos = Array.isArray(d.gastos) ? d.gastos : [];
   S.comisiones = Array.isArray(d.comisiones) ? d.comisiones : []; S.config = d.config || null;
-  for (const k of ["inversiones","cheques","cuenta"]) S[k] = Array.isArray(d[k]) ? d[k] : [];
+  for (const k of ["inversiones","cheques","cuenta","cocos"]) S[k] = Array.isArray(d[k]) ? d[k] : [];
   cacheLocal(); render(true); loadPX();
 }
 function logout(msg){ try { localStorage.removeItem(KEY); localStorage.removeItem(CACHE); } catch(e){}
-  S.clave = ""; S.mode = "loading"; S.retiros = []; S.gastos = []; S.comisiones = []; S.inversiones = []; S.cheques = []; S.cuenta = []; S.config = null; showGate(msg || ""); }
+  S.clave = ""; S.mode = "loading"; S.retiros = []; S.gastos = []; S.comisiones = []; S.inversiones = []; S.cheques = []; S.cuenta = []; S.cocos = []; S.config = null; showGate(msg || ""); }
 function showGate(msg){ $("#gate").hidden = false; $("#gateErr").textContent = msg || ""; setTimeout(() => $("#gateKey").focus(), 50); }
 async function enter(clave){
   S.clave = clave;
@@ -1571,7 +1696,7 @@ RESUMEN MENSUAL:
 ${lines.join("\n")}
 TRANSFERENCIAS SIN FACTURAR:
 ${pend.join("\n") || "ninguna"}
-INVERSIONES (USD): ${(S.inversiones||[]).map(h => `${h.ticker} [${h.broker}] valor ${Math.round(pxOf(h).v)} costo ${Math.round(+h.costo||0)}`).join("; ") || "sin datos"}
+INVERSIONES (USD): ${holdings().map(h => `${h.ticker} [${h.broker}] valor ${Math.round(h.px.v)} costo ${Math.round(+h.costo||0)}`).join("; ") || "sin datos"}
 CHEQUES SIN COBRAR (ARS): ${(S.cheques||[]).filter(q => !q.cobrado).map(q => `${q.librador} pagado ${q.pagado} nominal ${q.nominal} vence ${q.vencimiento}`).join("; ") || "ninguno"}
 CUENTA CON PAPÁ (no son gastos): saldo ARS ${Math.round(cuentaSaldo().ARS)}, USD ${Math.round(cuentaSaldo().USD)}
 GASTOS (detalle):
@@ -1653,6 +1778,9 @@ function printResumen(){
 /* ===================== export ===================== */
 async function exportCSV(col){
   const L = listOf(col).slice().sort((a,b) => a.fecha < b.fecha ? -1 : 1);
+  if (col === "cocos"){ const q = v => { v = v == null ? "" : String(v); return /[",;\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; };
+    const L = (S.cocos||[]).slice().sort((a,b) => a.f < b.f ? -1 : 1);
+    download(`santiago-rossi-cocos-${NOW.toISOString().slice(0,10)}.csv`, "\uFEFF" + ["fecha;operacion;instrumento;moneda;cantidad;precio;total", ...L.map(r => [r.f, r.op, r.ins, r.mon, String(r.q).replace(".",","), String(r.px).replace(".",","), String(r.tot).replace(".",",")].map(q).join(";"))].join("\n"), "text/csv;charset=utf-8"); return; }
   const cols = col === "inversiones" ? ["fecha","broker","tipo","ticker","cantidad","costo","precio","nota"] : col === "cheques" ? ["fecha","librador","pagado","nominal","vencimiento","cobrado","cobradoFecha","nota"] : col === "cuenta" ? ["fecha","tipo","concepto","moneda","importe","nota"] : col === "retiros" ? ["fecha","cliente","importe","tipo","facturado","nota"] : col === "gastos" ? ["fecha","concepto","importe","categoria","nota"] : ["fecha","cliente","importe","tasa","facturado","compensado","compensadoFecha","nota"];
   const q = v => { v = v === undefined || v === null ? "" : String(v); return /[",;\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; };
   const csv = "\uFEFF" + [cols.join(";"), ...L.map(r => cols.map(k => q(typeof r[k] === "number" ? String(r[k]).replace(".",",") : r[k])).join(";"))].join("\n");
@@ -1695,6 +1823,18 @@ document.addEventListener("click", async ev => {
       <div class="foot"><button type="button" class="btn ghost" data-act="close">Cancelar</button><button type="button" class="btn primary" data-act="catApply">Aplicar a ${plan.length} gastos</button></div></aside>`;
     setTimeout(() => $("#layer .btn.primary").focus(), 30); return; }
   if (a === "catApply"){ const plan = catPlan(); plan.forEach(([g,k]) => g.categoria = k); S.config = Object.assign({}, cfg(), {catsV2:true}); closeForm(); S.fGas = "todas"; changed(); toast(`${plan.length} gastos reorganizados`); return; }
+  if (a === "pickCocos"){ $("#cocosFile").click(); return; }
+  if (a === "cocosOk"){ const n = S.pendingCocos || []; S.pendingCocos = null; S.cocos = [...(S.cocos||[]), ...n]; closeForm(); changed(); loadPX(true); toast(`${n.length} movimientos de Cocos importados`); return; }
+  if (a === "cocosAj"){ const k = el.dataset.k, h = cocosPos().find(x => x.ticker === k); if (!h) return; formOpener = el;
+    const sinIni = h.cantidad - h.q0;
+    $("#layer").innerHTML = `<div class="scrim" data-act="close"></div><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+      <h3 id="dTitle">Tenencia de ${esc(k)}</h3><p class="sub" style="margin:0 0 18px">${esc(h.nombre)}. Los movimientos del CSV suman ${nf2.format(sinIni)}; lo que tenías antes del primer movimiento no figura. Cargá cuánto tenés hoy según Cocos y se recalcula.</p>
+      <form class="form" id="ajFrm"><div class="f"><label for="fAj">${h.tipo === "fci" ? "Cuotapartes" : "Cantidad"} que tenés hoy</label><input id="fAj" type="number" step="any" min="0" value="${+h.cantidad.toFixed(4)}" inputmode="decimal"></div>
+      <div class="err" id="fErr"></div><div class="foot"><button type="button" class="btn ghost" data-act="ajAuto" data-k="${esc(k)}">Volver a la estimación</button><button type="submit" class="btn primary">Guardar</button></div></form></aside>`;
+    $("#ajFrm").addEventListener("submit", e => { e.preventDefault(); const v = parseFloat(String($("#fAj").value).replace(",",".")); if (!isFinite(v) || v < 0) return $("#fErr").textContent = "Cargá una cantidad válida.";
+      const aj = Object.assign({}, cfg().cocosAj || {}); aj[k] = Math.max(0, v - sinIni); S.config = Object.assign({}, cfg(), {cocosAj:aj}); closeForm(); changed(); toast("Tenencia actualizada"); });
+    setTimeout(() => $("#fAj").focus(), 30); return; }
+  if (a === "ajAuto"){ const aj = Object.assign({}, cfg().cocosAj || {}); delete aj[el.dataset.k]; S.config = Object.assign({}, cfg(), {cocosAj:aj}); closeForm(); changed(); return; }
   if (a === "pxRefresh"){ loadPX(true); render(true); return; }
   if (a === "comp"){ try { await patch("comisiones", el.dataset.id, {compensado:true, compensadoFecha: NOW.toISOString().slice(0,10)}); toast("Marcado como compensado"); } catch(e){ toast(errMsg(e), true); } return; }
   if (a === "copy"){ const r = S.retiros.find(x => x.id === el.dataset.id); if (!r) return; const txt = `${r.cliente} — ${ddmm(r.fecha)}/${r.fecha.slice(0,4)} — $ ${nf2.format(+r.importe||0)}`;
@@ -1705,7 +1845,7 @@ document.addEventListener("click", async ev => {
   if (a === "exp"){ exportCSV(el.dataset.col); return; }
   if (a === "backup"){ download(`santiago-rossi-respaldo-${NOW.toISOString().slice(0,10)}.json`, JSON.stringify(snapshot(), null, 1), "application/json"); return; }
   if (a === "impNo"){ S.pendingImport = null; render(true); return; }
-  if (a === "impOk"){ const d = S.pendingImport; S.pendingImport = null; S.retiros = d.retiros; S.gastos = d.gastos; S.comisiones = d.comisiones; S.inversiones = d.inversiones; S.cheques = d.cheques; S.cuenta = d.cuenta; if (d.config) S.config = d.config; S.sel = null; changed(); toast("Datos importados"); return; }
+  if (a === "impOk"){ const d = S.pendingImport; S.pendingImport = null; S.retiros = d.retiros; S.gastos = d.gastos; S.comisiones = d.comisiones; S.inversiones = d.inversiones; S.cheques = d.cheques; S.cuenta = d.cuenta; S.cocos = d.cocos; if (d.config) S.config = d.config; S.sel = null; changed(); toast("Datos importados"); return; }
   if (a === "logout"){ logout(); return; }
   if (a === "theme"){ const t = el.dataset.t; ls.set("theme", t); if (t === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.setAttribute("data-theme", t); render(true); return; }
   if (a === "print"){ printResumen(); return; }
@@ -1717,7 +1857,7 @@ document.addEventListener("click", async ev => {
   if (a === "facLote"){ const n = SELF.size; S.retiros.forEach(r => { if (SELF.has(r.id)) r.facturado = true; }); SELF.clear(); changed(); toast(`${n} marcada${n>1?"s":""} como facturada${n>1?"s":""}`); return; }
   if (a === "sync"){ if (S.mode === "live" && S.sync !== "Guardado"){ dirty = true; setSync("Guardando…"); flush(); } return; }
   if (a === "demo"){ $("#gate").hidden = true; startDemo(); return; }
-  if (a === "exitDemo"){ S.mode = "loading"; S.retiros = []; S.gastos = []; S.comisiones = []; S.inversiones = []; S.cheques = []; S.cuenta = []; S.config = null; boot(); return; }
+  if (a === "exitDemo"){ S.mode = "loading"; S.retiros = []; S.gastos = []; S.comisiones = []; S.inversiones = []; S.cheques = []; S.cuenta = []; S.cocos = []; S.config = null; boot(); return; }
   if (a === "addSaldo"){ const c = cfg(); saveCfg(Object.assign({}, c, {saldos:[...(c.saldos||[]), {nombre:"Nueva cuenta", importe:0}]})); return; }
   if (a === "rmSaldo"){ const c = cfg(); const s = (c.saldos||[]).slice(); s.splice(+el.dataset.i, 1); saveCfg(Object.assign({}, c, {saldos:s})); return; }
 });
@@ -1730,13 +1870,25 @@ document.addEventListener("change", ev => {
   const t = ev.target, c = cfg();
   if (t.dataset.fid){ if (t.checked) SELF.add(t.dataset.fid); else SELF.delete(t.dataset.fid); render(true); return; }
   if (t.dataset.fmonth){ S.retiros.filter(r => r.tipo !== "efectivo" && !r.facturado && ymOf(r.fecha) === t.dataset.fmonth).forEach(r => t.checked ? SELF.add(r.id) : SELF.delete(r.id)); render(true); return; }
+  if (t.id === "cocosFile"){ const fs = [...(t.files||[])]; if (!fs.length) return;
+    Promise.all(fs.map(f => f.text())).then(txts => {
+      const rows = []; let bad = 0; txts.forEach(x => { const r = parseCocos(x); if (r) rows.push(...r); else bad++; });
+      if (!rows.length){ toast("Esos archivos no parecen el CSV de movimientos de Cocos.", true); return; }
+      const have = new Set((S.cocos||[]).map(r => r.t)), seen = new Set(), nuevos = rows.filter(r => !have.has(r.t) && !seen.has(r.t) && seen.add(r.t));
+      S.pendingCocos = nuevos; const fsr = rows.map(r => r.f).sort(), ops = {}; nuevos.forEach(r => ops[r.op] = (ops[r.op]||0) + 1);
+      formOpener = $("[data-act=pickCocos]");
+      $("#layer").innerHTML = `<div class="scrim" data-act="close"></div><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+        <h3 id="dTitle">Movimientos de Cocos</h3><p class="sub" style="margin:0 0 18px">${fs.length} archivo${fs.length>1?"s":""} · ${rows.length} movimientos del ${ddmm(fsr[0])}/${fsr[0].slice(0,4)} al ${ddmm(fsr[fsr.length-1])}/${fsr[fsr.length-1].slice(0,4)}. ${nuevos.length} son nuevos${rows.length - nuevos.length ? ` y ${rows.length - nuevos.length} ya estaban cargados` : ""}.${bad ? ` ${bad} archivo no se pudo leer.` : ""}</p>
+        <div class="catplan">${Object.entries(ops).sort((a,b) => b[1]-a[1]).map(([k,v]) => `<div class="cp-r"><span>${esc(k)}</span><small>${v}</small></div>`).join("") || `<div class="empty"><b>Nada nuevo</b>Todos estos movimientos ya estaban importados.</div>`}</div>
+        <div class="foot"><button type="button" class="btn ghost" data-act="close">Cancelar</button>${nuevos.length ? `<button type="button" class="btn primary" data-act="cocosOk">Importar ${nuevos.length}</button>` : ""}</div></aside>`;
+    }).catch(() => toast("No se pudieron leer los archivos.", true)); t.value = ""; return; }
   if (t.id === "impFile"){ const f = t.files && t.files[0]; if (!f) return;
     f.text().then(txt => { let o = JSON.parse(txt); if (o && o.data) o = o.data;
       const ok = o && ["retiros","gastos","comisiones"].every(k => Array.isArray(o[k]));
       if (!ok) throw new Error();
       const fix = (L, p) => L.map((r, i) => Object.assign({id: r.id || p + i + Date.now().toString(36)}, r));
       const opt = (k, p) => Array.isArray(o[k]) ? fix(o[k], p) : (S[k] || []);
-      S.pendingImport = {retiros:fix(o.retiros,"r"), gastos:fix(o.gastos,"g"), comisiones:fix(o.comisiones,"c"), inversiones:opt("inversiones","in"), cheques:opt("cheques","ch"), cuenta:opt("cuenta","cu"), config:o.config || null}; render(true);
+      S.pendingImport = {retiros:fix(o.retiros,"r"), gastos:fix(o.gastos,"g"), comisiones:fix(o.comisiones,"c"), inversiones:opt("inversiones","in"), cheques:opt("cheques","ch"), cuenta:opt("cuenta","cu"), cocos:Array.isArray(o.cocos) ? o.cocos : (S.cocos || []), config:o.config || null}; render(true);
     }).catch(() => toast("Ese archivo no es un respaldo de Santiago Rossi.", true)); t.value = ""; return; }
   if (t.dataset.cfg){ const v = t.dataset.cfg === "objetivo" ? Math.max(0, +t.value || 0) : t.value; saveCfg(Object.assign({}, c, {[t.dataset.cfg]: v})); }
   else if (t.dataset.tc){ const tc = Object.assign({}, c.tcManual||{}); const v = +t.value; if (v > 0) tc[t.dataset.tc] = v; else delete tc[t.dataset.tc]; saveCfg(Object.assign({}, c, {tcManual:tc})); }
@@ -1748,7 +1900,7 @@ document.addEventListener("change", ev => {
 function startDemo(){
   if (S.mode === "demo") return;
   S.sync = "";
-  const d = demoData(); S.retiros = d.R; S.gastos = d.G; S.comisiones = d.C; S.inversiones = d.I; S.cheques = d.Q; S.cuenta = d.P; S.config = d.cfg; S.mode = "demo"; render(true); loadPX();
+  const d = demoData(); S.retiros = d.R; S.gastos = d.G; S.comisiones = d.C; S.inversiones = d.I; S.cheques = d.Q; S.cuenta = d.P; S.cocos = d.K; S.config = d.cfg; S.mode = "demo"; render(true); loadPX();
 }
 function boot(){
   if (/^#?demo$/.test(location.hash) || /[?&]demo\b/.test(location.search)){ startDemo(); return; }
