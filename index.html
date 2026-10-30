@@ -177,14 +177,30 @@ table.lib tfoot td{border-top:1px solid var(--ink);border-bottom:0;font-weight:7
 .dv i.p{left:50%;background:var(--green-f)}.dv i.n{right:50%;background:var(--red)}
 @media (max-width:900px){.libro{grid-template-columns:minmax(0,1fr)}}
 
-.donut{display:grid;grid-template-columns:150px minmax(0,1fr);gap:20px;align-items:center}
-.donut svg{width:150px;height:150px}
-.dl{display:grid;gap:9px;min-width:0}
-.dl div{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:10px;align-items:center;font-size:14px;font-weight:500}
-.dl i{width:10px;height:10px;border-radius:50%}
-.dl span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dl b{font-size:13px;font-weight:500;color:var(--sec)}
-@media (max-width:420px){.donut{grid-template-columns:minmax(0,1fr);justify-items:center}}
+.cstack{display:flex;gap:2px;height:14px;margin:2px 0 14px}
+.cstack i{display:block;height:100%;min-width:2px}
+.cgrid{column-count:2;column-gap:40px}
+.cat-r{display:grid;grid-template-columns:10px minmax(0,1fr) 54px auto 40px;gap:10px;align-items:center;width:100%;break-inside:avoid;padding:9px 6px;border:0;border-top:1px solid var(--sep);background:none;color:var(--ink);font-size:14px;font-weight:500;text-align:left}
+button.cat-r:hover{background:var(--hover)}
+.cat-r[aria-pressed="true"]{background:var(--ink);color:var(--on-ink)}
+.cat-r[aria-pressed="true"] small{color:var(--on-ink);opacity:.7}
+.cat-r .d{width:10px;height:10px;border-radius:50%}
+.cat-r .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cat-r .tr{display:flex;align-items:flex-end;gap:2px;height:18px}
+.cat-r .tr u{flex:1;min-height:2px;background:var(--sep2);text-decoration:none}
+.cat-r .tr u.on{background:var(--ink)}
+.cat-r[aria-pressed="true"] .tr u{background:var(--ter)}.cat-r[aria-pressed="true"] .tr u.on{background:var(--on-ink)}
+.cat-r b{font-weight:600;text-align:right}
+.cat-r small{font-size:12px;color:var(--sec);text-align:right}
+.cat-r.sm{grid-template-columns:10px minmax(0,1fr) auto 40px;padding:7px 0}
+@media (max-width:820px){.cgrid{column-count:1}}
+@media (max-width:420px){.cat-r{grid-template-columns:10px minmax(0,1fr) auto 36px}.cat-r .tr{display:none}}
+.eye{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border:1px solid var(--sep2);border-radius:var(--pill);background:var(--bg);font-size:12px;font-weight:500;color:var(--ink)}
+.eye svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.eye .sl{display:none}
+.eye[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--on-ink)}
+.eye[aria-pressed="true"] .sl{display:block}
+@media (pointer:coarse){.eye{min-height:36px}}
 
 .signals{display:grid;gap:0}
 .sig{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:14px;align-items:center;padding:16px 0;border-top:1px solid var(--sep2)}
@@ -260,13 +276,6 @@ td .note{display:block;font-size:13px;color:var(--sec);font-weight:400;margin-to
 .rank em{grid-column:1/-1;height:4px;background:var(--fill2);overflow:hidden}
 .rank em i{display:block;height:100%;background:var(--ink)}
 
-.heat{display:grid;gap:2px;min-width:560px}
-.heat .hr{display:grid;grid-template-columns:140px repeat(var(--n),minmax(48px,1fr));gap:2px;align-items:stretch}
-.heat .hl{font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px;color:var(--ink)}
-.heat .hl i{width:8px;height:8px;border-radius:50%}
-.heat .hc{height:38px;display:grid;place-items:center;font-size:12px;font-weight:500;color:var(--ink);background:var(--bg);border:2px solid transparent}
-.heat .hc.sel{border-color:var(--ink)}
-.heat .hh{font-size:11px;font-weight:600;color:var(--sec);text-align:center;text-transform:uppercase;letter-spacing:.04em}
 
 .trail{position:relative;margin:40px 0 58px}
 .trail .track{position:relative;height:10px;background:var(--bg);overflow:hidden}
@@ -487,6 +496,7 @@ td .note{display:block;font-size:13px;color:var(--sec);font-weight:400;margin-to
     <button class="chip" id="status" data-act="sync" title="Estado de guardado"><span class="dot"></span><span>Conectando</span></button>
     <div class="grow"></div>
     <span class="tcinfo"><span id="tclbl">Dólar</span> <b class="num" id="tcchip">—</b> <span id="tcsrc">Oficial BNA · venta</span></span>
+    <button class="eye" id="eye" data-act="hide" aria-pressed="false" aria-label="Ocultar saldos" title="Ocultar saldos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="sl" d="M3 3l18 18"/></svg><span id="eyeLbl">Ocultar</span></button>
     <div class="seg" role="group" aria-label="Moneda">
       <button data-act="cur" data-c="USD" aria-pressed="false">USD</button>
       <button data-act="cur" data-c="ARS" aria-pressed="false">ARS</button>
@@ -578,7 +588,7 @@ const ls = {get(k){try{return localStorage.getItem("mr:"+k)}catch(e){return null
 const S = {
   retiros:[], gastos:[], comisiones:[], inversiones:[], cheques:[], cuenta:[], cocos:[], movs:[], config:null,
   mode:"loading", rev:0, clave:"", sync:"", dl:true, pendingImport:null,
-  cur: ls.get("cur")==="ARS"?"ARS":"USD",
+  cur: ls.get("cur")==="ARS"?"ARS":"USD", hide: ls.get("hide")==="1",
   view: "cabina", sel:null,
   fRet:"todos", fGas:"todas", qRet:"", qGas:"", donut:"mes", incl5:true,
   chat:[], chatBusy:false, ctl:null
@@ -731,11 +741,39 @@ function cocosStats(){
     pagU:-sum(r => /^orden de pago usd/i.test(r.op)), nPagU:R.filter(r => /^orden de pago usd/i.test(r.op)).length, pagA:-sum(r => /^orden de pago$/i.test(r.op)),
     cauc, renta, rentaU, meses};
 }
-const holdings = () => [...(S.inversiones||[]).map(h => Object.assign({}, h, {px: pxOf(h)})), ...cocosPos().filter(h => h.cantidad > 1e-6)];
+/* tenencias del reporte «portfolio_report» de Cocos: lo que hay hoy en la cuenta, valuado por Cocos.
+   Se guarda en config.carteraCocos {fecha, filas:[{ins,q,px,mon,tot}], caja:{ARS,USD}} */
+function parsePortfolio(txt){
+  const L = txt.replace(/^﻿/, "").split(/\r?\n/).filter(x => x.trim()); if (!L.length) return null;
+  const H = L[0].split(";").map(x => x.trim()); const ix = k => H.indexOf(k);
+  if (ix("instrumento") < 0 || ix("cantidad") < 0 || ix("precioAsOf") < 0 || ix("total") < 0) return null;
+  const filas = [], caja = {}; let fecha = "";
+  for (const l of L.slice(1)){ const c = l.split(";").map(x => x.trim());
+    if (c.length < H.length){ if (/^(ARS|USD)$/.test(c[0])) caja[c[0]] = (caja[c[0]]||0) + nAR(c[c.length-1]); continue; }  // filas de saldo: vienen sin fecha
+    const g = k => c[ix(k)] || "", f = g("precioAsOf"); if (f > fecha) fecha = f;
+    filas.push({ins:g("instrumento"), q:nAR(g("cantidad")), px:nAR(g("precio")), mon:g("moneda") === "USD" ? "USD" : "ARS", tot:nAR(g("total"))}); }
+  return filas.length && fecha ? {fecha, filas, caja} : null;
+}
+function portTipo(ins){ const u = (ins||"").toUpperCase();
+  if (/^FCI\b/.test(u)) return "fci"; if (/^CEDEAR\b/.test(u)) return "cedear"; if (/LETRA|LECAP|BONO|OBLIGAC|TESORO|BOPREAL|^ON\b/.test(u)) return "lecap"; return "accion"; }
+const portUSD = r => r.mon === "USD" ? r.tot : r.tot / usdHoy();
+/* el costo sale de los movimientos importados (costo promedio por unidad × cantidad del reporte); sin movimientos queda sin costo */
+function portPos(){
+  const P = cfg().carteraCocos; if (!P || !Array.isArray(P.filas)) return null;
+  const mv = {}; cocosPos().forEach(h => mv[h.ticker] = h);
+  return P.filas.filter(r => r.q > 0 || r.tot > 0).map(r => { const code = cocosCode(r.ins), m = mv[code];
+    return {id:"cocos:" + code, cocos:true, port:true, fijo:true, broker:"Cocos", tipo:portTipo(r.ins), ticker:code, nombre:r.ins.replace(/\s*\([A-Z0-9.]+\)\s*$/, ""), mon:r.mon, cantidad:r.q,
+      costo: m && m.cantidad > 1e-6 && m.costo > 0 ? m.costo / m.cantidad * r.q : 0, px:{v:portUSD(r), src:"reporte de Cocos"}, ult:P.fecha}; });
+}
+const cocosHold = () => portPos() || cocosPos().filter(h => h.cantidad > 1e-6);
+const holdings = () => [...(S.inversiones||[]).map(h => Object.assign({}, h, {px: pxOf(h)})), ...cocosHold()];
+/* el resultado solo cuenta las posiciones con costo conocido, para no inflarlo con las que no tienen */
+function invStats(H){ const k = H.filter(h => +h.costo > 0), tot = H.reduce((a,h) => a + h.px.v, 0), cost = k.reduce((a,h) => a + h.costo, 0);
+  return {tot, cost, res: k.reduce((a,h) => a + h.px.v, 0) - cost, sinCosto: H.length - k.length}; }
 
 async function loadPX(force){
-  const H = [...(S.inversiones||[]), ...cocosPos().filter(h => h.cantidad > 1e-6)]; if (!H.length || PX.busy) return;
-  const need = H.filter(h => AUTO.includes(h.tipo) && !(+h.precio>0) && !STABLE.includes(String(h.ticker).toUpperCase()));
+  const H = [...(S.inversiones||[]), ...cocosHold()]; if (!H.length || PX.busy) return;
+  const need = H.filter(h => AUTO.includes(h.tipo) && !h.fijo && !(+h.precio>0) && !STABLE.includes(String(h.ticker).toUpperCase()));
   if (!force && Date.now() - PX.at < 15*60e3 && PX.mep && need.every(h => PX.p[pxKey(h)] > 0)) return;
   PX.busy = true; PX.fail = ""; render();
   const j = u => fetch(u, {cache:"no-store"}).then(r => { if (!r.ok) throw 0; return r.json(); });
@@ -809,8 +847,8 @@ function cuentaSaldo(){ const s = {ARS:0, USD:0}; for (const m of S.cuenta||[]) 
 const val = (ars, ym) => S.cur === "USD" ? ars / tcFor(ym) : ars;
 const nf0 = new Intl.NumberFormat("es-AR",{maximumFractionDigits:0});
 const nf2 = new Intl.NumberFormat("es-AR",{minimumFractionDigits:2,maximumFractionDigits:2});
-function fmt(v, cur){ cur = cur || S.cur; const a = Math.abs(v); const f = cur==="USD" ? (a<100?nf2:nf0) : (a<1000?nf2:nf0); return (v<0?"−":"")+(cur==="USD"?"US$ ":"$ ")+f.format(a); }
-function compact(v, cur){ cur = cur || S.cur; const a = Math.abs(v); let s;
+function fmt(v, cur){ cur = cur || S.cur; if (S.hide) return (cur==="USD"?"US$ ":"$ ")+"••••"; const a = Math.abs(v); const f = cur==="USD" ? (a<100?nf2:nf0) : (a<1000?nf2:nf0); return (v<0?"−":"")+(cur==="USD"?"US$ ":"$ ")+f.format(a); }
+function compact(v, cur){ cur = cur || S.cur; if (S.hide) return (cur==="USD"?"US$":"$")+"••"; const a = Math.abs(v); let s;
   if (a >= 1e6) s = (a/1e6).toFixed(a>=1e7?0:1).replace(".",",")+"M"; else if (a >= 1e3) s = Math.round(a/1e3)+"k"; else s = Math.round(a);
   return (v<0?"−":"")+(cur==="USD"?"US$":"$")+s; }
 const money = (ars, ym) => fmt(val(ars, ym));
@@ -984,15 +1022,6 @@ function profileSVG(M, ms){
   ms.forEach((m,i) => { s += `<rect x="${(l+i*bw).toFixed(1)}" y="0" width="${bw.toFixed(1)}" height="${H}" fill="transparent" data-act="sel" data-m="${m}" style="cursor:pointer"/>`; });
   return s + `</svg>`;
 }
-function donutSVG(entries, total, label){
-  const R = 60, C = 2*Math.PI*R; let off = 0, s = `<svg viewBox="0 0 150 150" role="img" aria-label="Gastos por categoría">`;
-  s += `<circle cx="75" cy="75" r="${R}" fill="none" stroke="rgba(${K.g},.08)" stroke-width="16"/>`;
-  for (const [k,v] of entries){ const len = total ? v/total*C : 0; if (len <= 0) continue;
-    s += `<circle cx="75" cy="75" r="${R}" fill="none" stroke="${catColor(k)}" stroke-width="16" stroke-dasharray="${Math.max(len-1.5,.5).toFixed(2)} ${(C-len+1.5).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 75 75)"><title>${esc(k)}: ${fmt(v)}</title></circle>`; off += len; }
-  s += `<text x="75" y="74" text-anchor="middle" font-family="Inter, Helvetica Neue, Arial, sans-serif" font-weight="800" font-size="22" fill="${K.ink}">${compact(total)}</text>`;
-  s += `<text x="75" y="90" text-anchor="middle" font-family="Inter, Helvetica Neue, Arial, sans-serif" font-size="8" letter-spacing="1.2" fill="${K.sec}">${esc(label)}</text></svg>`;
-  return s;
-}
 
 /* ===================== header ===================== */
 function renderChrome(M, ms){
@@ -1013,6 +1042,7 @@ function renderChrome(M, ms){
   const qa = chqAlert().length; $("#chqBadge").textContent = qa ? String(qa) : "";
   $("#scale").hidden = NOPER.includes(S.view);
   if (NOPER.includes(S.view)) $("#sub").textContent = "Cuentas, inversiones, cheques y cuenta con papá";
+  const eye = $("#eye"); eye.setAttribute("aria-pressed", String(S.hide)); eye.setAttribute("aria-label", S.hide ? "Mostrar saldos" : "Ocultar saldos"); eye.title = eye.getAttribute("aria-label"); $("#eyeLbl").textContent = S.hide ? "Mostrar" : "Ocultar";
   document.querySelectorAll("[data-act=cur]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.c === S.cur)));
   document.querySelectorAll(".rail [data-act=view]").forEach(b => { if (b.dataset.v === S.view || (b.dataset.v === "cartera" && NOPER.includes(S.view))) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
   const obj = cfg().objetivo || 1;
@@ -1085,8 +1115,10 @@ function vCabina(M, ms){
     <section class="panel s4" aria-labelledby="h-cat">
       <div class="ph"><h2 id="h-cat">Gastos por categoría</h2>
         <div class="seg" role="group" aria-label="Alcance"><button data-act="donut" data-d="mes" aria-pressed="${S.donut==="mes"}">${single?ymLabel(S.sel):"Período"}</button><button data-act="donut" data-d="todo" aria-pressed="${S.donut==="todo"}">Todo</button></div></div>
-      ${ents.length ? `<div class="donut">${donutSVG(ents, ctot, S.donut==="mes" && single ? ymLabel(S.sel).toUpperCase() : "TOTAL")}
-        <div class="dl">${ents.map(([k,v]) => `<div><i style="background:${catColor(k)}"></i><span>${catL(k)}</span><b class="num">${compact(v)} · ${pct(v/ctot)}</b></div>`).join("")}</div></div>`
+      ${ents.length ? `${catStack(ents, ctot)}
+        <div>${ents.slice(0,6).map(([k,v]) => `<div class="cat-r sm"><i class="d" style="background:${catColor(k)}"></i><span class="nm">${catL(k)}</span><b>${compact(v)}</b><small>${pct(v/ctot)}</small></div>`).join("")}
+        ${ents.length > 6 ? `<div class="cat-r sm"><i class="d" style="background:var(--sep2)"></i><span class="nm">Otras ${ents.length-6}</span><b>${compact(ents.slice(6).reduce((a,e) => a + e[1], 0))}</b><small>${pct(ents.slice(6).reduce((a,e) => a + e[1], 0)/ctot)}</small></div>` : ""}</div>
+        <div style="margin-top:12px"><button class="btn ghost" data-act="view" data-v="gastos">Ver gastos</button></div>`
         : `<div class="empty"><b>Sin gastos</b>No hay gastos cargados en este período.</div>`}
     </section>
 
@@ -1254,7 +1286,6 @@ function vGastos(M, ms){
   const SM = selMonths(ms), G = sumConv(M, SM, o => o.gas), I = sumConv(M, SM, o => o.ing);
   const cats = [...new Set([...Object.keys(CATC).filter(k => S.gastos.some(g => g.categoria === k)), ...S.gastos.map(g => g.categoria).filter(Boolean)])];
   const hm = ms.filter(m => m <= CUR_YM);
-  let hmax = 1; const cell = {}; for (const c of cats) for (const m of hm){ const v = cv(at(M,m)).cat[c]||0; cell[c+"|"+m] = v; if (v > hmax) hmax = v; }
   const done = hm.filter(m => m !== S.sel && at(M,m).gas > 0), avg = done.length ? done.reduce((a,m) => a + cv(at(M,m)).gas, 0)/done.length : 0;
   const plan = catPlan();
   return `${plan.length ? `<div class="banner info"><b>Categorías nuevas</b><span>${plan.length} gasto${plan.length>1?"s":""} todavía usa${plan.length>1?"n":""} las categorías de la planilla (generales, comida, ganancias…). Te armé una propuesta para ordenarlos.</span><button class="btn" data-act="catPlan">Ver propuesta</button></div>` : ""}
@@ -1265,14 +1296,6 @@ function vGastos(M, ms){
     <div class="panel"><span class="lbl">${S.sel==="all"?"Promedio mensual":"vs promedio"}</span><b class="num ${S.sel!=="all" && G>avg?"neg":""}">${S.sel==="all" ? fmt(done.length ? G/Math.max(1, hm.filter(m => at(M,m).gas>0).length) : 0) : (avg ? (G>=avg?"+":"−")+pct(Math.abs(G/avg-1)) : "—")}</b></div>
   </div>
   <div class="grid">
-    <section class="panel s12" aria-labelledby="h-heat">
-      <div class="ph"><h2 id="h-heat">Mapa térmico · categoría por mes</h2><span class="meta">intensidad = monto · ${S.cur}</span></div>
-      <div class="tw"><div class="heat" style="--n:${hm.length}">
-        <div class="hr"><span></span>${hm.map(m => `<span class="hh">${ymLabel(m)}</span>`).join("")}</div>
-        ${cats.map(c => `<div class="hr"><span class="hl"><i style="background:${catColor(c)}"></i>${catL(c)}</span>${hm.map(m => { const v = cell[c+"|"+m]; const a = v ? Math.round(14 + v/hmax*70) : 0;
-          return `<span class="hc ${S.sel===m?"sel":""}" style="${v?`background:color-mix(in srgb, ${catColor(c)} ${a}%, transparent)`:""}" title="${esc(c)} · ${ymLong(m)}: ${fmt(v||0)}">${v?compact(v):""}</span>`; }).join("")}</div>`).join("")}
-      </div></div>
-    </section>
     <section class="panel s12" aria-labelledby="h-gas">
       <div class="ph"><h2 id="h-gas">Gastos · ${S.sel==="all"?"todo el período":esc(ymLong(S.sel))}</h2><button class="btn primary" data-act="new" data-col="gastos"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Nuevo gasto</button></div>
       <div class="bar-row"><div class="l pills"><button class="pill" data-act="fgas" data-f="todas" aria-pressed="${S.fGas==="todas"}">Todas</button>${cats.map(c => `<button class="pill" data-act="fgas" data-f="${esc(c)}" aria-pressed="${S.fGas===c}">${catL(c)}</button>`).join("")}</div>
@@ -1280,7 +1303,24 @@ function vGastos(M, ms){
       <div class="tw"><table><thead><tr><th>Fecha</th><th>Concepto</th><th>Categoría</th><th class="r">Importe</th><th><span class="sr">Acciones</span></th></tr></thead><tbody id="gasBody">${gasRows()}</tbody></table></div>
       <p class="foot-note">Un importe negativo se registra como ingreso o reintegro (intereses, comisiones cobradas) y se descuenta del neto.</p>
     </section>
+    ${catPanel(M, ms, SM)}
   </div>`;
+}
+/* categorías: una barra apilada y un ranking compacto con la evolución de los últimos 6 meses; tocar una categoría filtra la tabla */
+const catStack = (ents, T) => `<div class="cstack" role="img" aria-label="${esc(ents.map(([k,v]) => k + " " + pct(v/T)).join(", "))}">${ents.map(([k,v]) => `<i style="width:${(v/T*100).toFixed(2)}%;background:${catColor(k)}" title="${esc(k)}: ${esc(fmt(v))} · ${pct(v/T)}"></i>`).join("")}</div>`;
+function catPanel(M, ms, SM){
+  const tot = {}; for (const m of SM) for (const [k,v] of Object.entries(cv(at(M,m)).cat)) tot[k] = (tot[k]||0) + v;
+  const ents = Object.entries(tot).sort((a,b) => b[1]-a[1]), T = ents.reduce((a,e) => a + e[1], 0);
+  if (!ents.length) return "";
+  const end = S.sel === "all" ? (ms.filter(m => m <= CUR_YM).pop() || CUR_YM) : S.sel, i = ms.indexOf(end), win = ms.slice(Math.max(0, i-5), i+1);
+  const row = ([k,v]) => { const tr = win.map(m => cv(at(M,m)).cat[k]||0), mx = Math.max(...tr, 1);
+    return `<button class="cat-r" data-act="gascat" data-c="${esc(k)}" aria-pressed="${S.fGas===k}" title="${S.fGas===k ? "Quitar el filtro" : "Filtrar los gastos de esta categoría"}"><i class="d" style="background:${catColor(k)}"></i><span class="nm">${catL(k)}</span>
+      <span class="tr" aria-hidden="true">${tr.map((x,j) => `<u class="${win[j]===end?"on":""}" style="height:${x ? Math.max(x/mx*100, 14).toFixed(0) : 0}%" title="${ymLabel(win[j])}: ${esc(fmt(x))}"></u>`).join("")}</span><b>${fmt(v)}</b><small>${pct(v/T)}</small></button>`; };
+  return `<section class="panel s12" aria-labelledby="h-cat2">
+    <div class="ph"><h2 id="h-cat2">Por categoría</h2><span class="meta">${S.sel==="all" ? "todo el período" : esc(ymLong(S.sel))} · ${fmt(T)} · barritas = últimos ${win.length} meses</span></div>
+    ${catStack(ents, T)}
+    <div class="cgrid">${ents.map(row).join("")}</div>
+  </section>`;
 }
 
 function vArca(M, ms){
@@ -1375,7 +1415,7 @@ const TIPOL = {cedear:"CEDEAR", accion:"Acción", cripto:"Cripto", lecap:"LECAP 
 /* análisis de la cartera para el resumen: patrimonio neto en USD al oficial de hoy */
 function carteraPanel(){
   const tc = usdHoy(), H = holdings();
-  const inv = H.reduce((a,h) => a + h.px.v, 0), cost = H.reduce((a,h) => a + (+h.costo||0), 0), res = inv - cost;
+  const ist = invStats(H), inv = ist.tot, cost = ist.cost, res = ist.res;
   const Q = (S.cheques||[]).filter(q => !q.cobrado).sort((a,b) => a.vencimiento < b.vencimiento ? -1 : 1);
   const qNom = Q.reduce((a,q) => a + (+q.nominal||0), 0), qPag = Q.reduce((a,q) => a + (+q.pagado||0), 0);
   const tna = qPag ? Q.reduce((a,q) => a + chqTNA(q) * (+q.pagado||0), 0) / qPag : 0;
@@ -1444,38 +1484,40 @@ function subTabs(){
 }
 function vInversiones(){
   const H = holdings(), st = cocosStats();
-  const tot = H.reduce((a,h) => a + h.px.v, 0), cost = H.reduce((a,h) => a + (+h.costo||0), 0), res = tot - cost;
+  const ist = invStats(H), tot = ist.tot, cost = ist.cost, res = ist.res;
+  const P = cfg().carteraCocos, pDias = P ? -daysTo(P.fecha) : 0, caja = P && P.caja || {};
   const real = cocosPos().reduce((a,h) => a + (h.real||0), 0);
   const group = key => { const g = {}; H.forEach(h => { const k = key(h); g[k] = (g[k]||0) + h.px.v; }); return Object.entries(g).sort((a,b) => b[1]-a[1]); };
   const col = i => BRC[i % BRC.length] === "INK" ? K.ink : BRC[i % BRC.length];
   const bar = (rows, label) => tot > 0 ? `<div class="mix"><span class="lbl">${label}</span><div class="alloc" role="img" aria-label="${esc(rows.map(([b,v]) => b + " " + pct(v/tot)).join(", "))}">${rows.map(([b,v],i) => `<i style="width:${(v/tot*100).toFixed(2)}%;background:${col(i)}"></i>`).join("")}</div>
     <div class="alloc-key">${rows.map(([b,v],i) => `<span><i style="background:${col(i)}"></i>${esc(b)} <b>${pct(v/tot)}</b></span>`).join("")}</div></div>` : "";
-  const pxNote = PX.busy ? "Actualizando precios…" : PX.at ? `Precios de las ${new Date(PX.at).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"})}${PX.mep?` · MEP $ ${nf0.format(PX.mep)}`:""}` : "Sin precios online todavía";
+  const pxNote = PX.busy ? "Actualizando precios…" : P ? `Tenencias de Cocos al ${ddmm(P.fecha)}/${P.fecha.slice(2,4)}${pDias > 3 ? ` · hace ${pDias} días` : ""}` : PX.at ? `Precios de las ${new Date(PX.at).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"})}${PX.mep?` · MEP $ ${nf0.format(PX.mep)}`:""}` : "Sin precios online todavía";
   const sorted = H.slice().sort((a,b) => b.px.v - a.px.v);
-  const qtyF = h => { const q = +h.cantidad||0; return q >= 1000 ? nf0.format(q) : nf2.format(q).replace(/,00$/,""); };
-  const row = h => { const r = h.px.v - (+h.costo||0), rp = +h.costo ? r / +h.costo : 0, unit = +h.cantidad && h.tipo !== "fci" && h.tipo !== "lecap" && h.tipo !== "otro" ? h.px.v / +h.cantidad : 0;
+  const qtyF = h => { if (S.hide) return "•••"; const q = +h.cantidad||0; return q >= 1000 ? nf0.format(q) : nf2.format(q).replace(/,00$/,""); };
+  const row = h => { const kc = +h.costo > 0, r = kc ? h.px.v - h.costo : 0, rp = kc ? r / h.costo : 0, unit = +h.cantidad && h.tipo !== "fci" && h.tipo !== "lecap" && h.tipo !== "otro" ? h.px.v / +h.cantidad : 0;
     const share = tot ? h.px.v / tot : 0;
     return `<div class="pos-r">
-      <div class="pos-a"><b>${esc(h.ticker)}</b><span>${esc(TIPOL[h.tipo]||h.tipo)} · ${esc(h.broker)}${h.cocos ? ` · ${h.estimada ? `<em class="neg">tenencia inicial estimada</em>` : "desde movimientos"}` : ""}</span>
+      <div class="pos-a"><b>${esc(h.ticker)}</b><span>${esc(TIPOL[h.tipo]||h.tipo)} · ${esc(h.broker)}${h.cocos ? ` · ${h.port ? "reporte de Cocos" : h.estimada ? `<em class="neg">tenencia inicial estimada</em>` : "desde movimientos"}` : ""}</span>
         <small>${h.tipo === "fci" || h.tipo === "lecap" ? (h.cocos ? `${qtyF(h)} ${h.tipo === "fci" ? "cuotapartes" : "VN"}` : "valor cargado a mano") : `${qtyF(h)} × ${unit ? fUSD(unit) : "—"}`} · <span class="src">${esc(h.px.src)}</span></small></div>
       <div class="pos-w" aria-hidden="true"><i style="width:${(share*100).toFixed(1)}%"></i></div>
-      <div class="pos-v"><b>${fUSD(h.px.v)}</b><span class="${r>=0?"pos":"neg"}">${r>=0?"+":"−"}${fUSD(Math.abs(r))} · ${pct(rp,1)}</span></div>
-      <div class="pos-x">${h.cocos ? `<button class="ib" data-act="cocosAj" data-k="${esc(h.ticker)}" aria-label="Ajustar tenencia de ${esc(h.ticker)}" title="Ajustar tenencia"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4"/></svg></button>` : acts("inversiones", h.id)}</div>
+      <div class="pos-v"><b>${fUSD(h.px.v)}</b>${kc ? `<span class="${r>=0?"pos":"neg"}">${r>=0?"+":"−"}${fUSD(Math.abs(r))} · ${pct(rp,1)}</span>` : `<span class="na">sin costo</span>`}</div>
+      <div class="pos-x">${h.port ? "" : h.cocos ? `<button class="ib" data-act="cocosAj" data-k="${esc(h.ticker)}" aria-label="Ajustar tenencia de ${esc(h.ticker)}" title="Ajustar tenencia"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4"/></svg></button>` : acts("inversiones", h.id)}</div>
     </div>`; };
   const ms = st ? Object.keys(st.meses).sort() : [];
   return `<section class="camp inv" aria-label="Valor de la cartera">
     <div><div class="eyebrow">Cartera de inversión · ${H.length} posiciones</div>
       <h2>${fUSD(tot)}</h2>
-      <p>${cost ? `${res >= 0 ? "Ganás" : "Perdés"} <b class="${res>=0?"up":"down"}">${fUSD(Math.abs(res))} (${pct(res/cost,1)})</b> sobre ${fUSD(cost)} invertidos.` : "Cargá tus posiciones o importá los movimientos de Cocos."}</p>
+      <p>${cost ? `${res >= 0 ? "Ganás" : "Perdés"} <b class="${res>=0?"up":"down"}">${fUSD(Math.abs(res))} (${pct(res/cost,1)})</b> sobre ${fUSD(cost)} invertidos.` : "Importá el reporte de tenencias de Cocos o cargá tus posiciones."}</p>
       <div class="stats"><div><span>Invertido</span><b>${fUSD(cost)}</b></div><div><span>Resultado abierto</span><b>${res>=0?"+":"−"}${fUSD(Math.abs(res))}</b></div>${Math.abs(real) >= 1 ? `<div><span>Realizado (ventas)</span><b>${real>=0?"+":"−"}${fUSD(Math.abs(real))}</b></div>` : ""}<div><span>${esc(pxNote)}</span><b>${PX.fail ? `<span class="warn-t">${esc(PX.fail)}</span>` : "&nbsp;"}</b></div></div></div>
     <div class="camp-acts"><button class="btn" data-act="pxRefresh" ${PX.busy?"disabled":""}>${PX.busy ? "Actualizando…" : "Actualizar precios"}</button><button class="btn ghost-inv" data-act="pickCocos">Importar CSV de Cocos</button></div></section>
   <input type="file" id="cocosFile" accept=".csv,text/csv" multiple hidden>
-  ${tot > 0 ? `<section class="panel mixes">${bar(group(h => h.broker || "Otro"), "Por broker")}${bar(group(h => TIPOL[h.tipo] || h.tipo), "Por tipo de activo")}</section>` : ""}
   <section class="panel" aria-labelledby="h-pos" style="margin-top:8px">
     <div class="ph"><h2 id="h-pos">Posiciones</h2><button class="btn primary" data-act="new" data-col="inversiones"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Nueva posición</button></div>
     <div class="pos-list">${sorted.length ? sorted.map(row).join("") : `<div class="empty"><b>Sin posiciones</b>Importá el CSV de Cocos o cargá a mano lo que tenés en Binance y Lemon.</div>`}</div>
-    <p class="foot-note">Cripto: Binance en USDT. CEDEARs: precio de BYMA en pesos. Fondos y bonos de Cocos: último valor de cuotaparte o precio de tus movimientos. Lo que está en pesos se pasa a dólares con el oficial (el de cada compra para el costo, el de hoy para el valor), así el resultado no mezcla la brecha con el MEP.</p>
+    <p class="foot-note">${P ? `Las posiciones de Cocos son las del reporte al ${ddmm(P.fecha)}/${P.fecha.slice(0,4)}, valuadas por Cocos. Para actualizarlas importá un reporte nuevo con «Importar CSV de Cocos». El costo sale de tus movimientos importados${ist.sinCosto ? `; ${ist.sinCosto > 1 ? ist.sinCosto + " posiciones sin costo no entran" : "1 posición sin costo no entra"} en el resultado` : ""}. ` : "Fondos y bonos de Cocos: último valor de cuotaparte o precio de tus movimientos. "}Cripto: Binance en USDT. Lo que está en pesos se pasa a dólares con el oficial (el de cada compra para el costo, el de hoy para el valor), así el resultado no mezcla la brecha con el MEP.${P && (caja.ARS || caja.USD) ? ` Disponible en la cuenta de Cocos: ${[caja.ARS ? ars(caja.ARS) : "", caja.USD ? fmt(caja.USD,"USD") : ""].filter(Boolean).join(" + ")} (se ajusta en Cuentas).` : ""}</p>
+    ${P ? `<div class="l pills" style="margin-top:12px"><button class="btn ghost" data-act="portQuitar">Volver a calcular desde movimientos</button></div>` : ""}
   </section>
+  ${tot > 0 ? `<section class="panel mixes" style="margin-top:8px" aria-label="Composición de la cartera">${bar(group(h => h.broker || "Otro"), "Por broker")}${bar(group(h => TIPOL[h.tipo] || h.tipo), "Por tipo de activo")}</section>` : ""}
   ${st ? `<section class="panel" aria-labelledby="h-cocos" style="margin-top:8px">
     <div class="ph"><h2 id="h-cocos">Cuenta Cocos · movimientos</h2><span class="meta">${st.n} movimientos · ${ddmm(st.desde)}/${st.desde.slice(2,4)} al ${ddmm(st.hasta)}/${st.hasta.slice(2,4)}</span></div>
     <div class="cks">
@@ -1852,6 +1894,7 @@ function printResumen(){
   const gg = S.gastos.filter(g => inSel(g.fecha)).sort((a,b) => a.fecha < b.fecha ? -1 : 1);
   const pend = S.retiros.filter(r => r.tipo !== "efectivo" && !r.facturado), ptot = pend.reduce((a,r) => a + (+r.importe||0), 0);
   const fw = factWindow(), cat0 = c.monotributo || "A";
+  const hid = S.hide; S.hide = false;
   const tcTxt = U ? (single ? `Dólar oficial BNA venta de cada operación (promedio ${ymLabel(S.sel)}: $ ${nf0.format(tcFor(S.sel))}).` : "Dólar oficial BNA venta de cada operación.") : "Montos en pesos.";
   $("#print").innerHTML = `
     <img src="img/logo-smr-180.png" alt="" style="height:52pt;width:auto;float:right">
@@ -1885,6 +1928,7 @@ function printResumen(){
       <tr><td>Proyección a 12 meses</td><td class="r">${ars(fw.proj)} · categoría ${fitCat(fw.proj)}</td></tr>
     </tbody></table>
     <div class="foot">Santiago Rossi · escala de Monotributo vigente desde agosto 2026.</div>`;
+  S.hide = hid;
   setTimeout(() => window.print(), 60);
 }
 
@@ -1906,11 +1950,12 @@ document.addEventListener("click", async ev => {
   const a = el.dataset.act;
   if (a === "view"){ S.view = el.dataset.v === "cartera" ? (NOPER.includes(ls.get("csub")) ? ls.get("csub") : "cuentas") : el.dataset.v; if (NOPER.includes(S.view)) ls.set("csub", S.view); ls.set("view", S.view); try { history.replaceState(null, "", "#"+S.view); } catch(e){} render(true); window.scrollTo({top:0}); if (S.view === "copiloto") setTimeout(() => $("#ask") && $("#ask").focus(), 30); return; }
   if (a === "sel"){ S.sel = el.dataset.m; if (S.view === "copiloto"){ S.view = "cabina"; } render(true); return; }
+  if (a === "hide"){ S.hide = !S.hide; ls.set("hide", S.hide ? "1" : "0"); render(true); return; }
   if (a === "cur"){ S.cur = el.dataset.c; ls.set("cur", S.cur); render(true); return; }
   if (a === "donut"){ S.donut = el.dataset.d; render(true); return; }
   if (a === "fret"){ S.fRet = el.dataset.f; render(true); return; }
   if (a === "fgas"){ S.fGas = el.dataset.f; render(true); return; }
-  if (a === "gascat"){ S.fGas = el.dataset.c; S.view = "gastos"; render(true); return; }
+  if (a === "gascat"){ const tog = S.view === "gastos" && S.fGas === el.dataset.c; S.fGas = tog ? "todas" : el.dataset.c; S.view = "gastos"; render(true); if (!tog) { const t = document.getElementById("h-gas"); if (t) t.scrollIntoView({block:"start", behavior:"smooth"}); } return; }
   if (a === "incl5"){ S.incl5 = !S.incl5; render(true); return; }
   if (a === "new"){ openForm(el.dataset.col); return; }
   if (a === "edit"){ openForm(el.dataset.col, el.dataset.id); return; }
@@ -1969,6 +2014,8 @@ document.addEventListener("click", async ev => {
       const aj = Object.assign({}, cfg().cocosAj || {}); aj[k] = Math.max(0, v - sinIni); S.config = Object.assign({}, cfg(), {cocosAj:aj}); closeForm(); changed(); toast("Tenencia actualizada"); });
     setTimeout(() => $("#fAj").focus(), 30); return; }
   if (a === "ajAuto"){ const aj = Object.assign({}, cfg().cocosAj || {}); delete aj[el.dataset.k]; S.config = Object.assign({}, cfg(), {cocosAj:aj}); closeForm(); changed(); return; }
+  if (a === "portOk"){ const P = S.pendingPort; S.pendingPort = null; if (!P) return; S.config = Object.assign({}, cfg(), {carteraCocos:P}); closeForm(); changed(); loadPX(true); toast(`${P.filas.length} posiciones de Cocos al ${ddmm(P.fecha)}`); return; }
+  if (a === "portQuitar"){ const c = Object.assign({}, cfg()); delete c.carteraCocos; S.config = c; changed(); toast("Las posiciones de Cocos vuelven a salir de los movimientos"); return; }
   if (a === "pxRefresh"){ loadPX(true); render(true); return; }
   if (a === "comp"){ try { await patch("comisiones", el.dataset.id, {compensado:true, compensadoFecha: NOW.toISOString().slice(0,10)}); toast("Marcado como compensado"); } catch(e){ toast(errMsg(e), true); } return; }
   if (a === "copy"){ const r = S.retiros.find(x => x.id === el.dataset.id); if (!r) return; const txt = `${r.cliente} — ${ddmm(r.fecha)}/${r.fecha.slice(0,4)} — $ ${nf2.format(+r.importe||0)}`;
@@ -2006,6 +2053,13 @@ document.addEventListener("change", ev => {
   if (t.dataset.fmonth){ S.retiros.filter(r => r.tipo !== "efectivo" && !r.facturado && ymOf(r.fecha) === t.dataset.fmonth).forEach(r => t.checked ? SELF.add(r.id) : SELF.delete(r.id)); render(true); return; }
   if (t.id === "cocosFile"){ const fs = [...(t.files||[])]; if (!fs.length) return;
     Promise.all(fs.map(f => f.text())).then(txts => {
+      const ports = txts.map(parsePortfolio).filter(Boolean).sort((a,b) => a.fecha < b.fecha ? 1 : -1);
+      if (ports.length){ const P = ports[0], tot = P.filas.reduce((a,r) => a + portUSD(r), 0), mix = txts.length > ports.length; S.pendingPort = P; formOpener = $("[data-act=pickCocos]");
+        $("#layer").innerHTML = `<div class="scrim" data-act="close"></div><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+          <h3 id="dTitle">Tenencias de Cocos</h3><p class="sub" style="margin:0 0 18px">Reporte al ${ddmm(P.fecha)}/${P.fecha.slice(0,4)} · ${P.filas.length} posiciones por ${fmt(tot, "USD")} (pesos al oficial de hoy). Reemplaza las posiciones de Cocos actuales.${mix ? " Los archivos de movimientos importalos aparte." : ""}</p>
+          <div class="catplan">${P.filas.map(r => `<div class="cp-r"><span>${esc(cocosCode(r.ins))} · ${esc(TIPOL[portTipo(r.ins)])}</span><small>${esc(fmt(portUSD(r), "USD"))}</small></div>`).join("")}${P.caja.ARS || P.caja.USD ? `<div class="cp-r"><span>Disponible en la cuenta (no suma a la cartera)</span><small>${esc([P.caja.ARS ? ars(P.caja.ARS) : "", P.caja.USD ? fmt(P.caja.USD,"USD") : ""].filter(Boolean).join(" + "))}</small></div>` : ""}</div>
+          <div class="foot"><button type="button" class="btn ghost" data-act="close">Cancelar</button><button type="button" class="btn primary" data-act="portOk">Usar estas tenencias</button></div></aside>`;
+        return; }
       const rows = []; let bad = 0; txts.forEach(x => { const r = parseCocos(x); if (r) rows.push(...r); else bad++; });
       if (!rows.length){ toast("Esos archivos no parecen el CSV de movimientos de Cocos.", true); return; }
       const have = new Set((S.cocos||[]).map(r => r.t)), seen = new Set(), nuevos = rows.filter(r => !have.has(r.t) && !seen.has(r.t) && seen.add(r.t));
