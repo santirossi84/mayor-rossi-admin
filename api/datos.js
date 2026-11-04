@@ -30,6 +30,12 @@ function detalle(e) {
   return m.slice(0, 200);
 }
 
+const LISTAS = ['retiros', 'gastos', 'comisiones', 'inversiones', 'cheques', 'cuenta', 'cocos', 'movs'];
+const totalRegistros = d => LISTAS.reduce((a, k) => a + (d && Array.isArray(d[k]) ? d[k].length : 0), 0);
+const OPTS = { access: 'private', addRandomSuffix: false, contentType: 'application/json' };
+
+// Devuelve {doc, txt, etag} o null si el archivo no existe. Cualquier otra respuesta rara es un error:
+// nunca se confunde "no pude leer" con "no hay datos", porque eso haria arrancar la app en blanco.
 async function leer() {
   let r;
   try {
@@ -38,16 +44,26 @@ async function leer() {
     if (e && (e.name === 'BlobNotFoundError' || /not.?found/i.test(String(e.message)))) return null;
     throw e;
   }
-  if (!r || r.statusCode !== 200) return null;
-  return JSON.parse(await new Response(r.stream).text());
+  if (!r) return null;
+  if (r.statusCode !== 200) throw new Error('respuesta inesperada del Blob (' + r.statusCode + ')');
+  const txt = await new Response(r.stream).text();
+  return { doc: JSON.parse(txt), txt, etag: r.blob && r.blob.etag };
+}
+
+// Copia de respaldo que nunca pisa una existente. Se mira con get (null = no existe), igual que leer(),
+// en vez de depender del texto de un error.
+async function copiaUnica(ruta, txt) {
+  const previa = await get(ruta, { access: 'private', useCache: false });
+  if (previa) { try { await previa.stream.cancel(); } catch {} return; }
+  await put(ruta, txt, { ...OPTS, allowOverwrite: true });
 }
 
 export async function GET(request) {
   const err = control(request);
   if (err) return err;
   try {
-    const doc = await leer();
-    return doc ? json(doc) : json({ vacio: true, rev: 0 });
+    const actual = await leer();
+    return actual ? json(actual.doc) : json({ vacio: true, rev: 0 });
   } catch (e) {
     return json({ error: 'No se pudieron leer los datos: ' + detalle(e) }, 500);
   }
@@ -67,14 +83,37 @@ export async function PUT(request) {
   }
   try {
     const actual = await leer();
-    const revActual = actual ? +actual.rev || 0 : 0;
     const revCliente = +body.rev || 0;
-    if (actual && revCliente < revActual) return json(actual, 409);
-    const doc = { rev: Math.max(revActual, revCliente) + 1, updatedAt: new Date().toISOString(), data };
-    const txt = JSON.stringify(doc);
-    const opts = { access: 'private', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json' };
-    await put(PATH, txt, opts);
-    await put('mayor-rossi/historial/' + doc.updatedAt.slice(0, 10) + '.json', txt, opts);
+    if (!actual && revCliente > 0) {
+      // El cliente vio datos en el servidor y ahora no hay nada: no se guarda encima.
+      return json({ error: 'El servidor no encuentra los datos guardados. No se sobrescribio nada: baja un respaldo desde Ajustes.', code: 'sin_base' }, 503);
+    }
+    const revActual = actual ? +actual.doc.rev || 0 : 0;
+    if (actual && revCliente < revActual) return json(actual.doc, 409);
+
+    const antes = actual ? totalRegistros(actual.doc.data) : 0, despues = totalRegistros(data);
+    if (body.forzar !== true && antes >= 10 && despues < antes * 0.5) {
+      return json({ error: 'Este guardado borraria ' + (antes - despues) + ' de ' + antes + ' registros.', code: 'caida', antes, despues }, 422);
+    }
+
+    const ahora = new Date().toISOString();
+    if (actual) {
+      // Estado previo a este guardado: el primero del dia queda como copia del dia (no se pisa),
+      // y si el guardado reduce registros se guarda ademas una copia puntual.
+      await copiaUnica('mayor-rossi/historial/' + ahora.slice(0, 10) + '.json', actual.txt);
+      if (despues < antes || body.forzar === true) await copiaUnica('mayor-rossi/historial/' + ahora.replace(/[:.]/g, '-') + '-antes-de-borrar.json', actual.txt);
+    }
+    const doc = { rev: Math.max(revActual, revCliente) + 1, updatedAt: ahora, data };
+    try {
+      // Escritura condicional: si alguien guardo entre la lectura y esta escritura, falla y devuelve 409.
+      await put(PATH, JSON.stringify(doc), actual ? { ...OPTS, allowOverwrite: true, ifMatch: actual.etag } : { ...OPTS, allowOverwrite: false });
+    } catch (e) {
+      if (e && (e.name === 'BlobPreconditionFailedError' || /precondition|already exists/i.test(String(e.message)))) {
+        const nuevo = await leer();
+        if (nuevo) return json(nuevo.doc, 409);
+      }
+      throw e;
+    }
     return json({ rev: doc.rev, updatedAt: doc.updatedAt });
   } catch (e) {
     return json({ error: 'No se pudieron guardar los datos: ' + detalle(e) }, 500);

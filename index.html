@@ -1692,35 +1692,81 @@ async function saveCfg(next){ S.config = next; changed(); }
 
 /* ===================== sincronización con la nube ===================== */
 const API = "/api/datos", CACHE = "mayor_rossi_v1", KEY = "mayor_rossi_clave";
-let saveT = null, saving = false, dirty = false;
+let saveT = null, saving = false, dirty = false, forceNext = false, lastRef = 0;
+const LISTAS = ["retiros","gastos","comisiones","inversiones","cheques","cuenta","cocos","movs"];
 const snapshot = () => ({retiros:S.retiros, gastos:S.gastos, comisiones:S.comisiones, inversiones:S.inversiones, cheques:S.cheques, cuenta:S.cuenta, cocos:S.cocos, movs:S.movs, config:S.config || DEF_CFG});
-function cacheLocal(){ try { localStorage.setItem(CACHE, JSON.stringify({rev:S.rev, data:snapshot()})); } catch(e){} }
+const clone = o => JSON.parse(JSON.stringify(o));
+const norm = d => { d = d || {}; const o = {}; for (const k of LISTAS) o[k] = Array.isArray(d[k]) ? d[k] : []; o.config = d.config || DEF_CFG; return o; };
+/*MERGE-START*/
+/* Fusión de tres vías: base = último estado que se sincronizó con el servidor, local = lo que hay acá,
+   servidor = lo último que guardó otro dispositivo. Lo agregado o editado acá se suma, lo borrado acá se borra,
+   y todo lo demás queda como está en el servidor. Así un cambio nunca pisa al del otro dispositivo. */
+const keyOf = r => r && r.id !== undefined ? "i:" + r.id : r && r.t !== undefined ? "t:" + r.t : "j:" + JSON.stringify(r);
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+function mergeLista(base, local, server){
+  const B = new Map((base || []).map(r => [keyOf(r), r])), L = new Map((local || []).map(r => [keyOf(r), r])), seen = new Set(), out = [];
+  const mine = k => L.has(k) && (!B.has(k) || !same(L.get(k), B.get(k)));
+  for (const r of server || []){ const k = keyOf(r); seen.add(k);
+    if (B.has(k) && !L.has(k)) continue;
+    out.push(mine(k) ? L.get(k) : r); }
+  for (const r of local || []){ const k = keyOf(r); if (!seen.has(k) && mine(k)) out.push(r); }
+  return out;
+}
+function mergeData(base, local, server){
+  base = base || {}; const out = {};
+  for (const k of LISTAS) out[k] = mergeLista(base[k], local[k], server[k]);
+  const bc = base.config || {}, lc = local.config || {}, cfg = Object.assign({}, server.config || {});
+  for (const k of new Set([...Object.keys(lc), ...Object.keys(bc)])) if (!same(lc[k], bc[k])){ if (k in lc) cfg[k] = lc[k]; else delete cfg[k]; }
+  out.config = cfg; return out;
+}
+/*MERGE-END*/
+const total = d => LISTAS.reduce((a, k) => a + (d[k] ? d[k].length : 0), 0);
+function cacheLocal(){ try { localStorage.setItem(CACHE, JSON.stringify({rev:S.rev, data:snapshot(), dirty, base: dirty ? S.base : null})); } catch(e){} }
 function setSync(t){ S.sync = t; const st = $("#status"); if (!st || S.mode !== "live") return;
   st.className = "chip " + (t === "Guardado" ? "live" : t === "Guardando…" ? "busy" : "bad"); st.lastElementChild.textContent = t; }
-function api(method, body){ return fetch(API, {method, cache:"no-store", headers:{"content-type":"application/json","x-clave":S.clave}, body: body ? JSON.stringify(body) : undefined}); }
-function changed(){ render(true); if (S.mode !== "live") return; cacheLocal(); dirty = true; setSync("Guardando…"); clearTimeout(saveT); saveT = setTimeout(flush, 700); }
+function api(method, body){ return fetch(API, {method, cache:"no-store", headers:{"content-type":"application/json","x-clave":S.clave}, body}); }
+function changed(){ render(true); if (S.mode !== "live") return; dirty = true; cacheLocal(); setSync("Guardando…"); clearTimeout(saveT); saveT = setTimeout(flush, 700); }
+function later(ms){ clearTimeout(saveT); saveT = setTimeout(flush, ms); }
+function apply(data, rev){
+  const d = data || {}; S.rev = +rev || 0;
+  for (const k of LISTAS) S[k] = Array.isArray(d[k]) ? d[k] : [];
+  S.config = d.config || null; cacheLocal(); render(true); loadPX();
+}
+function load(doc){ apply(doc && doc.data, doc && doc.rev); S.base = clone(snapshot()); dirty = false; cacheLocal(); }
+/* Hay cambios míos sin guardar y el servidor tiene otra versión: se unen en vez de pisar. */
+function reconcile(j){
+  const merged = mergeData(S.base, clone(snapshot()), norm(j.data));
+  S.base = clone(norm(j.data)); dirty = true; apply(merged, j.rev);
+}
+function restoreCache(){
+  try { const c = JSON.parse(localStorage.getItem(CACHE) || "null"); if (!c || !c.data) return false;
+    dirty = !!c.dirty; S.base = dirty && c.base ? c.base : clone(norm(c.data)); S.mode = "live"; S.sync = "Conectando…"; apply(c.data, c.rev); return true;
+  } catch(e){ return false; }
+}
 async function flush(){
-  if (saving){ clearTimeout(saveT); saveT = setTimeout(flush, 400); return; }
+  if (saving){ later(400); return; }
   if (!dirty || S.mode !== "live") return;
   saving = true; dirty = false;
+  const dataTxt = JSON.stringify(snapshot()), enviado = JSON.parse(dataTxt), txt = `{"rev":${+S.rev || 0},"forzar":${forceNext},"data":${dataTxt}}`;
   try {
-    const r = await api("PUT", {rev:S.rev, data:snapshot()}); const j = await r.json().catch(() => ({}));
-    if (r.status === 409){ load(j); setSync("Guardado"); toast("Había cambios desde otro dispositivo y se cargaron. Revisá tu último cambio.", true); }
-    else if (r.status === 401){ dirty = true; logout("La clave cambió. Volvé a entrar."); }
-    else if (!r.ok){ dirty = true; setSync("Sin guardar"); toast(j.error || "No se pudo guardar. Tocá el estado para reintentar.", true); }
-    else { S.rev = j.rev; cacheLocal(); setSync(dirty ? "Guardando…" : "Guardado"); }
-  } catch(e){ dirty = true; setSync("Sin guardar"); toast("Sin conexión. El cambio quedó en este dispositivo; tocá el estado para reintentar.", true); }
-  finally { saving = false; if (dirty && S.sync === "Guardando…"){ clearTimeout(saveT); saveT = setTimeout(flush, 500); } }
+    const r = await api("PUT", txt); const j = await r.json().catch(() => ({}));
+    if (r.status === 409){
+      reconcile(j); setSync("Guardando…"); later(200);
+      toast("Otro dispositivo había guardado cambios: se unieron con los tuyos.", false);
+    }
+    else if (r.status === 401){ dirty = true; cacheLocal(); logout("La clave cambió. Volvé a entrar. Tus cambios sin guardar se conservan.", true); }
+    else if (r.status === 422 && j.code === "caida"){
+      dirty = true; cacheLocal(); setSync("Sin guardar");
+      if (confirm((j.error || "Este guardado borraría muchos registros.") + "\n\nEl servidor tiene " + j.antes + " y este dispositivo " + j.despues + ". ¿Confirmás el borrado? (Se guarda una copia antes de borrar.)")){ forceNext = true; setSync("Guardando…"); later(50); }
+      else { dirty = false; forceNext = false; try { const r2 = await api("GET"), j2 = await r2.json(); if (r2.ok && !j2.vacio) load(j2); } catch(e){} setSync("Guardado"); toast("Cambio descartado: se recargaron los datos del servidor."); }
+    }
+    else if (!r.ok){ dirty = true; cacheLocal(); setSync("Sin guardar"); toast(j.error || "No se pudo guardar. Tocá el estado para reintentar.", true); }
+    else { S.rev = j.rev; S.base = enviado; forceNext = false; cacheLocal(); setSync(dirty ? "Guardando…" : "Guardado"); }
+  } catch(e){ dirty = true; cacheLocal(); setSync("Sin guardar"); toast("Sin conexión. El cambio quedó en este dispositivo y se guarda al volver la conexión.", true); }
+  finally { saving = false; if (dirty && S.sync === "Guardando…") later(500); }
 }
-function load(doc){
-  const d = (doc && doc.data) || {};
-  S.rev = +(doc && doc.rev) || 0;
-  S.retiros = Array.isArray(d.retiros) ? d.retiros : []; S.gastos = Array.isArray(d.gastos) ? d.gastos : [];
-  S.comisiones = Array.isArray(d.comisiones) ? d.comisiones : []; S.config = d.config || null;
-  for (const k of ["inversiones","cheques","cuenta","cocos","movs"]) S[k] = Array.isArray(d[k]) ? d[k] : [];
-  cacheLocal(); render(true); loadPX();
-}
-function logout(msg){ try { localStorage.removeItem(KEY); localStorage.removeItem(CACHE); } catch(e){}
+function logout(msg, keep){ try { localStorage.removeItem(KEY); if (!keep) localStorage.removeItem(CACHE); } catch(e){}
+  clearTimeout(saveT); dirty = false; forceNext = false; S.base = null;
   S.clave = ""; S.mode = "loading"; S.retiros = []; S.gastos = []; S.comisiones = []; S.inversiones = []; S.cheques = []; S.cuenta = []; S.cocos = []; S.movs = []; S.config = null; showGate(msg || ""); }
 function showGate(msg){ $("#gate").hidden = false; $("#gateErr").textContent = msg || ""; setTimeout(() => $("#gateKey").focus(), 50); }
 async function enter(clave){
@@ -1730,9 +1776,32 @@ async function enter(clave){
   if (r.status === 401) throw new Error("Clave incorrecta.");
   if (!r.ok) throw new Error(j.error || "No se pudo conectar.");
   try { localStorage.setItem(KEY, clave); } catch(e){}
+  if (S.mode !== "live") restoreCache();
   S.mode = "live"; $("#gate").hidden = true;
-  if (j.vacio) load({rev:0, data:{}}); else load(j);
+  if (j.vacio){
+    if (S.rev > 0){
+      /* El servidor dice que no hay nada pero este dispositivo ya había sincronizado antes: no se pisa ninguno de los dos. */
+      dirty = true; cacheLocal(); setSync("Sin guardar");
+      toast("El servidor no tiene datos y este dispositivo sí. No se sobrescribió nada: bajá un respaldo en Ajustes.", true); return;
+    }
+    if (total(snapshot()) > 0){ dirty = true; cacheLocal(); setSync("Guardando…"); later(300); return; }
+    load({rev:0, data:{}});
+  }
+  else if (dirty){ if ((+j.rev || 0) !== S.rev) reconcile(j); else S.base = S.base || clone(norm(j.data)); setSync("Guardando…"); later(300); return; }
+  else load(j);
   setSync("Guardado");
+}
+/* Trae los cambios de otros dispositivos al volver a la app, sin pisar nada si hay algo sin guardar. */
+const formAbierto = () => $("#layer").children.length > 0 || ($("#view").contains(document.activeElement) && document.activeElement.matches("input,select,textarea"));
+async function refrescar(force){
+  if (S.mode !== "live" || saving) return;
+  if (dirty){ later(100); return; }
+  if (!force && Date.now() - lastRef < 15000) return; lastRef = Date.now();
+  try {
+    const r = await api("GET"); if (!r.ok) return; const j = await r.json();
+    if (j.vacio || dirty || saving || S.mode !== "live" || formAbierto()) return;
+    if ((+j.rev || 0) > S.rev){ load(j); setSync("Guardado"); }
+  } catch(e){}
 }
 function download(name, text, type){
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], {type})); a.download = name;
@@ -2049,8 +2118,8 @@ document.addEventListener("click", async ev => {
   if (a === "exp"){ exportCSV(el.dataset.col); return; }
   if (a === "backup"){ download(`santiago-rossi-respaldo-${NOW.toISOString().slice(0,10)}.json`, JSON.stringify(snapshot(), null, 1), "application/json"); return; }
   if (a === "impNo"){ S.pendingImport = null; render(true); return; }
-  if (a === "impOk"){ const d = S.pendingImport; S.pendingImport = null; S.retiros = d.retiros; S.gastos = d.gastos; S.comisiones = d.comisiones; S.inversiones = d.inversiones; S.cheques = d.cheques; S.cuenta = d.cuenta; S.cocos = d.cocos; S.movs = d.movs; if (d.config) S.config = d.config; S.sel = null; changed(); toast("Datos importados"); return; }
-  if (a === "logout"){ logout(); return; }
+  if (a === "impOk"){ const d = S.pendingImport; S.pendingImport = null; download(`santiago-rossi-antes-de-importar-${NOW.toISOString().slice(0,10)}.json`, JSON.stringify(snapshot(), null, 1), "application/json"); forceNext = true; S.retiros = d.retiros; S.gastos = d.gastos; S.comisiones = d.comisiones; S.inversiones = d.inversiones; S.cheques = d.cheques; S.cuenta = d.cuenta; S.cocos = d.cocos; S.movs = d.movs; if (d.config) S.config = d.config; S.sel = null; changed(); toast("Datos importados"); return; }
+  if (a === "logout"){ if (dirty && !confirm("Hay cambios que todavía no se guardaron en la nube. Si salís, se pierden. ¿Salir igual?")) return; logout(); return; }
   if (a === "theme"){ const t = el.dataset.t; ls.set("theme", t); if (t === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.setAttribute("data-theme", t); render(true); return; }
   if (a === "print"){ printResumen(); return; }
   if (a === "selAll"){ const pend = S.retiros.filter(r => r.tipo !== "efectivo" && !r.facturado); const all = pend.every(r => SELF.has(r.id));
@@ -2118,8 +2187,9 @@ function boot(){
   let clave = ""; try { clave = localStorage.getItem(KEY) || ""; } catch(e){}
   if (!clave){ showGate(); return; }
   S.clave = clave;
-  try { const c = JSON.parse(localStorage.getItem(CACHE) || "null"); if (c){ S.mode = "live"; S.sync = "Conectando…"; load(c); } } catch(e){}
-  enter(clave).catch(e => { if (/Clave/.test(e.message)) logout("Tu clave cambió. Volvé a entrar."); else if (S.mode === "live"){ setSync("Sin conexión"); } else showGate(e.message); });
+  restoreCache();
+  const reintentar = n => setTimeout(() => enter(clave).catch(e => { if (/Clave/.test(e.message)) logout("Tu clave cambió. Volvé a entrar.", dirty); else if (n < 8) reintentar(n + 1); }), Math.min(30000, 3000 * (n + 1)));
+  enter(clave).catch(e => { if (/Clave/.test(e.message)) logout("Tu clave cambió. Volvé a entrar.", dirty); else if (S.mode === "live"){ setSync("Sin conexión"); reintentar(0); } else showGate(e.message); });
 }
 $("#gateForm").addEventListener("submit", async ev => {
   ev.preventDefault();
@@ -2132,6 +2202,9 @@ loadTC();
 try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => render(true)); } catch(e){}
 addEventListener("scroll", () => $("#topbar").classList.toggle("scrolled", scrollY > 4), {passive:true});
 addEventListener("beforeunload", e => { if (dirty || saving){ e.preventDefault(); e.returnValue = ""; } });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") refrescar(); });
+addEventListener("focus", () => refrescar()); addEventListener("online", () => refrescar(true));
+setInterval(() => { if (document.visibilityState === "visible") refrescar(); }, 60000);
 boot();
 })();
 </script>
