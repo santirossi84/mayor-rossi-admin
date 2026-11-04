@@ -10,8 +10,12 @@ Se publica sola en Vercel con cada git push a main.
 - package.json: dependencia @vercel/blob.
 
 ## Datos
-- Blob privado, archivo mayor-rossi/datos.json con {rev, updatedAt, data: {retiros, gastos, comisiones, inversiones, cheques, cuenta, cocos, movs, config}}. Copia diaria en mayor-rossi/historial/.
-- Control de concurrencia por rev (409 devuelve la versión del servidor). Copia local en localStorage "mayor_rossi_v1"; la clave en "mayor_rossi_clave".
+- Blob privado, archivo mayor-rossi/datos.json con {rev, updatedAt, data: {retiros, gastos, comisiones, inversiones, cheques, cuenta, cocos, movs, config}}.
+- Concurrencia: el servidor escribe con ifMatch (ETag) y compara rev; si otro dispositivo guardó antes, devuelve 409 con la versión del servidor. El cliente no la pisa: fusiona a tres vías (base = último estado sincronizado, local, servidor) por id (en cocos por `t`): suma lo agregado o editado acá, respeta lo borrado acá y deja el resto como está en el servidor; la config se fusiona por clave. Función mergeData entre los marcadores MERGE-START/END de index.html.
+- Copia local en localStorage "mayor_rossi_v1" = {rev, data, dirty, base}. Si queda con cambios sin guardar (sin conexión, error, recarga), al abrir se restaura y se fusiona con el servidor en vez de descartarse; reintenta con espera creciente si el servidor no responde. Al volver a la app (foco, visibilidad, online, cada 60 s) trae los cambios de otros dispositivos si no hay nada sin guardar ni un formulario abierto. La clave va en "mayor_rossi_clave".
+- Protecciones del servidor: rechaza (422, code "caida") un guardado que deje menos de la mitad de los registros si había 10 o más, salvo que el cliente confirme (forzar); si el cliente ya había sincronizado (rev > 0) y el Blob no existe, responde 503 y no escribe; leer() nunca toma una respuesta rara por "no hay datos".
+- Historial en mayor-rossi/historial/: AAAA-MM-DD.json = estado al empezar ese día (se escribe una sola vez, no se pisa) y AAAA-MM-DDTHH-MM-SS-mmmZ-antes-de-borrar.json = estado previo a cualquier guardado que reduce registros o fuerza un reemplazo (import). Archivos viejos AAAA-MM-DD.json eran el estado al final del día. Importar un respaldo baja antes un .json con los datos actuales (santiago-rossi-antes-de-importar-*.json).
+- @vercel/blob fijado en 2.8.2 (no usar latest).
 - Variables en Vercel: MAYOR_CLAVE, BLOB_READ_WRITE_TOKEN (la crea Vercel al conectar el Blob). Nunca escribir la clave en el código ni en el repo.
 - Los nombres de clientes nunca van al repo: la carga inicial se hace importando un respaldo .json desde Ajustes.
 - Modo demo con datos inventados: botón en la pantalla de acceso o la URL con #demo. Sirve para mostrar la app en el portfolio.
