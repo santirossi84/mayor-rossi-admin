@@ -616,10 +616,12 @@ const catL = c => { c = String(c ?? ""); return esc(c.charAt(0).toUpperCase() + 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const cfg = () => Object.assign({}, DEF_CFG, S.config || {});
 const ymOf = f => String(f||"").slice(0,7);
+/* Mes razonable (2000-2099). Una fecha mal tipeada (ej. año 0011) no debe correr el rango de meses de toda la app. */
+const okYM = x => /^20\d{2}-(0[1-9]|1[0-2])$/.test(x);
 const ymLabel = ym => { const [y,m] = ym.split("-"); return MES[+m-1]+" "+y.slice(2); };
 const ymLong = ym => { const [y,m] = ym.split("-"); return MESL[+m-1]+" "+y; };
 const ddmm = f => f ? f.slice(8,10)+"/"+f.slice(5,7) : "—";
-const addM = (ym,n) => { let [y,m] = ym.split("-").map(Number); m += n; while(m>12){m-=12;y++} while(m<1){m+=12;y--} return y+"-"+String(m).padStart(2,"0"); };
+const addM = (ym,n) => { let [y,m] = ym.split("-").map(Number); m += n; while(m>12){m-=12;y++} while(m<1){m+=12;y--} return String(y).padStart(4,"0")+"-"+String(m).padStart(2,"0"); };
 const mDiff = (a,b) => { const [ya,ma]=a.split("-").map(Number), [yb,mb]=b.split("-").map(Number); return (yb-ya)*12+(mb-ma); };
 const catColor = (() => { const extra = {}; let i = 0; return c => CATC[c] === "INK" ? K.ink : CATC[c] || extra[c] || (extra[c] = EXTRA[(i++)%EXTRA.length]); })();
 
@@ -869,7 +871,7 @@ function niceStep(raw){ const p = Math.pow(10, Math.floor(Math.log10(raw||1))); 
 
 /* ===================== modelo ===================== */
 function months(){
-  const all = [...S.retiros, ...S.gastos, ...S.comisiones].map(r => ymOf(r.fecha)).filter(x => /^\d{4}-\d{2}$/.test(x)).sort();
+  const all = [...S.retiros, ...S.gastos, ...S.comisiones].map(r => ymOf(r.fecha)).filter(okYM).sort();
   let a = all[0] || addM(CUR_YM,-5), b = all[all.length-1] || CUR_YM;
   if (CUR_YM > b) b = CUR_YM;
   const out = []; for (let m = a; m <= b; m = addM(m,1)) out.push(m);
@@ -1820,7 +1822,7 @@ function openForm(col, id){
   const clients = [...new Set([...S.retiros, ...S.comisiones].map(x => x.cliente).filter(Boolean))].sort();
   const cats = [...new Set([...CATS, ...S.gastos.map(g => g.categoria).filter(g => g && !OLDCAT.includes(g))])];
   const title = {retiros:"retiro", gastos:"gasto", comisiones:"cobro con comisión", inversiones:"posición", cheques:"cheque", movs:"movimiento entre cuentas", cuenta: r.tipo === "pago" ? "pago a papá" : "consumo de papá"}[col];
-  let fields = `<div class="f2"><div class="f"><label for="fFecha">Fecha</label><input id="fFecha" type="date" required value="${esc(r.fecha)}"></div>
+  let fields = `<div class="f2"><div class="f"><label for="fFecha">Fecha</label><input id="fFecha" type="date" min="2000-01-01" max="2099-12-31" required value="${esc(r.fecha)}"></div>
     <div class="f"><label for="fImp">Importe (ARS)</label><input id="fImp" type="number" step="0.01" required value="${r.importe===""?"":+r.importe}" inputmode="decimal"></div></div>`;
   if (col === "retiros") fields += `<div class="f"><label for="fCli">Cliente</label><input id="fCli" list="dlCli" required value="${esc(r.cliente||"")}" autocomplete="off"><datalist id="dlCli">${clients.map(c => `<option value="${esc(c)}">`).join("")}</datalist></div>
     <div class="f"><label for="fTipo">Tipo</label><select id="fTipo"><option value="transferencia" ${r.tipo!=="efectivo"?"selected":""}>Transferencia de cliente</option><option value="efectivo" ${r.tipo==="efectivo"?"selected":""}>Retiro en efectivo</option></select></div>
@@ -1829,24 +1831,24 @@ function openForm(col, id){
     <div class="f"><label for="fCat">Categoría</label><input id="fCat" list="dlCat" required value="${esc(r.categoria||"")}" autocomplete="off"><datalist id="dlCat">${cats.map(c => `<option value="${esc(c)}">`).join("")}</datalist><small>Importe negativo = ingreso o reintegro.</small></div>`;
   if (col === "comisiones") fields += `<div class="f"><label for="fCli">Cliente</label><input id="fCli" list="dlCli" required value="${esc(r.cliente||"")}" autocomplete="off"><datalist id="dlCli">${clients.map(c => `<option value="${esc(c)}">`).join("")}</datalist></div>
     <div class="f2"><div class="f"><label for="fTasa">Comisión (%)</label><input id="fTasa" type="number" step="0.1" min="0" value="${((+r.tasa||.05)*100).toFixed(1)}"></div>
-    <div class="f"><label for="fCompF">Fecha de compensación</label><input id="fCompF" type="date" value="${esc(r.compensadoFecha||"")}"></div></div>
+    <div class="f"><label for="fCompF">Fecha de compensación</label><input id="fCompF" type="date" min="2000-01-01" max="2099-12-31" value="${esc(r.compensadoFecha||"")}"></div></div>
     <label class="chk"><input id="fFac" type="checkbox" ${r.facturado?"checked":""}> Facturado</label><label class="chk"><input id="fComp" type="checkbox" ${r.compensado?"checked":""}> Compensado</label>`;
   const num = v => v === "" || v === undefined ? "" : +v;
   if (col === "movs"){ const L = ctas(), d0 = r.desde || ctaFind(/efectivo/i), h0 = r.hacia || (L.find(c => c.id !== d0) || {}).id;
-    fields = `<div class="f2"><div class="f"><label for="fFecha">Fecha</label><input id="fFecha" type="date" required value="${esc(r.fecha)}"></div>
+    fields = `<div class="f2"><div class="f"><label for="fFecha">Fecha</label><input id="fFecha" type="date" min="2000-01-01" max="2099-12-31" required value="${esc(r.fecha)}"></div>
     <div class="f"><label for="fImp">Sale (moneda de origen)</label><input id="fImp" type="number" step="0.01" required value="${r.importe===""?"":+r.importe}" inputmode="decimal"></div></div>
     <div class="f2"><div class="f"><label for="fDes">Desde</label><select id="fDes">${L.map(c => `<option value="${esc(c.id)}" data-mon="${c.moneda}" ${c.id===d0?"selected":""}>${esc(c.nombre)} · ${c.moneda}</option>`).join("")}</select></div>
     <div class="f"><label for="fHac">Hacia</label><select id="fHac">${L.map(c => `<option value="${esc(c.id)}" data-mon="${c.moneda}" ${c.id===h0?"selected":""}>${esc(c.nombre)} · ${c.moneda}</option>`).join("")}</select></div></div>
     <div class="f" id="fDstW"><label for="fDst">Entra (moneda de destino)</label><input id="fDst" type="number" step="0.01" value="${r.destino ? +r.destino : ""}" inputmode="decimal"><small id="fDstH">Si cambiás pesos por dólares, cargá cuánto entró; ves el tipo de cambio que te quedó.</small></div>`; }
   if (col === "cheques") fields = `<div class="f"><label for="fLib">Librador</label><input id="fLib" value="${esc(r.librador||"")}" autocomplete="off"></div>
-    <div class="f2"><div class="f"><label for="fFecha">Fecha de compra</label><input id="fFecha" type="date" required value="${esc(r.fecha)}"></div>
-    <div class="f"><label for="fVto">Vencimiento</label><input id="fVto" type="date" required value="${esc(r.vencimiento||"")}"></div></div>
+    <div class="f2"><div class="f"><label for="fFecha">Fecha de compra</label><input id="fFecha" type="date" min="2000-01-01" max="2099-12-31" required value="${esc(r.fecha)}"></div>
+    <div class="f"><label for="fVto">Vencimiento</label><input id="fVto" type="date" min="2000-01-01" max="2099-12-31" required value="${esc(r.vencimiento||"")}"></div></div>
     <div class="f2"><div class="f"><label for="fImp">Pagado (ARS)</label><input id="fImp" type="number" step="0.01" required value="${num(r.pagado)}" inputmode="decimal"></div>
     <div class="f"><label for="fNom">Nominal (ARS)</label><input id="fNom" type="number" step="0.01" required value="${num(r.nominal)}" inputmode="decimal"></div></div>
     <label class="chk"><input id="fCob" type="checkbox" ${r.cobrado?"checked":""}> Ya está cobrado</label>`;
   if (col === "cuenta") fields = `<div class="f"><label for="fTipo">Tipo</label><select id="fTipo"><option value="cargo" ${r.tipo!=="pago"?"selected":""}>Consumo de papá (le debo)</option><option value="pago" ${r.tipo==="pago"?"selected":""}>Pago a papá (liquidación)</option></select></div>
     <div class="f"><label for="fCon">Concepto</label><input id="fCon" required value="${esc(r.concepto||"")}" autocomplete="off"></div>
-    <div class="f2"><div class="f"><label for="fFecha">Fecha</label><input id="fFecha" type="date" required value="${esc(r.fecha)}"></div>
+    <div class="f2"><div class="f"><label for="fFecha">Fecha</label><input id="fFecha" type="date" min="2000-01-01" max="2099-12-31" required value="${esc(r.fecha)}"></div>
     <div class="f"><label for="fMon">Moneda</label><select id="fMon"><option value="ARS" ${r.moneda!=="USD"?"selected":""}>Pesos</option><option value="USD" ${r.moneda==="USD"?"selected":""}>Dólares</option></select></div></div>
     <div class="f"><label for="fImp">Importe</label><input id="fImp" type="number" step="0.01" required value="${num(r.importe)}" inputmode="decimal"></div>`;
   if (col === "inversiones") fields = `<div class="f2"><div class="f"><label for="fTic">Activo / ticker</label><input id="fTic" required value="${esc(r.ticker||"")}" autocomplete="off" placeholder="SPY, BTC, S30J7…"></div>
@@ -1855,7 +1857,7 @@ function openForm(col, id){
     <div class="f"><label for="fCant">Cantidad</label><input id="fCant" type="number" step="any" value="${num(r.cantidad)}" inputmode="decimal"></div></div>
     <div class="f2"><div class="f"><label for="fImp">Invertido (USD)</label><input id="fImp" type="number" step="0.01" required value="${num(r.costo)}" inputmode="decimal"></div>
     <div class="f"><label for="fPx">Valor manual (USD)</label><input id="fPx" type="number" step="any" value="${+r.precio>0?+r.precio:""}" inputmode="decimal"><small>CEDEAR, acción o cripto: precio por unidad, solo si no querés el online. LECAP, FCI u otro: valor actual total.</small></div></div>
-    <div class="f"><label for="fFecha">Fecha de alta</label><input id="fFecha" type="date" required value="${esc(r.fecha)}"></div>`;
+    <div class="f"><label for="fFecha">Fecha de alta</label><input id="fFecha" type="date" min="2000-01-01" max="2099-12-31" required value="${esc(r.fecha)}"></div>`;
   const defCta = (rec ? null : (col === "retiros" ? ctaFind(/mutual|billetera/i) : col === "gastos" ? (ls.get("ctaG") || ctaFind(/mutual|billetera/i)) : col === "cheques" ? (ls.get("ctaQ") || ctaFind(/mutual|billetera/i)) : col === "cuenta" ? ctaFind(/mutual|billetera/i) : ""));
   if (col === "retiros") fields += ctaField(rec ? r.cta : defCta, "Entra a la cuenta", "fCta", r.montoCta ?? "");
   if (col === "gastos") fields += ctaField(rec ? r.cta : defCta, "Sale de la cuenta", "fCta", r.montoCta ?? "");
@@ -1886,7 +1888,7 @@ function openForm(col, id){
   frm.addEventListener("submit", async ev => {
     ev.preventDefault();
     const g = s => frm.querySelector(s), fecha = g("#fFecha").value, imp = parseFloat(String(g("#fImp").value).replace(",","."));
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return $("#fErr").textContent = "Cargá una fecha válida.";
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha) || !okYM(fecha.slice(0,7))) return $("#fErr").textContent = "Cargá una fecha válida (revisá el año).";
     if (!isFinite(imp) || (imp === 0 && col !== "inversiones")) return $("#fErr").textContent = "El importe tiene que ser un número distinto de cero.";
     if (NEWC && imp < 0) return $("#fErr").textContent = "El importe no puede ser negativo.";
     let data;
