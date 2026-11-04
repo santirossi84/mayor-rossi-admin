@@ -21,6 +21,7 @@ Se publica sola en Vercel con cada git push a main.
 - Modo demo con datos inventados: botón en la pantalla de acceso o la URL con #demo. Sirve para mostrar la app en el portfolio.
 
 ## Reglas de negocio
+- Fechas inválidas: okYM() acepta solo meses 2000-2099 y okF() solo días que existen en ese rango; months() ignora lo inválido y lo que queda a más de un año hacia adelante (un año mal tipeado corría el rango y dejaba afuera el mes actual). Esos registros no entran en meses ni totales: aparecen en Ajustes › «Fechas para corregir» (botón Corregir abre el formulario) y como señal crítica en el Resumen. Los formularios rechazan fechas fuera de rango. Si una pantalla tira un error, render() muestra un aviso con acceso a Ajustes en vez de dejar la pantalla anterior.
 - Montos guardados en pesos. La vista se muestra en USD o ARS. Lo impositivo (ARCA, Monotributo) siempre en pesos.
 - Cotización: dólar oficial BNA, venta, de cada día (api.argentinadatos.com histórico + dolarapi.com para hoy), cacheada en localStorage "mayor_rossi_tc" por 6 horas. Cada operación se convierte con el valor de su fecha (fin de semana = último hábil anterior). config.tcManual[mes] fija un mes a mano; config.tc es el respaldo viejo y solo se usa sin conexión.
 - Sueldo a retirar: objetivo mensual (hoy $ 1.500.000). Libro de retiros: subtotal del mes, diferencia contra el objetivo y diferencia acumulada. El acumulado negativo es lo que queda por retirar.
