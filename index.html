@@ -1733,6 +1733,13 @@ async function saveCfg(next){ S.config = next; changed(); }
 /* ===================== sincronización con la nube ===================== */
 const API = "/api/datos", CACHE = "mayor_rossi_v1", KEY = "mayor_rossi_clave";
 let saveT = null, saving = false, dirty = false, forceNext = false, lastRef = 0;
+/* Reintentos y frenos: un fallo nunca puede disparar pedidos al Blob en bucle (cada put cuenta como operación avanzada, el cupo es chico).
+   - Tras un error se reintenta solo hasta 3 veces, esperando 2 s, 5 s y 15 s. Después queda "Sin guardar" hasta que se toque el estado o se cambie algo.
+   - Al volver a la pestaña se refresca como máximo una vez cada 5 minutos (no hay refresco periódico).
+   - Freno de emergencia: más de 30 PUT o 60 GET en 10 minutos corta la sincronización de esta sesión. */
+const BACKOFF = [2000, 5000, 15000], REFRESCO_MIN = 5 * 60 * 1000, PAUSA_TXT = "Sincronización pausada";
+const FRENO = {ventana: 10 * 60 * 1000, PUT: 30, GET: 60}, usos = {PUT: [], GET: []};
+let fallos = 0, pausada = false;
 const LISTAS = ["retiros","gastos","comisiones","inversiones","cheques","cuenta","cocos","movs"];
 const snapshot = () => ({retiros:S.retiros, gastos:S.gastos, comisiones:S.comisiones, inversiones:S.inversiones, cheques:S.cheques, cuenta:S.cuenta, cocos:S.cocos, movs:S.movs, config:S.config || DEF_CFG});
 const clone = o => JSON.parse(JSON.stringify(o));
@@ -1762,11 +1769,32 @@ function mergeData(base, local, server){
 /*MERGE-END*/
 const total = d => LISTAS.reduce((a, k) => a + (d[k] ? d[k].length : 0), 0);
 function cacheLocal(){ try { localStorage.setItem(CACHE, JSON.stringify({rev:S.rev, data:snapshot(), dirty, base: dirty ? S.base : null})); } catch(e){} }
-function setSync(t){ S.sync = t; const st = $("#status"); if (!st || S.mode !== "live") return;
+function setSync(t){ if (pausada) t = PAUSA_TXT; S.sync = t; const st = $("#status"); if (!st || S.mode !== "live") return;
   st.className = "chip " + (t === "Guardado" ? "live" : t === "Guardando…" ? "busy" : "bad"); st.lastElementChild.textContent = t; }
-function api(method, body){ return fetch(API, {method, cache:"no-store", headers:{"content-type":"application/json","x-clave":S.clave}, body}); }
-function changed(){ render(true); if (S.mode !== "live") return; dirty = true; cacheLocal(); setSync("Guardando…"); clearTimeout(saveT); saveT = setTimeout(flush, 700); }
-function later(ms){ clearTimeout(saveT); saveT = setTimeout(flush, ms); }
+function pausar(){
+  if (pausada) return; pausada = true; clearTimeout(saveT);
+  console.error("[mayor-rossi] Sincronización pausada por el freno de emergencia: más de " + FRENO.PUT + " PUT o " + FRENO.GET + " GET en 10 minutos.", {put: usos.PUT.length, get: usos.GET.length});
+  setSync(PAUSA_TXT); toast("Sincronización pausada: hubo demasiados pedidos seguidos al servidor. Tus cambios quedan en este dispositivo; recargá la página para reanudar.", true);
+}
+/* Único punto de salida hacia /api/datos: cuenta cada pedido y corta si se pasa del tope. */
+function api(method, body){
+  const L = usos[method], ahora = Date.now();
+  while (L.length && ahora - L[0] > FRENO.ventana) L.shift();
+  if (pausada || L.length >= FRENO[method]){ pausar(); return Promise.reject(Object.assign(new Error(PAUSA_TXT), {pausada:true})); }
+  L.push(ahora);
+  return fetch(API, {method, cache:"no-store", headers:{"content-type":"application/json","x-clave":S.clave}, body});
+}
+function changed(){ render(true); if (S.mode !== "live") return; dirty = true; fallos = 0; cacheLocal(); setSync("Guardando…"); clearTimeout(saveT); saveT = setTimeout(flush, 700); }
+function later(ms){ if (pausada) return; clearTimeout(saveT); saveT = setTimeout(flush, ms); }
+/* Queda sin guardar y NO se reintenta solo: hace falta tocar el estado o hacer un cambio. */
+function parar(msg){ dirty = true; fallos = BACKOFF.length; cacheLocal(); setSync("Sin guardar"); toast(msg + " Tocá el estado para reintentar.", true); }
+/* Reintento automático con espera creciente (2 s, 5 s, 15 s); pasado el tope queda "Sin guardar". Nunca reintenta en menos de 2 s. */
+function reintentoAuto(msg){
+  dirty = true; cacheLocal();
+  if (pausada) return;
+  if (fallos >= BACKOFF.length){ setSync("Sin guardar"); toast(msg + " Dejé de reintentar solo: tocá el estado para probar de nuevo.", true); return; }
+  setSync("Guardando…"); later(BACKOFF[fallos++]);
+}
 function apply(data, rev){
   const d = data || {}; S.rev = +rev || 0;
   for (const k of LISTAS) S[k] = Array.isArray(d[k]) ? d[k] : [];
@@ -1784,15 +1812,15 @@ function restoreCache(){
   } catch(e){ return false; }
 }
 async function flush(){
-  if (saving){ later(400); return; }
-  if (!dirty || S.mode !== "live") return;
+  /* Si ya hay un guardado en curso no se reprograma nada: al terminar, el éxito agenda lo que haya cambiado y el error sigue su espera. */
+  if (pausada || saving || !dirty || S.mode !== "live") return;
   saving = true; dirty = false;
   const dataTxt = JSON.stringify(snapshot()), enviado = JSON.parse(dataTxt), txt = `{"rev":${+S.rev || 0},"forzar":${forceNext},"data":${dataTxt}}`;
   try {
     const r = await api("PUT", txt); const j = await r.json().catch(() => ({}));
     if (r.status === 409){
-      reconcile(j); setSync("Guardando…"); later(200);
-      toast("Otro dispositivo había guardado cambios: se unieron con los tuyos.", false);
+      if (!j.data || (+j.rev || 0) <= (+S.rev || 0)) parar("El servidor rechazó el guardado, pero no tiene nada nuevo para unir con tus cambios.");
+      else { reconcile(j); toast("Otro dispositivo había guardado cambios: se unieron con los tuyos.", false); reintentoAuto("No se pudo guardar después de unir los cambios."); }
     }
     else if (r.status === 401){ dirty = true; cacheLocal(); logout("La clave cambió. Volvé a entrar. Tus cambios sin guardar se conservan.", true); }
     else if (r.status === 422 && j.code === "caida"){
@@ -1800,10 +1828,16 @@ async function flush(){
       if (confirm((j.error || "Este guardado borraría muchos registros.") + "\n\nEl servidor tiene " + j.antes + " y este dispositivo " + j.despues + ". ¿Confirmás el borrado? (Se guarda una copia antes de borrar.)")){ forceNext = true; setSync("Guardando…"); later(50); }
       else { dirty = false; forceNext = false; try { const r2 = await api("GET"), j2 = await r2.json(); if (r2.ok && !j2.vacio) load(j2); } catch(e){} setSync("Guardado"); toast("Cambio descartado: se recargaron los datos del servidor."); }
     }
-    else if (!r.ok){ dirty = true; cacheLocal(); setSync("Sin guardar"); toast(j.error || "No se pudo guardar. Tocá el estado para reintentar.", true); }
-    else { S.rev = j.rev; S.base = enviado; forceNext = false; cacheLocal(); setSync(dirty ? "Guardando…" : "Guardado"); }
-  } catch(e){ dirty = true; cacheLocal(); setSync("Sin guardar"); toast("Sin conexión. El cambio quedó en este dispositivo y se guarda al volver la conexión.", true); }
-  finally { saving = false; if (dirty && S.sync === "Guardando…") later(500); }
+    else if (!r.ok){
+      const m = j.error || "No se pudo guardar (error " + r.status + ").";
+      if (r.status >= 500 && j.code !== "sin_base") reintentoAuto(m); else parar(m);
+    }
+    else { S.rev = j.rev; S.base = enviado; forceNext = false; fallos = 0; cacheLocal(); if (dirty){ setSync("Guardando…"); later(500); } else setSync("Guardado"); }
+  } catch(e){
+    if (e && e.pausada){ dirty = true; cacheLocal(); }
+    else reintentoAuto("Sin conexión: el cambio quedó en este dispositivo.");
+  }
+  finally { saving = false; }
 }
 function logout(msg, keep){ try { localStorage.removeItem(KEY); if (!keep) localStorage.removeItem(CACHE); } catch(e){}
   clearTimeout(saveT); dirty = false; forceNext = false; S.base = null;
@@ -1815,6 +1849,7 @@ async function enter(clave){
   const j = await r.json().catch(() => ({}));
   if (r.status === 401) throw new Error("Clave incorrecta.");
   if (!r.ok) throw new Error(j.error || "No se pudo conectar.");
+  lastRef = Date.now();
   try { localStorage.setItem(KEY, clave); } catch(e){}
   if (S.mode !== "live") restoreCache();
   S.mode = "live"; $("#gate").hidden = true;
@@ -1831,12 +1866,12 @@ async function enter(clave){
   else load(j);
   setSync("Guardado");
 }
-/* Trae los cambios de otros dispositivos al volver a la app, sin pisar nada si hay algo sin guardar. */
+/* Trae los cambios de otros dispositivos al volver a la app (visibilitychange / focus), como máximo una vez cada 5 minutos.
+   Con cambios sin guardar no pide nada: eso lo maneja flush() con su propia espera. */
 const formAbierto = () => $("#layer").children.length > 0 || ($("#view").contains(document.activeElement) && document.activeElement.matches("input,select,textarea"));
-async function refrescar(force){
-  if (S.mode !== "live" || saving) return;
-  if (dirty){ later(100); return; }
-  if (!force && Date.now() - lastRef < 15000) return; lastRef = Date.now();
+async function refrescar(){
+  if (S.mode !== "live" || saving || pausada || dirty) return;
+  if (Date.now() - lastRef < REFRESCO_MIN) return; lastRef = Date.now();
   try {
     const r = await api("GET"); if (!r.ok) return; const j = await r.json();
     if (j.vacio || dirty || saving || S.mode !== "live" || formAbierto()) return;
@@ -2170,7 +2205,9 @@ document.addEventListener("click", async ev => {
     const txt = sel.map(r => `${ddmm(r.fecha)}/${String(r.fecha||"").slice(0,4)}\t${r.cliente}\t${nf2.format(+r.importe||0)}`).join("\n");
     try { await navigator.clipboard.writeText(txt); toast(`Copiadas ${sel.length} líneas`); } catch(e){ toast("No se pudo copiar.", true); } return; }
   if (a === "facLote"){ const n = SELF.size; S.retiros.forEach(r => { if (SELF.has(r.id)) r.facturado = true; }); SELF.clear(); changed(); toast(`${n} marcada${n>1?"s":""} como facturada${n>1?"s":""}`); return; }
-  if (a === "sync"){ if (S.mode === "live" && S.sync !== "Guardado"){ dirty = true; setSync("Guardando…"); flush(); } return; }
+  if (a === "sync"){
+    if (pausada){ toast("La sincronización está pausada por el freno de emergencia. Recargá la página para reanudar; tus cambios están guardados en este dispositivo.", true); return; }
+    if (S.mode === "live" && S.sync !== "Guardado"){ dirty = true; fallos = 0; setSync("Guardando…"); flush(); } return; }
   if (a === "demo"){ $("#gate").hidden = true; startDemo(); return; }
   if (a === "exitDemo"){ S.mode = "loading"; S.retiros = []; S.gastos = []; S.comisiones = []; S.inversiones = []; S.cheques = []; S.cuenta = []; S.cocos = []; S.movs = []; S.config = null; boot(); return; }
   if (a === "addSaldo"){ const c = cfg(); saveCfg(Object.assign({}, c, {saldos:[...(c.saldos||[]), {nombre:"Nueva cuenta", importe:0}]})); return; }
@@ -2245,8 +2282,9 @@ try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () =
 addEventListener("scroll", () => $("#topbar").classList.toggle("scrolled", scrollY > 4), {passive:true});
 addEventListener("beforeunload", e => { if (dirty || saving){ e.preventDefault(); e.returnValue = ""; } });
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") refrescar(); });
-addEventListener("focus", () => refrescar()); addEventListener("online", () => refrescar(true));
-setInterval(() => { if (document.visibilityState === "visible") refrescar(); }, 60000);
+addEventListener("focus", () => refrescar());
+/* Al volver la conexión se reintenta una vez lo que quedó sin guardar (con 2 s de espera); el freno de emergencia sigue vigente. */
+addEventListener("online", () => { if (pausada || S.mode !== "live") return; if (dirty){ fallos = 0; later(BACKOFF[0]); } else refrescar(); });
 boot();
 })();
 </script>
