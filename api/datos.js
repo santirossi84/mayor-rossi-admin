@@ -47,15 +47,15 @@ async function leer() {
   if (!r) return null;
   if (r.statusCode !== 200) throw new Error('respuesta inesperada del Blob (' + r.statusCode + ')');
   const txt = await new Response(r.stream).text();
-  return { doc: JSON.parse(txt), txt, etag: r.blob && r.blob.etag };
+  return { doc: JSON.parse(txt), txt };
 }
 
-// Copia de respaldo que nunca pisa una existente. Se mira con get (null = no existe), igual que leer(),
-// en vez de depender del texto de un error.
+// Copia del dia: nunca pisa una existente. Se mira con get (null = no existe) porque un put que falla
+// tambien cuenta como operacion avanzada del Blob y un get es una operacion simple (mucho mas barata).
 async function copiaUnica(ruta, txt) {
   const previa = await get(ruta, { access: 'private', useCache: false });
   if (previa) { try { await previa.stream.cancel(); } catch {} return; }
-  await put(ruta, txt, { ...OPTS, allowOverwrite: true });
+  await put(ruta, txt, { ...OPTS, allowOverwrite: false });
 }
 
 export async function GET(request) {
@@ -98,22 +98,22 @@ export async function PUT(request) {
 
     const ahora = new Date().toISOString();
     if (actual) {
-      // Estado previo a este guardado: el primero del dia queda como copia del dia (no se pisa),
-      // y si el guardado reduce registros se guarda ademas una copia puntual.
-      await copiaUnica('mayor-rossi/historial/' + ahora.slice(0, 10) + '.json', actual.txt);
-      if (despues < antes || body.forzar === true) await copiaUnica('mayor-rossi/historial/' + ahora.replace(/[:.]/g, '-') + '-antes-de-borrar.json', actual.txt);
+      // Estado previo a este guardado. El primero del dia queda como copia del dia (no se pisa): si el documento
+      // ya se guardo hoy (updatedAt de hoy) la copia ya existe y se evita el get extra; solo se consulta una vez por dia.
+      if (String(actual.doc.updatedAt || '').slice(0, 10) !== ahora.slice(0, 10)) {
+        await copiaUnica('mayor-rossi/historial/' + ahora.slice(0, 10) + '.json', actual.txt);
+      }
+      // Si el guardado reduce registros (o fuerza un reemplazo) va ademas una copia puntual. El nombre lleva
+      // milisegundos, asi que es siempre un archivo nuevo: put directo, sin get previo.
+      if (despues < antes || body.forzar === true) {
+        await put('mayor-rossi/historial/' + ahora.replace(/[:.]/g, '-') + '-antes-de-borrar.json', actual.txt, { ...OPTS, allowOverwrite: false });
+      }
     }
     const doc = { rev: Math.max(revActual, revCliente) + 1, updatedAt: ahora, data };
-    try {
-      // Escritura condicional: si alguien guardo entre la lectura y esta escritura, falla y devuelve 409.
-      await put(PATH, JSON.stringify(doc), actual ? { ...OPTS, allowOverwrite: true, ifMatch: actual.etag } : { ...OPTS, allowOverwrite: false });
-    } catch (e) {
-      if (e && (e.name === 'BlobPreconditionFailedError' || /precondition|already exists/i.test(String(e.message)))) {
-        const nuevo = await leer();
-        if (nuevo) return json(nuevo.doc, 409);
-      }
-      throw e;
-    }
+    // Sin ifMatch: el control de concurrencia es solo por rev (arriba, 409 si el cliente quedo atras).
+    // Cualquier error del put sube al catch de abajo y sale como 500, nunca como 409: el cliente tomaria un
+    // 409 por "otro dispositivo guardo" y reintentaria.
+    await put(PATH, JSON.stringify(doc), { ...OPTS, allowOverwrite: actual ? true : false });
     return json({ rev: doc.rev, updatedAt: doc.updatedAt });
   } catch (e) {
     return json({ error: 'No se pudieron guardar los datos: ' + detalle(e) }, 500);
