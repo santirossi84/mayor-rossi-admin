@@ -1854,6 +1854,9 @@ async function enter(clave){
   if (S.mode !== "live") restoreCache();
   S.mode = "live"; $("#gate").hidden = true;
   if (j.vacio){
+    /* Migración a la base nueva (Neon): el servidor arranca sin datos y lo avisa con "migracion". Este dispositivo
+       sube su copia local como punto de partida (la API rechazaría el guardado si ya hubiera datos en la base). */
+    if (j.migracion && S.rev > 0 && total(snapshot()) > 0) S.rev = 0;
     if (S.rev > 0){
       /* El servidor dice que no hay nada pero este dispositivo ya había sincronizado antes: no se pisa ninguno de los dos. */
       dirty = true; cacheLocal(); setSync("Sin guardar");

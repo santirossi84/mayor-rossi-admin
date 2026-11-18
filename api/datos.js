@@ -1,7 +1,9 @@
-import { put, get } from '@vercel/blob';
 import { createHash, timingSafeEqual } from 'node:crypto';
+import { obtenerDoc, guardarDoc, guardarHistorial, detalleError } from './_db.js';
 
-const PATH = 'mayor-rossi/datos.json';
+// Datos en Postgres (Neon), esquema apps: app "mayor-rossi", documento "datos".
+// El Blob viejo (mayor-rossi/datos.json) solo se lee para rescatar la copia previa a la migración.
+const APP = 'mayor-rossi', DOC = 'datos', BLOB = 'mayor-rossi/datos.json';
 
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), {
@@ -24,48 +26,16 @@ function control(request) {
   return null;
 }
 
-function detalle(e) {
-  const m = String((e && e.message) || e || 'error desconocido');
-  if (/token|credential|oidc|unauthori|store/i.test(m)) return 'no se encuentra el almacenamiento Blob conectado al proyecto (' + m.slice(0, 160) + ')';
-  return m.slice(0, 200);
-}
-
 const LISTAS = ['retiros', 'gastos', 'comisiones', 'inversiones', 'cheques', 'cuenta', 'cocos', 'movs'];
 const totalRegistros = d => LISTAS.reduce((a, k) => a + (d && Array.isArray(d[k]) ? d[k].length : 0), 0);
-const OPTS = { access: 'private', addRandomSuffix: false, contentType: 'application/json' };
-
-// Devuelve {doc, txt, etag} o null si el archivo no existe. Cualquier otra respuesta rara es un error:
-// nunca se confunde "no pude leer" con "no hay datos", porque eso haria arrancar la app en blanco.
-async function leer() {
-  let r;
-  try {
-    r = await get(PATH, { access: 'private', useCache: false });
-  } catch (e) {
-    if (e && (e.name === 'BlobNotFoundError' || /not.?found/i.test(String(e.message)))) return null;
-    throw e;
-  }
-  if (!r) return null;
-  if (r.statusCode !== 200) throw new Error('respuesta inesperada del Blob (' + r.statusCode + ')');
-  const txt = await new Response(r.stream).text();
-  return { doc: JSON.parse(txt), txt };
-}
-
-// Copia del dia: nunca pisa una existente. Se mira con get (null = no existe) porque un put que falla
-// tambien cuenta como operacion avanzada del Blob y un get es una operacion simple (mucho mas barata).
-async function copiaUnica(ruta, txt) {
-  const previa = await get(ruta, { access: 'private', useCache: false });
-  if (previa) { try { await previa.stream.cancel(); } catch {} return; }
-  await put(ruta, txt, { ...OPTS, allowOverwrite: false });
-}
 
 export async function GET(request) {
   const err = control(request);
   if (err) return err;
   try {
-    const actual = await leer();
-    return actual ? json(actual.doc) : json({ vacio: true, rev: 0 });
+    return json(await obtenerDoc(APP, DOC, { blobRuta: BLOB }));
   } catch (e) {
-    return json({ error: 'No se pudieron leer los datos: ' + detalle(e) }, 500);
+    return json({ error: 'No se pudieron leer los datos: ' + detalleError(e) }, 500);
   }
 }
 
@@ -82,40 +52,27 @@ export async function PUT(request) {
     if (data[k] !== undefined && !Array.isArray(data[k])) return json({ error: 'Formato de datos invalido: ' + k }, 400);
   }
   try {
-    const actual = await leer();
-    const revCliente = +body.rev || 0;
-    if (!actual && revCliente > 0) {
-      // El cliente vio datos en el servidor y ahora no hay nada: no se guarda encima.
-      return json({ error: 'El servidor no encuentra los datos guardados. No se sobrescribio nada: baja un respaldo desde Ajustes.', code: 'sin_base' }, 503);
-    }
-    const revActual = actual ? +actual.doc.rev || 0 : 0;
-    if (actual && revCliente < revActual) return json(actual.doc, 409);
-
-    const antes = actual ? totalRegistros(actual.doc.data) : 0, despues = totalRegistros(data);
-    if (body.forzar !== true && antes >= 10 && despues < antes * 0.5) {
-      return json({ error: 'Este guardado borraria ' + (antes - despues) + ' de ' + antes + ' registros.', code: 'caida', antes, despues }, 422);
-    }
-
-    const ahora = new Date().toISOString();
-    if (actual) {
-      // Estado previo a este guardado. El primero del dia queda como copia del dia (no se pisa): si el documento
-      // ya se guardo hoy (updatedAt de hoy) la copia ya existe y se evita el get extra; solo se consulta una vez por dia.
-      if (String(actual.doc.updatedAt || '').slice(0, 10) !== ahora.slice(0, 10)) {
-        await copiaUnica('mayor-rossi/historial/' + ahora.slice(0, 10) + '.json', actual.txt);
-      }
-      // Si el guardado reduce registros (o fuerza un reemplazo) va ademas una copia puntual. El nombre lleva
-      // milisegundos, asi que es siempre un archivo nuevo: put directo, sin get previo.
-      if (despues < antes || body.forzar === true) {
-        await put('mayor-rossi/historial/' + ahora.replace(/[:.]/g, '-') + '-antes-de-borrar.json', actual.txt, { ...OPTS, allowOverwrite: false });
-      }
-    }
-    const doc = { rev: Math.max(revActual, revCliente) + 1, updatedAt: ahora, data };
-    // Sin ifMatch: el control de concurrencia es solo por rev (arriba, 409 si el cliente quedo atras).
-    // Cualquier error del put sube al catch de abajo y sale como 500, nunca como 409: el cliente tomaria un
-    // 409 por "otro dispositivo guardo" y reintentaria.
-    await put(PATH, JSON.stringify(doc), { ...OPTS, allowOverwrite: actual ? true : false });
-    return json({ rev: doc.rev, updatedAt: doc.updatedAt });
+    const forzar = body.forzar === true;
+    const r = await guardarDoc(APP, DOC, {
+      revCliente: +body.rev || 0,
+      data,
+      // Con la base vacía no hay nada que proteger: el primer guardado (la migración desde la copia local) entra directo.
+      revisar: async (actual, nueva) => {
+        if (!actual) return null;
+        const antes = totalRegistros(actual.data), despues = totalRegistros(nueva);
+        if (!forzar && antes >= 10 && despues < antes * 0.5) {
+          return { status: 422, body: { error: 'Este guardado borraria ' + (antes - despues) + ' de ' + antes + ' registros.', code: 'caida', antes, despues } };
+        }
+        // Si el guardado reduce registros (o fuerza un reemplazo) queda además una copia puntual del estado previo.
+        if (despues < antes || forzar) {
+          await guardarHistorial(APP, DOC, 'antes-de-borrar-' + new Date().toISOString(), actual);
+        }
+        return null;
+      },
+    });
+    // Cualquier error sale como 500, nunca como 409: el cliente toma un 409 como "otro dispositivo guardó".
+    return json(r.body, r.status);
   } catch (e) {
-    return json({ error: 'No se pudieron guardar los datos: ' + detalle(e) }, 500);
+    return json({ error: 'No se pudieron guardar los datos: ' + detalleError(e) }, 500);
   }
 }
