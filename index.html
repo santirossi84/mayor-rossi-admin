@@ -88,8 +88,21 @@ button{cursor:pointer}
 
 .main{flex:1;min-width:0;width:100%;max-width:1440px;margin:0 auto;padding-inline:var(--gut);padding-block:0 64px}
 .hud{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 20px;padding-block:40px 20px}
+.brand{min-width:0;max-width:100%}
 .brand h1{margin:0;font:400 clamp(48px,8vw,112px)/.88 var(--fx);text-transform:uppercase;letter-spacing:-.005em;overflow-wrap:anywhere}
 .brand p{margin:10px 0 0;color:var(--sec);font-size:16px;font-weight:500}
+/* cabezal ASCII: montaña del escudo, chica, encima del título. Piedra en claro, mostaza en oscuro. */
+.ascii{display:block;width:max-content;max-width:100%;margin:0 0 8px;overflow:hidden;font:clamp(8px,2.5vw,13px)/1.05 var(--fm);color:var(--stone);opacity:.4;white-space:pre;pointer-events:none;user-select:none}
+.ascii .ln{display:block;white-space:pre;animation:asciiUp .1s steps(22,end) both;animation-delay:calc(var(--i) * 60ms)}
+@keyframes asciiUp{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .ascii{color:var(--mustard)}}
+:root[data-theme="dark"] .ascii{color:var(--mustard)}
+.gate .ascii{color:var(--mustard);opacity:.7}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .gate .ascii{opacity:.45}}
+:root[data-theme="dark"] .gate .ascii{opacity:.45}
+.gate .ascii.disipa{animation:niebla .46s ease forwards}
+@keyframes niebla{to{opacity:0;letter-spacing:.35em}}
+@media (prefers-reduced-motion:reduce){.ascii .ln{animation:none;clip-path:none}}
 .chip{display:inline-flex;align-items:center;gap:7px;height:28px;padding:0 12px;border:0;border-radius:var(--pill);background:var(--bg);font-size:12px;font-weight:500;color:var(--ink);white-space:nowrap}
 .chip .dot{width:7px;height:7px;border-radius:50%;background:var(--ter)}
 .chip.live .dot{background:var(--green-f)}
@@ -601,7 +614,7 @@ td .note{display:block;font-size:13px;color:var(--sec);font-weight:400;margin-to
 @media print{
   @page{size:A4;margin:14mm}
   html,body{background:#fff!important;color:#111!important}
-  .app,#layer,.gate,.toast{display:none!important}
+  .app,#layer,.gate,.toast,.ascii{display:none!important}
   #print{display:block!important;font:10.5pt/1.4 "Inter","Helvetica Neue",Arial,sans-serif;color:#111}
   #print h1{font:400 30pt/.95 "Anton","Impact",sans-serif;text-transform:uppercase;margin:0 0 4pt}
   #print h2{font-size:11pt;text-transform:uppercase;letter-spacing:.04em;margin:16pt 0 6pt;padding-bottom:3pt;border-bottom:1.5px solid #111}
@@ -648,6 +661,7 @@ td .note{display:block;font-size:13px;color:var(--sec);font-weight:400;margin-to
   <div class="main">
     <header class="hud">
       <div class="brand">
+        <pre class="ascii" id="ascii" aria-hidden="true"></pre>
         <h1 id="vtitle">Resumen</h1>
         <p id="sub">Santiago Rossi</p>
       </div>
@@ -662,6 +676,7 @@ td .note{display:block;font-size:13px;color:var(--sec);font-weight:400;margin-to
 <div class="gate" id="gate" hidden>
   <form id="gateForm" novalidate>
     <img class="logo" src="img/logo-smr.png" alt="SMR" width="112" height="128">
+    <pre class="ascii" id="gateAscii" aria-hidden="true"></pre>
     <h1>Santiago Rossi</h1>
     <p>Ingresá tu clave para abrir tus finanzas.</p>
     <label class="sr" for="gateKey">Clave</label>
@@ -1196,6 +1211,186 @@ function profileSVG(M, ms){
   return s + `</svg>`;
 }
 
+/* ===================== cabezal ASCII ===================== */
+/* Montaña del escudo, una variante por vista. Decorativa: el pre es aria-hidden. */
+const ACOL = 34, AROW = 8;
+const agr = () => Array.from({length:AROW}, () => Array(ACOL).fill(" "));
+const aput = (g, y, x, ch) => { if (ch && y >= 0 && y < AROW && x >= 0 && x < ACOL) g[y][x] = ch; };
+const asuelo = g => { for (let x = 1; x < ACOL - 1; x++) aput(g, AROW - 1, x, "▒"); };
+const aout = g => g.map(r => r.join("").replace(/\s+$/, "")).join("\n");
+function aLadera(g, cx, top, bot, derecho){
+  aput(g, top, cx, "^");
+  for (let y = top + 1; y <= bot; y++){
+    aput(g, y, cx - (y - top), "/");
+    if (derecho) aput(g, y, cx + (y - top), "\\");
+  }
+}
+function asciiCabina(sol){
+  const g = agr(), cx = 14;
+  aLadera(g, cx, 1, 6, true);
+  if (sol === "alto") aput(g, 0, cx, "*");
+  else if (sol === "bajo") aput(g, 4, cx - 6, "*");
+  else if (sol === "suelo") aput(g, 6, 2, "*");
+  asuelo(g); return aout(g);
+}
+function asciiRetiros(){
+  const g = agr(), cx = 14;
+  aLadera(g, cx, 1, 6, false);
+  for (let y = 2; y <= 6; y++){ const x = cx + (y - 1); aput(g, y, x, "\\"); aput(g, y, x - 1, "."); }
+  asuelo(g); return aout(g);
+}
+function asciiGastos(vals){
+  const g = agr(), cx = 11, rows = 5;
+  const v = (vals && vals.length ? vals : [3, 2, 2, 1]).slice(0, 5);
+  const s = v.reduce((a, b) => a + b, 0) || 1;
+  let hs = v.map(x => Math.max(1, Math.round(x / s * rows))), guard = 0;
+  while (hs.reduce((a, b) => a + b, 0) > rows && guard++ < 20){ const i = hs.reduce((bi, h, ix) => h > hs[bi] ? ix : bi, 0); if (hs[i] > 1) hs[i]--; else break; }
+  while (hs.reduce((a, b) => a + b, 0) < rows) hs[0]++;
+  aput(g, 1, cx, "^");
+  const tono = ["▓", "▒", "░", "▓", "▒"];
+  let y = 2, ancho = 1;
+  hs.forEach((h, i) => {
+    for (let r = 0; r < h && y + r <= 6; r++){
+      const yy = y + r;
+      aput(g, yy, cx - (yy - 1), "/");
+      for (let k = 1; k <= ancho && cx + k < ACOL - 1; k++) aput(g, yy, cx + k, tono[i % tono.length]);
+      ancho++;
+    }
+    y += h;
+  });
+  asuelo(g); return aout(g);
+}
+function asciiArca(){
+  const g = agr();
+  aLadera(g, 10, 1, 6, true);
+  aput(g, 0, 22, "·"); aput(g, 1, 23, "·"); aput(g, 2, 22, "·");
+  [" |", "/|\\", "| |", "|_|"].forEach((ln, i) => { for (let k = 0; k < ln.length; k++) aput(g, 3 + i, 22 + k, ln[k]); });
+  asuelo(g); return aout(g);
+}
+function asciiAjustes(){
+  const g = agr();
+  aLadera(g, 11, 1, 6, true);
+  [" /|", "/ |", "  /", " / ", "/  "].forEach((ln, i) => { for (let k = 0; k < ln.length; k++) if (ln[k] !== " ") aput(g, 1 + i, 24 + k, ln[k]); });
+  "~~~".split("").forEach((c, k) => aput(g, 6, 27 + k, c));
+  asuelo(g); return aout(g);
+}
+function asciiComis(){
+  const g = agr();
+  aLadera(g, 12, 1, 6, true);
+  aput(g, 0, 24, "%"); aput(g, 1, 24, "|"); aput(g, 2, 24, "|"); aput(g, 3, 23, "/");
+  asuelo(g); return aout(g);
+}
+function asciiNiebla(){
+  const g = agr(), cx = 14;
+  aLadera(g, cx, 1, 6, true);
+  for (let y = 0; y < 6; y++) for (let x = 0; x < ACOL; x++){
+    if (g[y][x] !== " ") continue;
+    if (Math.abs(x - cx) < 12 && (x + y) % 2 === 0) g[y][x] = "·";
+  }
+  asuelo(g); return aout(g);
+}
+/* Valor de la cartera al cierre de cada mes: costo de posiciones ya abiertas + nominal de cheques todavía en cartera. Sin serie, perfil fijo. */
+function serieCartera(ms){
+  if (!ms || !ms.length) return null;
+  const pts = ms.map(m => {
+    const end = m + "-31"; let v = 0, any = false;
+    for (const h of S.inversiones || []){
+      if (okF(h.fecha) && h.fecha > end) continue;
+      const c = +h.costo || +h.precio || 0; if (c > 0){ v += c; any = true; }
+    }
+    for (const q of S.cheques || []){
+      if (!okF(q.fecha) || q.fecha > end) continue;
+      if (q.cobrado && okF(q.cobradoFecha) && q.cobradoFecha <= end) continue;
+      const nom = +q.nominal || 0; if (nom > 0){ v += nom / (tcFor(m) || 1); any = true; }
+    }
+    return any ? v : 0;
+  });
+  return pts.some(x => x > 0) ? pts : null;
+}
+function asciiPerfil(vals){
+  const g = agr();
+  const min = Math.min(...vals), max = Math.max(...vals), span = (max - min) || 1;
+  const x0 = 4, x1 = ACOL - 5, ys = [];
+  for (let x = x0; x <= x1; x++){
+    const t = (x - x0) / (x1 - x0), i = t * (vals.length - 1);
+    const i0 = Math.floor(i), i1 = Math.min(vals.length - 1, i0 + 1);
+    const v = vals[i0] + (vals[i1] - vals[i0]) * (i - i0);
+    ys.push([x, 6 - Math.round((v - min) / span * 5)]);
+  }
+  ys.forEach(([x, y], i) => {
+    const prev = i ? ys[i - 1][1] : y;
+    if (Math.abs(y - prev) > 1){ const step = y > prev ? 1 : -1; for (let yy = prev + step; yy !== y; yy += step) aput(g, yy, x, step > 0 ? "\\" : "/"); }
+    aput(g, y, x, y < prev ? "/" : y > prev ? "\\" : "_");
+  });
+  let pico = ys[0]; ys.forEach(p => { if (p[1] < pico[1]) pico = p; });
+  aput(g, pico[1], pico[0], "^");
+  asuelo(g); return aout(g);
+}
+function solDelMes(M, ms){
+  const SM = selMonths(ms);
+  const ret = sumConv(M, SM, o => o.ret), gas = sumConv(M, SM, o => o.gas), ing = sumConv(M, SM, o => o.ing);
+  const ahorro = ret + ing - gas;
+  if (ahorro > 0) return "alto";
+  const fondo = ret > 0 ? -ahorro / ret : 1;
+  if (fondo < .35) return "bajo";
+  if (fondo < .75) return "suelo";
+  return "no";
+}
+function catsDelPeriodo(M, ms){
+  const cat = {};
+  for (const m of selMonths(ms)) for (const [k, v] of Object.entries(cv(at(M, m)).cat)) if (v > 0) cat[k] = (cat[k] || 0) + v;
+  return Object.entries(cat).sort((a, b) => b[1] - a[1]).slice(0, 5).map(e => e[1]);
+}
+function arteDe(vista, M, ms){
+  if (vista === "cabina") return asciiCabina(solDelMes(M, ms));
+  if (vista === "retiros") return asciiRetiros();
+  if (vista === "gastos") return asciiGastos(catsDelPeriodo(M, ms));
+  if (vista === "arca") return asciiArca();
+  if (vista === "comisiones") return asciiComis();
+  if (vista === "ajustes") return asciiAjustes();
+  if (NOPER.includes(vista)){ const s = serieCartera(ms); return s ? asciiPerfil(s) : asciiCabina("no"); }
+  return asciiCabina("no");
+}
+function pintarAscii(M, ms){
+  const el = $("#ascii"); if (!el) return;
+  const arte = arteDe(S.view, M, ms);
+  const firma = S.view + "|" + (S.sel || "") + "|" + arte;
+  if (el.dataset.f === firma) return;
+  el.dataset.f = firma;
+  const lineas = arte.split("\n");
+  el.replaceChildren();
+  lineas.forEach((ln, i) => {
+    const s = document.createElement("span");
+    s.className = "ln";
+    s.style.setProperty("--i", String(lineas.length - 1 - i));
+    s.textContent = ln;
+    el.appendChild(s);
+  });
+}
+function pintarNiebla(){
+  const el = $("#gateAscii"); if (!el || el.dataset.listo) return;
+  el.dataset.listo = "1";
+  const lineas = asciiNiebla().split("\n");
+  el.replaceChildren();
+  lineas.forEach((ln, i) => {
+    const s = document.createElement("span");
+    s.className = "ln";
+    s.style.setProperty("--i", String(lineas.length - 1 - i));
+    s.textContent = ln;
+    el.appendChild(s);
+  });
+}
+let gateGen = 0;
+function cerrarGate(){
+  const gate = $("#gate"); if (!gate || gate.hidden) return;
+  const pre = $("#gateAscii");
+  const quieto = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!pre || quieto){ gate.hidden = true; return; }
+  const gen = ++gateGen;
+  pre.classList.add("disipa");
+  setTimeout(() => { if (gen === gateGen) gate.hidden = true; }, 460);
+}
+
 /* ===================== header ===================== */
 function railHints(){
   const rail = document.querySelector(".rail"); if (!rail) return;
@@ -1251,6 +1446,7 @@ function renderChrome(M, ms){
     ? `<div class="banner"><b>Demo</b><span>Estás viendo datos de ejemplo inventados. Podés cargar, editar y borrar: nada se guarda.</span><button class="btn" data-act="exitDemo">Salir de la demo</button></div>`
     : empty && S.view !== "ajustes" && !NOPER.includes(S.view) ? `<div class="banner info"><b>Todavía no hay datos</b><span>Importá tu respaldo desde Ajustes o cargá tu primer retiro.</span><button class="btn" data-act="view" data-v="ajustes">Ir a Ajustes</button></div>` : "");
   railFocus();
+  pintarAscii(M, ms);
 }
 
 /* ===================== vistas ===================== */
@@ -2107,7 +2303,7 @@ async function flush(){
 function logout(msg, keep){ try { localStorage.removeItem(KEY); if (!keep) localStorage.removeItem(CACHE); } catch(e){}
   clearTimeout(saveT); dirty = false; forceNext = false; S.base = null;
   S.clave = ""; S.mode = "loading"; S.retiros = []; S.gastos = []; S.comisiones = []; S.inversiones = []; S.cheques = []; S.cuenta = []; S.cocos = []; S.movs = []; S.config = null; showGate(msg || ""); }
-function showGate(msg){ $("#gate").hidden = false; $("#gateErr").textContent = msg || ""; setTimeout(() => $("#gateKey").focus(), 50); }
+function showGate(msg){ gateGen++; $("#gate").hidden = false; const pre = $("#gateAscii"); if (pre){ pre.classList.remove("disipa"); delete pre.dataset.listo; } pintarNiebla(); $("#gateErr").textContent = msg || ""; setTimeout(() => $("#gateKey").focus(), 50); }
 async function enter(clave){
   S.clave = clave;
   const r = await api("GET");
@@ -2117,7 +2313,7 @@ async function enter(clave){
   lastRef = Date.now();
   try { localStorage.setItem(KEY, clave); } catch(e){}
   if (S.mode !== "live") restoreCache();
-  S.mode = "live"; $("#gate").hidden = true;
+  S.mode = "live"; cerrarGate();
   if (j.vacio){
     /* Migración a la base nueva (Neon): el servidor arranca sin datos y lo avisa con "migracion". Este dispositivo
        sube su copia local como punto de partida (la API rechazaría el guardado si ya hubiera datos en la base). */
@@ -2476,7 +2672,7 @@ document.addEventListener("click", async ev => {
   if (a === "sync"){
     if (pausada){ toast("La sincronización está pausada por el freno de emergencia. Recargá la página para reanudar; tus cambios están guardados en este dispositivo.", true); return; }
     if (S.mode === "live" && S.sync !== "Guardado"){ dirty = true; fallos = 0; setSync("Guardando…"); flush(); } return; }
-  if (a === "demo"){ $("#gate").hidden = true; startDemo(); return; }
+  if (a === "demo"){ cerrarGate(); startDemo(); return; }
   if (a === "exitDemo"){ S.mode = "loading"; S.retiros = []; S.gastos = []; S.comisiones = []; S.inversiones = []; S.cheques = []; S.cuenta = []; S.cocos = []; S.movs = []; S.config = null; boot(); return; }
   if (a === "addSaldo"){ const c = cfg(); saveCfg(Object.assign({}, c, {saldos:[...(c.saldos||[]), {nombre:"Nueva cuenta", importe:0}]})); return; }
   if (a === "rmSaldo"){ const c = cfg(); const s = (c.saldos||[]).slice(); s.splice(+el.dataset.i, 1); saveCfg(Object.assign({}, c, {saldos:s})); return; }
