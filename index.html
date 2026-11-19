@@ -1340,6 +1340,7 @@ function vLibro(M, ms){
    Nube de puntos del escudo SMR de fondo (gira despacio, respira y se aparta del mouse), datos en las esquinas,
    titular gigante con lo que falta retirar, alerta del Monotributo, cinta con las novedades, pulso de retiros y botones de carga. */
 const VIVO = {anim: false, cont: false};
+const mill = v => S.hide ? "$ ••" : "$ " + (v / 1e6).toLocaleString("es-AR", {minimumFractionDigits:1, maximumFractionDigits:1}) + " M";
 function heroVivo(M, ms, o){
   const rows = libroRows(M, ms); if (!rows.length) return "";
   const ci = rows.findIndex(x => x.m === CUR_YM), cur = ci >= 0 ? rows[ci] : rows[rows.length-1], prevAcc = ci > 0 ? rows[ci-1].acc : 0;
@@ -1357,7 +1358,7 @@ function heroVivo(M, ms, o){
     : `<span class="k ok">Vas adelantado · ${esc(mes.toLowerCase())}</span><h2 class="num" data-cuenta="${Math.round(-falta)}">${ars(-falta)}</h2>
        <p>Ya cubriste el sueldo de ${esc(mes.toLowerCase())}, contando el arrastre de los meses anteriores.</p>`;
   const alerta = `<button type="button" class="alr ${use > .85 || pc > cat ? "crit" : ""}" data-act="view" data-v="arca"><span class="lbl">Monotributo ${esc(cat)} · ARCA</span><b class="num">${pct(use)}</b>
-    <p>${use >= 1 ? `<strong>Pasado del tope</strong> de la categoría ${esc(cat)}. 12 meses: ${compact(fw.tot, "ARS")} contra ${compact(tope, "ARS")}. Recategorizá en ${nm}.` : `del tope anual de la ${esc(cat)}. A este ritmo encaja en la ${esc(pc)}. Próxima recategorización: ${nm}.`}</p></button>`;
+    <p>${use >= 1 ? `<strong>Pasado del tope</strong> de la categoría ${esc(cat)}. 12 meses: ${mill(fw.tot)} contra ${mill(tope)}. Recategorizá en ${nm}.` : `del tope anual de la ${esc(cat)}. A este ritmo encaja en la ${esc(pc)}. Próxima recategorización: ${nm}.`}</p></button>`;
   // cinta
   const qa = chqAlert(), ps = cuentaSaldo();
   const items = [`Dólar BNA $ ${nf0.format(tc)}`, `Monotributo ${cat} al ${pct(use)} del tope`,
