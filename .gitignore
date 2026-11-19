@@ -1,4 +1,5 @@
 node_modules
+.hallmark
 .vercel
 *.json.bak
 mayor-rossi-importar.json
