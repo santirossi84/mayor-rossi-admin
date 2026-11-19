@@ -3,50 +3,54 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#F5F5F5" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#E8251A" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#FF2B17" media="(prefers-color-scheme: dark)">
 <script>try{var t=localStorage.getItem("mr:theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <title>Santiago Rossi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap">
 <link rel="icon" type="image/png" href="img/favicon.png">
 <link rel="apple-touch-icon" href="img/logo-smr-180.png">
 <style>
-/* Layout: lenguaje Nike — barra utilitaria gris, navegación horizontal blanca, título cartel en mayúsculas,
-   bloque de campaña negro con el número gigante, tarjetas planas sobre gris, píldoras negras. */
+/* Layout: piel Tabloide (Pirate Wires, Print, Filmtopia) — cinta roja arriba, navegación en cajas, titulares Anton gigantes,
+   etiquetas en grotesca condensada, tarjetas planas con borde fino; un solo color fuerte (rojo) para lo urgente y lo negativo.
+   En oscuro: negro y crema. En claro: papel y tinta. El Resumen abre con la nube de puntos del escudo SMR. */
 :root{
   color-scheme: light;
-  --bg:#FFFFFF; --card:#F5F5F5; --ink:#111111; --ink2:#39393B; --sec:#707072; --ter:#9E9EA0;
-  --sep:#E5E5E5; --sep2:#CACACB; --fill:#F5F5F5; --fill2:#E5E5E5;
-  --blue:#111111; --blue-ink:#111111; --green:#007D48; --green-f:#1EAA52; --orange:#111111; --orange-ink:#D30005;
-  --red:#D30005; --red-f:#D30005; --purple:#0A7281; --indigo:#111111;
-  --on-ink:#FFFFFF; --hero:#111111; --hero-ink:#FFFFFF; --hero-sec:#9E9EA0;
-  --void:#FFFFFF; --ice:var(--ink); --mist:var(--sec); --dim:var(--ter); --prizm:var(--ink); --prizm-soft:#F5F5F5;
-  --mustard:var(--ink); --crit:var(--red); --good:var(--green-f); --warn:#111111; --frost:#0A7281;
+  --bg:#F2EEE6; --card:#EAE4D8; --ink:#0B0B0B; --ink2:#2B2925; --sec:#625D55; --ter:#8C877D;
+  --sep:#DCD5C7; --sep2:#C2BAAA; --fill:#E4DDCF; --fill2:#D8D0C0;
+  --blue:#0B0B0B; --blue-ink:#0B0B0B; --green:#0B7A3E; --green-f:#14934F; --orange:#0B0B0B; --orange-ink:#D81E0C;
+  --red:#D81E0C; --red-f:#D81E0C; --purple:#0A7281; --indigo:#0B0B0B;
+  --acc:#E8251A; --acc-ink:#0B0B0B; --cloud:226,36,24; --cloudA:.72;
+  --on-ink:#F2EEE6; --hero:var(--card); --hero-ink:var(--ink); --hero-sec:var(--sec);
+  --void:#F2EEE6; --ice:var(--ink); --mist:var(--sec); --dim:var(--ter); --prizm:var(--ink); --prizm-soft:#E4DDCF;
+  --mustard:var(--ink); --crit:var(--red); --good:var(--green-f); --warn:#0B0B0B; --frost:#0A7281;
   --line:var(--sep); --line-hi:var(--sep2);
   --f:"Inter","Helvetica Neue",Helvetica,Arial,sans-serif;
   --fd:"Inter","Helvetica Neue",Helvetica,Arial,sans-serif;
   --fx:"Anton","Bebas Neue","Impact","Arial Narrow Bold",sans-serif;
-  --r:0px; --rs:0px; --pill:30px; --gut:clamp(16px,3vw,48px);
-  --shadow:none; --glass:#FFFFFF; --glass-edge:inset 0 -1px 0 #E5E5E5;
-  --raised:#111111; --rail-bg:#FFFFFF; --top-bg:#F5F5F5; --sheet:#FFFFFF; --tcbg:transparent;
-  --hover:#FAFAFA; --toast:#111111; --g:17,17,17;
+  --fl:"Archivo","Arial Narrow",Arial,sans-serif;
+  --fm:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --r:0px; --rs:0px; --pill:0px; --gut:clamp(16px,3vw,48px);
+  --shadow:none; --glass:#F2EEE6; --glass-edge:inset 0 -1px 0 var(--sep);
+  --raised:#0B0B0B; --rail-bg:var(--bg); --top-bg:var(--acc); --sheet:#F2EEE6; --tcbg:transparent;
+  --hover:#ECE6DA; --toast:#0B0B0B; --g:11,11,11;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ color-scheme:dark;
-  --bg:#000000; --card:#161617; --ink:#FFFFFF; --ink2:#D4D4D6; --sec:#9E9EA0; --ter:#707072;
-  --sep:#262628; --sep2:#3A3A3C; --fill:#1C1C1E; --fill2:#2A2A2C;
-  --blue:#FFFFFF; --blue-ink:#FFFFFF; --green:#1EAA52; --green-f:#1EAA52; --orange:#FFFFFF; --orange-ink:#FF4D4F;
-  --red:#FF4D4F; --red-f:#FF4D4F; --on-ink:#111111; --hero:#FFFFFF; --hero-ink:#111111; --hero-sec:#707072;
-  --void:#161617; --prizm-soft:#1C1C1E; --rail-bg:#000000; --top-bg:#161617; --sheet:#111111; --hover:#121213;
-  --toast:#FFFFFF; --g:255,255,255; --glass:#000000; --glass-edge:inset 0 -1px 0 #262628; } }
+  --bg:#0B0B0B; --card:#141414; --ink:#F4F1EA; --ink2:#D9D5CC; --sec:#9A968E; --ter:#716D66;
+  --sep:#262626; --sep2:#3A3A3A; --fill:#1A1A1A; --fill2:#262626;
+  --blue:#F4F1EA; --blue-ink:#F4F1EA; --green:#3DDC84; --green-f:#3DDC84; --orange:#F4F1EA; --orange-ink:#FF3B26;
+  --red:#FF3B26; --red-f:#FF3B26; --acc:#FF2B17; --acc-ink:#0B0B0B; --cloud:255,43,23; --cloudA:.95; --on-ink:#0B0B0B;
+  --void:#141414; --prizm-soft:#1A1A1A; --rail-bg:#0B0B0B; --sheet:#111111; --hover:#121212; --warn:#F4F1EA;
+  --toast:#F4F1EA; --g:244,241,234; --glass:#0B0B0B; --glass-edge:inset 0 -1px 0 #262626; } }
 :root[data-theme="dark"]{ color-scheme:dark;
-  --bg:#000000; --card:#161617; --ink:#FFFFFF; --ink2:#D4D4D6; --sec:#9E9EA0; --ter:#707072;
-  --sep:#262628; --sep2:#3A3A3C; --fill:#1C1C1E; --fill2:#2A2A2C;
-  --blue:#FFFFFF; --blue-ink:#FFFFFF; --green:#1EAA52; --green-f:#1EAA52; --orange:#FFFFFF; --orange-ink:#FF4D4F;
-  --red:#FF4D4F; --red-f:#FF4D4F; --on-ink:#111111; --hero:#FFFFFF; --hero-ink:#111111; --hero-sec:#707072;
-  --void:#161617; --prizm-soft:#1C1C1E; --rail-bg:#000000; --top-bg:#161617; --sheet:#111111; --hover:#121213;
-  --toast:#FFFFFF; --g:255,255,255; --glass:#000000; --glass-edge:inset 0 -1px 0 #262628; }
+  --bg:#0B0B0B; --card:#141414; --ink:#F4F1EA; --ink2:#D9D5CC; --sec:#9A968E; --ter:#716D66;
+  --sep:#262626; --sep2:#3A3A3A; --fill:#1A1A1A; --fill2:#262626;
+  --blue:#F4F1EA; --blue-ink:#F4F1EA; --green:#3DDC84; --green-f:#3DDC84; --orange:#F4F1EA; --orange-ink:#FF3B26;
+  --red:#FF3B26; --red-f:#FF3B26; --acc:#FF2B17; --acc-ink:#0B0B0B; --cloud:255,43,23; --cloudA:.95; --on-ink:#0B0B0B;
+  --void:#141414; --prizm-soft:#1A1A1A; --rail-bg:#0B0B0B; --sheet:#111111; --hover:#121212; --warn:#F4F1EA;
+  --toast:#F4F1EA; --g:244,241,234; --glass:#0B0B0B; --glass-edge:inset 0 -1px 0 #262626; }
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--f);-webkit-font-smoothing:antialiased;overflow-x:hidden}
@@ -243,7 +247,7 @@ table.lib tfoot td{border-top:1px solid var(--ink);border-bottom:0;font-weight:7
 .pill{height:40px;padding:0 18px;border:1px solid var(--sep2);border-radius:var(--pill);background:var(--bg);font-size:14px;font-weight:500;color:var(--ink)}
 .pill:hover{border-color:var(--ink)}
 .pill[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--on-ink)}
-.search{height:40px;width:min(280px,100%);padding:0 18px;border:0;border-radius:24px;background:var(--bg);font-size:15px}
+.search{height:40px;width:min(280px,100%);padding:0 18px;border:1px solid var(--sep2);border-radius:0;background:var(--bg);font-size:15px}
 .search:focus{outline:none;box-shadow:0 0 0 2px var(--ink)}
 .search::placeholder{color:var(--sec)}
 .strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:8px}
@@ -306,7 +310,7 @@ td .note{display:block;font-size:13px;color:var(--sec);font-weight:400;margin-to
 .form{display:grid;gap:16px}
 .f{display:grid;gap:6px}
 .f label,.f .lbl{font-size:13px;font-weight:600;color:var(--ink)}
-.f input,.f select,.f textarea{height:48px;padding:0 16px;border:1px solid var(--sep2);border-radius:8px;background:var(--bg);min-width:0;width:100%;font-size:16px}
+.f input,.f select,.f textarea{height:48px;padding:0 16px;border:1px solid var(--sep2);border-radius:0;background:var(--bg);min-width:0;width:100%;font-size:16px}
 .f input:focus,.f select:focus,.f textarea:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
 .f textarea{height:80px;padding:12px 16px;resize:vertical}
 .f small{color:var(--sec);font-size:13px}
@@ -475,6 +479,115 @@ td .note{display:block;font-size:13px;color:var(--sec);font-weight:400;margin-to
 @media (max-width:600px){ .util .tcinfo #tcsrc,.util .tcinfo #tclbl{display:none} .eye{padding:0 10px} .hide-sm{display:none} .nav .btn{width:40px;padding:0} .brandmark span{font-size:20px} }
 @media (pointer:coarse){.ib{width:44px;height:44px}.btn,.pill{min-height:44px}.seg button{min-height:36px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- piel Tabloide: ajustes sobre los componentes ---------- */
+.util{background:var(--top-bg);color:#0B0B0B}
+.util .tcinfo{color:#0B0B0B}
+.util .tcinfo #tclbl,.util .tcinfo #tcsrc{color:rgba(11,11,11,.72)}
+.util .chip,.util .eye,.util .seg button{background:#0B0B0B;border:1px solid #0B0B0B;color:#F4F1EA;font-family:var(--fl);font-stretch:80%;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.util .seg button[aria-pressed="true"],.util .eye[aria-pressed="true"]{background:#F4F1EA;border-color:#F4F1EA;color:#0B0B0B}
+.util .chip.bad{color:#FFB4AB}.util .chip.bad .dot,.util .chip.demo .dot{background:#FF3B26}
+.util .chip.busy .dot{background:#F4F1EA}
+.brandmark span{font-size:26px}
+.rail{gap:4px}
+.rail button{height:38px;padding:0 12px;border:1px solid var(--sep2);font:700 13px/1 var(--fl);font-stretch:75%;letter-spacing:.1em;text-transform:uppercase}
+@media (max-width:1240px) and (min-width:901px){.rail button{font-size:12px;padding:0 8px}}
+.rail button::after{display:none}
+.rail button:hover{border-color:var(--ink)}
+.rail button[aria-current="page"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.rail button .badge,.subtabs .badge{border-radius:0;background:var(--acc);color:#0B0B0B}
+.lbl,.ph .meta,th,.camp .eyebrow,.src,.camp .stats span,.lh dt,.cd .mx,.alloc-key,.pend-m h3{font-family:var(--fl);font-stretch:78%;font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.ph h2{font:400 28px/1 var(--fx);text-transform:uppercase;letter-spacing:.01em}
+.panel{border:1px solid var(--sep)}
+.camp{border:1px solid var(--sep);border-top:4px solid var(--acc)}
+.camp .btn{background:var(--ink);color:var(--bg)}
+.camp .btn:hover{background:var(--ink);opacity:.85}
+.camp .up{color:var(--green)}.camp .down,.camp .warn-t{color:var(--red)}
+.btn.primary{background:var(--acc);color:var(--acc-ink)}
+.btn.primary:hover{background:var(--acc);filter:brightness(1.08)}
+.btn{font-family:var(--fl);font-stretch:80%;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.btn.ghost{text-transform:none;letter-spacing:0;font-family:var(--f);font-stretch:100%;font-weight:500}
+.pill,.tag,.seg button,.scale button{font-family:var(--fl);font-stretch:80%;font-weight:700;letter-spacing:.06em}
+.subtabs button[aria-current="page"]::after{background:var(--acc)}
+.trail .tick.cur span{background:var(--acc);color:#0B0B0B}
+.seal{font-family:var(--fl);font-stretch:80%;font-weight:700}
+.cats div.cur{background:var(--ink);color:var(--bg)}
+.gate{background:#0B0B0B;color:#F4F1EA}
+.gate::before{content:"";position:absolute;left:0;right:0;top:0;height:10px;background:#FF2B17}
+.gate h1{color:#F4F1EA}
+.gate p{color:#9A968E}
+.gate input{background:#1A1A1A;color:#F4F1EA}
+.gate input:focus{box-shadow:0 0 0 2px #FF2B17}
+.gate .btn.primary{background:#FF2B17;color:#0B0B0B}
+.gate .btn.ghost{color:#F4F1EA}
+@media (max-width:900px){.rail{gap:4px;padding-bottom:10px}.rail button{height:36px;font-size:12px}}
+
+/* ---------- Resumen: portada viva (nube de puntos del escudo SMR) ---------- */
+.vivo{position:relative;min-height:clamp(560px,74vh,700px);margin:0 0 0;border:1px solid var(--sep);border-bottom:0;overflow:hidden;background:var(--bg)}
+.vivo canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.vivo .vc{position:absolute;display:grid;gap:2px;max-width:42%;z-index:1}
+.vivo .vc .lbl{display:inline-flex;align-items:center;gap:7px}
+.vivo .vc b{font:400 clamp(30px,3.4vw,46px)/1 var(--fx);font-variant-numeric:tabular-nums}
+.vivo .vc small{font-size:13px;color:var(--sec)}
+.vivo .tl{left:28px;top:26px}.vivo .tr{right:28px;top:26px;text-align:right;justify-items:end}
+.vivo .ml{left:28px;top:168px}.vivo .mr{right:28px;top:168px;text-align:right;justify-items:end}
+.vivo .vc.link{cursor:pointer}
+.vivo .vc.link:hover b{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+.vivo .latido{width:7px;height:7px;border-radius:50%;background:var(--green-f);animation:latido 2s infinite}
+@keyframes latido{0%,100%{box-shadow:0 0 0 0 rgba(61,220,132,.5)}60%{box-shadow:0 0 0 7px rgba(61,220,132,0)}}
+.vivo .tit{position:absolute;left:28px;bottom:28px;max-width:64%;z-index:1}
+.vivo .tit .k{font:700 13px/1 var(--fl);font-stretch:78%;letter-spacing:.16em;text-transform:uppercase;color:var(--red)}
+.vivo .tit .k.ok{color:var(--green)}
+.vivo .tit h2{margin:10px 0 14px;font:400 clamp(64px,10vw,160px)/.82 var(--fx);white-space:nowrap;font-variant-numeric:tabular-nums}
+.vivo .tit p{margin:0;max-width:60ch;font-size:17px;color:var(--sec)}
+.vivo .tit p b{color:var(--ink);font-weight:700}
+.vivo .bar2{position:relative;height:6px;margin-top:16px;max-width:520px;background:var(--fill2)}
+.vivo .bar2 i{position:absolute;inset:0 auto 0 0;background:var(--ink)}
+.vivo .bar2 em{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--red)}
+.vivo .alr{position:absolute;right:28px;bottom:28px;width:300px;padding:14px 16px;border:2px solid var(--sep2);background:color-mix(in srgb,var(--bg) 82%,transparent);z-index:1;cursor:pointer;text-align:left;color:var(--ink);font:inherit}
+.vivo .alr.crit{border-color:var(--red);transform:rotate(2deg)}
+.vivo .alr.crit .lbl,.vivo .alr.crit b{color:var(--red)}
+.vivo .alr b{display:block;margin:6px 0;font:400 58px/.9 var(--fx)}
+.vivo .alr p{margin:0;font-size:13.5px;line-height:1.4}
+.cinta{overflow:hidden;white-space:nowrap;background:var(--acc);color:#0B0B0B;border:1px solid var(--acc)}
+.cinta .pista{display:inline-flex;gap:44px;padding:10px 0;animation:cinta 46s linear infinite;font:700 13px/1 var(--fl);font-stretch:78%;letter-spacing:.1em;text-transform:uppercase}
+.cinta .pista span::before{content:"■  "}
+@keyframes cinta{to{transform:translateX(-50%)}}
+.pulso{display:grid;grid-template-columns:240px minmax(0,1fr);gap:32px;padding:28px;border:1px solid var(--sep);border-top:0;background:var(--card)}
+.pulso h3{margin:6px 0 10px;font:400 44px/.92 var(--fx);text-transform:uppercase}
+.pulso p{margin:0;font-size:13px;color:var(--sec)}
+.pcols{position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px;align-items:end;height:260px;padding-top:18px}
+.pcol{position:relative;display:flex;flex-direction:column-reverse;align-items:center;gap:4px;height:100%;padding:0;border:0;background:none;color:var(--ink);cursor:pointer}
+.pcol .d{width:12px;height:7px;background:var(--ink)}
+.pcol.cur .d{background:var(--red)}
+.pcol.cur .d:last-of-type{animation:parpadeo 1.2s infinite}
+.pcol.sel .m{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.pcol .m{order:-1;margin-top:6px;font:700 11px/1 var(--fl);font-stretch:78%;letter-spacing:.1em;text-transform:uppercase;color:var(--sec)}
+.pcol .t{position:absolute;bottom:100%;font:600 11px/1 var(--fm);white-space:nowrap;opacity:0;transition:opacity .2s;background:var(--ink);color:var(--bg);padding:3px 6px}
+.pcol:hover .t,.pcol:focus-visible .t{opacity:1}
+.pcol .mas{font:700 10px/1 var(--fl);color:var(--sec)}
+.pulso .obj{position:absolute;left:-6px;right:-6px;border-top:1.5px dashed var(--red);pointer-events:none}
+.pulso .obj span{position:absolute;right:0;top:-17px;font:700 10.5px/1 var(--fl);font-stretch:78%;letter-spacing:.1em;text-transform:uppercase;color:var(--red)}
+.vivo-anim .pcol .d{animation:dotIn .35s both}
+@keyframes dotIn{from{opacity:0;transform:translateY(6px)}}
+@keyframes parpadeo{50%{opacity:.2}}
+.registrar{display:grid;grid-template-columns:2fr 1fr;margin-bottom:8px}
+.registrar button{height:64px;border:0;background:var(--acc);color:#0B0B0B;font:700 15px/1 var(--fl);font-stretch:80%;letter-spacing:.2em;text-transform:uppercase}
+.registrar button+button{background:var(--ink);color:var(--bg)}
+.registrar button:hover{filter:brightness(1.08)}
+@media (max-width:760px){
+  .vivo{min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:18px 12px;padding:20px 16px 22px}
+  .vivo canvas{height:440px;top:30px}
+  .vivo .vc,.vivo .tit,.vivo .alr{position:relative;inset:auto;max-width:none}
+  .vivo .vc b{font-size:28px}
+  .vivo .vc .lbl{font-size:11px;letter-spacing:.06em}
+  .vivo .tit{grid-column:1 / -1;margin-top:250px}
+  .vivo .tit h2{font-size:clamp(56px,17vw,92px);white-space:normal}
+  .vivo .alr{grid-column:1 / -1;width:auto;transform:none!important}
+  .pulso{grid-template-columns:minmax(0,1fr);gap:14px;padding:20px 16px}
+  .pcols{height:210px;gap:3px}.pcol .d{width:8px;height:5px}
+  .registrar{grid-template-columns:1fr}
+}
 
 #print{display:none}
 @media print{
@@ -758,7 +871,9 @@ function cocosStats(){
     cauc, renta, rentaU, meses};
 }
 /* tenencias del reporte «portfolio_report» de Cocos: lo que hay hoy en la cuenta, valuado por Cocos.
-   Se guarda en config.carteraCocos {fecha, filas:[{ins,q,px,mon,tot}], caja:{ARS,USD}} */
+   Se guarda en config.carteraCocos {fecha, filas:[{ins,q,px,mon,tot,aviso?}], caja:{ARS,USD}}.
+   Columnas (nov 2026): instrumento;cantidad;precio;precioAsOf;moneda;total;usedFallbackPrice;missingPrice. Se leen por nombre.
+   usedFallbackPrice / missingPrice = 1 → la fila trae aviso "respaldo" o "sin precio" (Cocos no tenía precio del día). */
 function parsePortfolio(txt){
   const L = txt.replace(/^﻿/, "").split(/\r?\n/).filter(x => x.trim()); if (!L.length) return null;
   const H = L[0].split(";").map(x => x.trim()); const ix = k => H.indexOf(k);
@@ -766,8 +881,9 @@ function parsePortfolio(txt){
   const filas = [], caja = {}; let fecha = "";
   for (const l of L.slice(1)){ const c = l.split(";").map(x => x.trim());
     if (c.length < H.length){ if (/^(ARS|USD)$/.test(c[0])) caja[c[0]] = (caja[c[0]]||0) + nAR(c[c.length-1]); continue; }  // filas de saldo: vienen sin fecha
-    const g = k => c[ix(k)] || "", f = g("precioAsOf"); if (f > fecha) fecha = f;
-    filas.push({ins:g("instrumento"), q:nAR(g("cantidad")), px:nAR(g("precio")), mon:g("moneda") === "USD" ? "USD" : "ARS", tot:nAR(g("total"))}); }
+    const g = k => ix(k) >= 0 ? c[ix(k)] || "" : "", f = g("precioAsOf"); if (f > fecha) fecha = f;
+    const si = v => /^(1|true|si|sí)$/i.test(v), aviso = si(g("missingPrice")) ? "sin precio" : si(g("usedFallbackPrice")) ? "respaldo" : "";
+    filas.push(Object.assign({ins:g("instrumento"), q:nAR(g("cantidad")), px:nAR(g("precio")), mon:g("moneda") === "USD" ? "USD" : "ARS", tot:nAR(g("total"))}, aviso ? {aviso} : {})); }
   return filas.length && fecha ? {fecha, filas, caja} : null;
 }
 function portTipo(ins){ const u = (ins||"").toUpperCase();
@@ -1123,7 +1239,7 @@ function vCabina(M, ms){
   const cat = {}; for (const m of (S.donut === "mes" ? SM : ms)) for (const [k,v] of Object.entries(cv(at(M,m)).cat)) cat[k] = (cat[k]||0) + v;
   const ents = Object.entries(cat).sort((a,b) => b[1]-a[1]), ctot = ents.reduce((a,e) => a+e[1], 0);
 
-  return `${campaign(M, ms)}
+  return `${heroVivo(M, ms, {ret, gas, ahorro, tasa, pLabel, dGas, prev})}
   <div class="grid">
     <section class="panel s5" aria-labelledby="h-alt">
       <div class="ph"><h2 id="h-alt">Sueldo del mes</h2><span class="meta">${esc(pLabel)}</span></div>
@@ -1220,20 +1336,131 @@ function vLibro(M, ms){
     </div>
   </section>`;
 }
-function campaign(M, ms){
+/* ===================== Resumen: portada viva =====================
+   Nube de puntos del escudo SMR de fondo (gira despacio, respira y se aparta del mouse), datos en las esquinas,
+   titular gigante con lo que falta retirar, alerta del Monotributo, cinta con las novedades, pulso de retiros y botones de carga. */
+const VIVO = {anim: false, cont: false};
+function heroVivo(M, ms, o){
   const rows = libroRows(M, ms); if (!rows.length) return "";
-  const cur = rows.find(x => x.m === CUR_YM) || rows[rows.length-1];
-  const falta = -cur.acc, mes = MESL[+cur.m.slice(5)-1], c = cfg();
-  const day = NOW.getDate(), dim = new Date(NOW.getFullYear(), NOW.getMonth()+1, 0).getDate(), sem = Math.max(1, Math.ceil((dim - day + 1) / 7));
+  const ci = rows.findIndex(x => x.m === CUR_YM), cur = ci >= 0 ? rows[ci] : rows[rows.length-1], prevAcc = ci > 0 ? rows[ci-1].acc : 0;
+  const c = cfg(), obj = c.objetivo || 1, mes = MESL[+cur.m.slice(5)-1], falta = -cur.acc;
+  const day = NOW.getDate(), dim = new Date(NOW.getFullYear(), NOW.getMonth()+1, 0).getDate(), quedan = dim - day + 1, sem = Math.max(1, Math.ceil(quedan / 7));
+  const meta = obj - prevAcc, esperado = Math.max(0, meta) * day / dim, avance = meta > 0 ? Math.min(cur.r / meta, 1) : 1, enCurso = cur.m === CUR_YM;
   const pend = S.retiros.filter(r => r.tipo !== "efectivo" && !r.facturado), ptot = pend.reduce((a,r) => a + (+r.importe||0), 0);
-  const fw = factWindow(), cat = c.monotributo || "A";
-  return `<section class="camp" aria-label="Estado del sueldo">
-    <div><div class="eyebrow">${esc(mes)} ${cur.m.slice(0,4)} · Libro de retiros</div>
-      <h2>${falta > 0 ? `Te quedan<br>${ars(falta)}` : `Vas adelantado<br>${ars(-falta)}`}</h2>
-      <p>${falta > 0 ? `Para cerrar ${mes.toLowerCase()} al día con tu sueldo de ${ars(c.objetivo)}. Son unos ${ars(falta / sem)} por semana.` : `Ya cubriste el sueldo de ${mes.toLowerCase()}, contando el arrastre de los meses anteriores.`}</p>
-      <div class="stats"><div><span>Retirado en ${esc(mes.toLowerCase())}</span><b>${ars(cur.r)}</b></div><div><span>Sin facturar</span><b>${pend.length} · ${compact(ptot, "ARS")}</b></div><div><span>Monotributo ${cat}</span><b>${pct(fw.tot / MONO[cat][0])} del tope</b></div></div></div>
-    <button class="btn" data-act="view" data-v="retiros">Ver retiros</button></section>`;
+  const fw = factWindow(), cat = c.monotributo || "A", tope = MONO[cat][0], use = fw.tot / tope, pc = fitCat(fw.proj);
+  const nm = NOW.getMonth() < 6 ? "julio" : "enero";
+  const tc = TCD.today || tcFor(CUR_YM);
+  const anim = !VIVO.anim; VIVO.anim = true;
+  const titular = falta > 0
+    ? `<span class="k">Te quedan · ${esc(mes.toLowerCase())}</span><h2 class="num" data-cuenta="${Math.round(falta)}">${ars(falta)}</h2>
+       <p>${enCurso ? `Retirá <b>${ars(falta / sem)} por semana</b> · quedan ${quedan} día${quedan>1?"s":""}${cur.r < esperado ? ` · al ritmo parejo irías en ${ars(esperado)}` : " · vas al ritmo del mes"}` : `Para cerrar ${esc(mes.toLowerCase())} al día con tu sueldo de ${ars(obj)}.`}</p>`
+    : `<span class="k ok">Vas adelantado · ${esc(mes.toLowerCase())}</span><h2 class="num" data-cuenta="${Math.round(-falta)}">${ars(-falta)}</h2>
+       <p>Ya cubriste el sueldo de ${esc(mes.toLowerCase())}, contando el arrastre de los meses anteriores.</p>`;
+  const alerta = `<button type="button" class="alr ${use > .85 || pc > cat ? "crit" : ""}" data-act="view" data-v="arca"><span class="lbl">Monotributo ${esc(cat)} · ARCA</span><b class="num">${pct(use)}</b>
+    <p>${use >= 1 ? `<strong>Pasado del tope</strong> de la categoría ${esc(cat)}. 12 meses: ${compact(fw.tot, "ARS")} contra ${compact(tope, "ARS")}. Recategorizá en ${nm}.` : `del tope anual de la ${esc(cat)}. A este ritmo encaja en la ${esc(pc)}. Próxima recategorización: ${nm}.`}</p></button>`;
+  // cinta
+  const qa = chqAlert(), ps = cuentaSaldo();
+  const items = [`Dólar BNA $ ${nf0.format(tc)}`, `Monotributo ${cat} al ${pct(use)} del tope`,
+    pend.length ? `${pend.length} transferencia${pend.length>1?"s":""} sin facturar · ${ars(ptot)}` : "Todo facturado en ARCA",
+    `Ahorro neto ${o.pLabel.toLowerCase()} ${fmt(o.ahorro)}`, falta > 0 ? `Te quedan ${ars(falta)} para cerrar ${mes.toLowerCase()}` : `Sueldo de ${mes.toLowerCase()} cubierto`,
+    `Gastos ${fmt(o.gas)}${o.dGas !== null ? ` · ${o.dGas >= 0 ? "▲" : "▼"} ${fmt(Math.abs(o.dGas))} vs ${ymLabel(o.prev)}` : ""}`];
+  if (qa.length) items.push(`${qa.length} cheque${qa.length>1?"s":""} por vencer`);
+  if (ps.ARS > 0 || ps.USD > 0) items.push(`Le debés a papá ${[ps.USD > 0 ? fmt(ps.USD, "USD") : "", ps.ARS > 0 ? ars(ps.ARS) : ""].filter(Boolean).join(" + ")}`);
+  const pista = items.map(t => `<span>${esc(t)}</span>`).join("");
+  // pulso: un punto cada décimo del sueldo
+  const uni = obj / 10, MAXD = 24;
+  const cols = rows.map(x => { const n = Math.max(x.r > 0 ? 1 : 0, Math.round(x.r / uni)), k = Math.min(n, MAXD);
+    let d = ""; for (let i = 0; i < k; i++) d += `<i class="d" style="animation-delay:${(rows.indexOf(x) * 60 + i * 20)}ms"></i>`;
+    return `<button type="button" class="pcol${x.m === CUR_YM ? " cur" : ""}${S.sel === x.m ? " sel" : ""}" data-act="sel" data-m="${x.m}" aria-label="${esc(ymLong(x.m))}: ${esc(ars(x.r))}"><span class="m">${esc(ymLabel(x.m))}</span>${d}${n > MAXD ? `<span class="mas">+${n - MAXD}</span>` : ""}<span class="t">${esc(ars(x.r))}</span></button>`; }).join("");
+  return `<div class="${anim ? "vivo-anim" : ""}">
+  <section class="vivo" aria-label="Estado del sueldo">
+    <canvas id="nube" aria-hidden="true"></canvas>
+    <div class="vc tl"><span class="lbl">Retirado · ${esc(mes.toLowerCase())}</span><b class="num">${ars(cur.r)}</b><small>de ${ars(obj)} · ${pct(cur.r / obj)}</small></div>
+    <div class="vc tr"><span class="lbl">Ahorro neto · ${esc(o.pLabel.toLowerCase())}</span><b class="num ${o.ahorro >= 0 ? "pos" : "neg"}">${fmt(o.ahorro)}</b><small>tasa de ahorro ${pct(o.tasa)}</small></div>
+    <div class="vc ml link" data-act="view" data-v="arca" role="button" tabindex="0"><span class="lbl">Sin facturar · ARCA</span><b class="num ${pend.length ? "neg" : "pos"}">${pend.length}</b><small>${pend.length ? compact(ptot, "ARS") + " en transferencias" : "todo facturado"}</small></div>
+    <div class="vc mr"><span class="lbl"><i class="latido"></i>Dólar BNA · <span id="vivoHora">${String(NOW.getHours()).padStart(2,"0")}:${String(NOW.getMinutes()).padStart(2,"0")}</span></span><b class="num">$ ${nf0.format(tc)}</b><small>oficial · venta</small></div>
+    <div class="tit">${titular}<div class="bar2" title="Retirado ${pct(avance)} de lo que corresponde este mes"><i style="width:${(avance*100).toFixed(1)}%"></i>${enCurso ? `<em style="left:${(day/dim*100).toFixed(1)}%"></em>` : ""}</div></div>
+    ${alerta}
+  </section>
+  <div class="cinta" aria-hidden="true"><div class="pista">${pista}${pista}</div></div>
+  <section class="pulso" aria-labelledby="h-pulso"><div><span class="lbl">${esc(ymLabel(rows[0].m))} → ${esc(ymLabel(rows[rows.length-1].m))} · un punto = ${compact(uni, "ARS")}</span><h3 id="h-pulso">Pulso de retiros</h3><p>La línea roja es el sueldo de ${ars(obj)}. Tocá un mes para verlo.</p></div>
+    <div class="pcols" id="pcols">${cols}<div class="obj" id="pobj"><span>Sueldo</span></div></div></section>
+  <div class="registrar"><button type="button" data-act="new" data-col="retiros">+ Registrar retiro</button><button type="button" data-act="new" data-col="gastos">+ Registrar gasto</button></div>
+  </div>`;
 }
+/* después de armar el Resumen: ubica la línea del sueldo, cuenta el titular la primera vez y arranca la nube */
+function vivoPost(){
+  const pc = $("#pcols"), ob = $("#pobj");
+  if (pc && ob){ const d = pc.querySelector(".d"), m = pc.querySelector(".m");
+    if (d && m){ const paso = d.getBoundingClientRect().height + 4, base = m.getBoundingClientRect().height + 6; ob.style.bottom = (base + paso * 10) + "px"; } else ob.hidden = true; }
+  const h = document.querySelector(".vivo .tit h2[data-cuenta]");
+  if (h && !VIVO.cont && !S.hide && !matchMedia("(prefers-reduced-motion: reduce)").matches){ VIVO.cont = true;
+    const meta = +h.dataset.cuenta, t0 = performance.now();
+    (function paso(t){ const k = Math.min(1, (t - t0) / 1300), e = 1 - Math.pow(1 - k, 3); if (!h.isConnected) return; h.textContent = ars(Math.round(meta * e)); if (k < 1) requestAnimationFrame(paso); })(t0); }
+  nubeStart();
+}
+setInterval(() => { const el = document.getElementById("vivoHora"); if (el){ const d = new Date(); el.textContent = [d.getHours(), d.getMinutes(), d.getSeconds()].map(x => String(x).padStart(2, "0")).join(":"); } }, 1000);
+
+/* nube de puntos: se arma una sola vez leyendo los píxeles del escudo (img/logo-smr.png) */
+const NUBE = {X:null, raf:0, t0:0, cargando:false, color:"255,43,23", alfa:.9, mx:0, my:0, tx:0, ty:0, px:-9999, py:-9999};
+function nubeCargar(listo){
+  const img = new Image();
+  img.onload = () => { try {
+    const W = img.naturalWidth, H = img.naturalHeight, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+    const cx = cv.getContext("2d"); cx.drawImage(img, 0, 0); const px = cx.getImageData(0, 0, W, H).data;
+    const paso = Math.max(4, Math.round(W / 100)), pk = (W / 2), pyk = H * .15, by = H * .735, half = W * .385;
+    const enMonte = (x, y) => y >= pyk && y <= by + 8 && Math.abs(x - pk) <= (y - pyk) / (by - pyk) * half;
+    const X = [], Y = [], Z = [], K = [];
+    for (let y = 0; y < H; y += paso) for (let x = 0; x < W; x += paso){
+      const i = (y * W + x) * 4, r = px[i], g = px[i+1], b = px[i+2], a = px[i+3]; if (a < 128) continue;
+      const jx = x + (Math.random() - .5) * 3, jy = y + (Math.random() - .5) * 3, mt = enMonte(x, y); let z, k;
+      if (r > 220 && g > 200 && b > 170){ if (mt && y > H * .53) { z = 62; k = 3; } else if (mt) { z = 70 - (y - pyk) * .12; k = 3; } else { z = -14; k = 0; } }
+      else if (r < 90 && g < 60){ if (mt || (y > H * .69 && x > W * .1 && x < W * .9)) { z = 30 + (1 - (y - pyk) / (H * .6)) * 28; k = 2; } else { z = -6; k = 1; } }
+      else if (r > 200 && g > 140 && b < 80){ z = 6; k = 1; } else if (r > 190 && g < 130 && b < 60){ z = 2; k = 1; } else if (r > 150 && g < 70){ z = -2; k = 2; } else { z = -6; k = 1; }
+      X.push(jx - W/2); Y.push(jy - H/2); Z.push((z + (Math.random() - .5) * 6) * 1.6); K.push(k); }
+    const n = X.length; NUBE.X = Float32Array.from(X); NUBE.Y = Float32Array.from(Y); NUBE.Z = Float32Array.from(Z); NUBE.K = Uint8Array.from(K); NUBE.H = H;
+    NUBE.SX = Float32Array.from({length:n}, () => (Math.random() - .5) * 1400); NUBE.SY = Float32Array.from({length:n}, () => (Math.random() - .5) * 900); NUBE.SZ = Float32Array.from({length:n}, () => (Math.random() - .5) * 900);
+  } catch(e){ console.error(e); } listo(); };
+  img.onerror = () => listo();
+  img.src = "img/logo-smr.png";
+}
+function nubeStart(){
+  const cv = document.getElementById("nube"); if (!cv) return;
+  const cs = getComputedStyle(document.documentElement); NUBE.color = cs.getPropertyValue("--cloud").trim() || NUBE.color; NUBE.alfa = parseFloat(cs.getPropertyValue("--cloudA")) || .8;
+  if (!NUBE.X){ if (!NUBE.cargando){ NUBE.cargando = true; nubeCargar(() => { NUBE.cargando = false; if (NUBE.X) nubeStart(); }); } return; }
+  if (!NUBE.t0) NUBE.t0 = performance.now();
+  if (!NUBE.raf) NUBE.raf = requestAnimationFrame(nubeCuadro);
+}
+function nubeCuadro(now){
+  NUBE.raf = 0;
+  const cv = document.getElementById("nube"); if (!cv || document.hidden) return;
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const r = cv.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1), W = r.width, H = r.height;
+  if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)){ cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+  const t = (now - NUBE.t0) / 1000, ent = reduce ? 1 : Math.min(1, t / 2.2), e = 1 - Math.pow(1 - ent, 3);
+  NUBE.mx += (NUBE.tx - NUBE.mx) * .05; NUBE.my += (NUBE.ty - NUBE.my) * .05;
+  const ry = (reduce ? 0 : Math.sin(t * .22) * .42) + NUBE.mx * .7, rx = (reduce ? 0 : Math.sin(t * .17) * .07) + NUBE.my * .3;
+  const cy = Math.cos(ry), sy = Math.sin(ry), cx_ = Math.cos(rx), sx_ = Math.sin(rx);
+  const movil = W < 760, esc_ = (movil ? 360 : H * .78) / NUBE.H, ox = movil ? W * .5 : W * .6, oy = movil ? 230 : H * .46, f = 900;
+  const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+  const X = NUBE.X, Y = NUBE.Y, Z = NUBE.Z, K = NUBE.K, SX = NUBE.SX, SY = NUBE.SY, SZ = NUBE.SZ, n = X.length, A = [.16, .38, .7, 1];
+  const mpx = NUBE.px - r.left, mpy = NUBE.py - r.top;
+  for (let k = 0; k < 4; k++){
+    ctx.fillStyle = "rgba(" + NUBE.color + "," + (A[k] * NUBE.alfa).toFixed(3) + ")";
+    for (let i = 0; i < n; i++){ if (K[i] !== k) continue;
+      let x = X[i], y = Y[i], z = Z[i] + (reduce ? 0 : Math.sin(t * 1.3 + y * .025 + x * .01) * 4);
+      if (e < 1){ x = SX[i] + (x - SX[i]) * e; y = SY[i] + (y - SY[i]) * e; z = SZ[i] + (z - SZ[i]) * e; }
+      const x1 = x * cy + z * sy, z1 = -x * sy + z * cy, y1 = y * cx_ - z1 * sx_, z2 = y * sx_ + z1 * cx_;
+      const p = f / (f - z2 * esc_); let px = ox + x1 * esc_ * p, py = oy + y1 * esc_ * p;
+      const dx = px - mpx, dy = py - mpy, d2 = dx * dx + dy * dy;
+      if (d2 < 6400){ const d = Math.sqrt(d2) || 1, g = (1 - d / 80) * 18; px += dx / d * g; py += dy / d * g; }
+      const s = (k === 3 ? 2.1 : 1.7) * p * (movil ? .9 : 1); ctx.fillRect(px, py, s, s); } }
+  if (!reduce || e < 1) NUBE.raf = requestAnimationFrame(nubeCuadro);
+}
+document.addEventListener("pointermove", ev => { const cv = document.getElementById("nube"); if (!cv) return; const r = cv.getBoundingClientRect();
+  if (ev.clientX < r.left || ev.clientX > r.right || ev.clientY < r.top || ev.clientY > r.bottom){ NUBE.tx = NUBE.ty = 0; NUBE.px = NUBE.py = -9999; return; }
+  NUBE.tx = (ev.clientX - r.left) / r.width - .5; NUBE.ty = (ev.clientY - r.top) / r.height - .5; NUBE.px = ev.clientX; NUBE.py = ev.clientY; }, {passive:true});
+document.addEventListener("visibilitychange", () => { if (!document.hidden) nubeStart(); });
 function signals(M, ms){
   const out = [];
   const nMalas = fechasMalas().length;
@@ -1717,6 +1944,7 @@ function render(force){
     : S.view === "ajustes" ? vAjustes(ms) : vCabina(M, ms);
   } catch(e){ /* una pantalla rota no debe dejar la anterior encima: se avisa y se puede ir a Ajustes */
     console.error(e); v.innerHTML = `<section class="panel"><div class="ph"><h2>Esta pantalla no se pudo armar</h2></div><p class="sub" style="margin:0 0 12px">Hay un dato que la rompe (${esc(e && e.message || e)}). Revisá las fechas en Ajustes.</p><button class="btn" data-act="view" data-v="ajustes">Ir a Ajustes</button></section>`; }
+  if (S.view === "cabina") vivoPost();
   const stb = document.querySelector(".subtabs"), sta = stb && stb.querySelector("[aria-current]"); if (sta) stb.scrollLeft = Math.max(0, sta.offsetLeft - stb.offsetLeft - 16);
 }
 document.addEventListener("focusout", () => setTimeout(() => { if (pendingRender && !( $("#view").contains(document.activeElement) && document.activeElement.matches("input,select,textarea"))) render(); }, 0));
@@ -2231,7 +2459,7 @@ document.addEventListener("change", ev => {
       if (ports.length){ const P = ports[0], tot = P.filas.reduce((a,r) => a + portUSD(r), 0), mix = txts.length > ports.length; S.pendingPort = P; formOpener = $("[data-act=pickCocos]");
         $("#layer").innerHTML = `<div class="scrim" data-act="close"></div><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle">
           <h3 id="dTitle">Tenencias de Cocos</h3><p class="sub" style="margin:0 0 18px">Reporte al ${ddmm(P.fecha)}/${P.fecha.slice(0,4)} · ${P.filas.length} posiciones por ${fmt(tot, "USD")} (pesos al oficial de hoy). Reemplaza las posiciones de Cocos actuales.${mix ? " Los archivos de movimientos importalos aparte." : ""}</p>
-          <div class="catplan">${P.filas.map(r => `<div class="cp-r"><span>${esc(cocosCode(r.ins))} · ${esc(TIPOL[portTipo(r.ins)])}</span><small>${esc(fmt(portUSD(r), "USD"))}</small></div>`).join("")}${P.caja.ARS || P.caja.USD ? `<div class="cp-r"><span>Disponible en la cuenta (no suma a la cartera)</span><small>${esc([P.caja.ARS ? ars(P.caja.ARS) : "", P.caja.USD ? fmt(P.caja.USD,"USD") : ""].filter(Boolean).join(" + "))}</small></div>` : ""}</div>
+          ${P.filas.some(r => r.aviso) ? `<p class="sub" style="margin:-8px 0 14px;color:var(--red)">Cocos no tenía el precio del día de ${P.filas.filter(r => r.aviso).length} posición${P.filas.filter(r => r.aviso).length>1?"es":""}: ${P.filas.some(r => r.aviso === "sin precio") ? "sin precio vale cero hasta el próximo reporte" : "usó el último precio disponible"}.</p>` : ""}<div class="catplan">${P.filas.map(r => `<div class="cp-r"><span>${esc(cocosCode(r.ins))} · ${esc(TIPOL[portTipo(r.ins)])}${r.aviso ? ` · <b style="color:var(--red)">${esc(r.aviso)}</b>` : ""}</span><small>${esc(fmt(portUSD(r), "USD"))}</small></div>`).join("")}${P.caja.ARS || P.caja.USD ? `<div class="cp-r"><span>Disponible en la cuenta (no suma a la cartera)</span><small>${esc([P.caja.ARS ? ars(P.caja.ARS) : "", P.caja.USD ? fmt(P.caja.USD,"USD") : ""].filter(Boolean).join(" + "))}</small></div>` : ""}</div>
           <div class="foot"><button type="button" class="btn ghost" data-act="close">Cancelar</button><button type="button" class="btn primary" data-act="portOk">Usar estas tenencias</button></div></aside>`;
         return; }
       const rows = []; let bad = 0; txts.forEach(x => { const r = parseCocos(x); if (r) rows.push(...r); else bad++; });
