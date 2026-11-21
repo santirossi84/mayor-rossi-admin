@@ -835,6 +835,7 @@ const cocosVto = ins => { const m = /(\d{2})\/(\d{2})\/(\d{2})\b/.exec(ins||"");
 const unitOf = (tipo, px) => tipo === "fci" ? px / 1000 : tipo === "lecap" ? px / 100 : px;
 const mepHoy = () => PX.mep || usdHoy();
 const toUSDf = (v, mon, f) => mon === "USD" ? v : v / tcDay(f);
+const ratioOf = code => ((cfg().cocosRatio || {})[code] || []).filter(e => okF(e.f) && +e.x > 0).map(e => ({f:e.f, x:+e.x})).sort((a,b) => a.f < b.f ? -1 : 1);
 /* posiciones a partir de los movimientos: costo promedio en USD (pesos al oficial del día); la tenencia inicial que no está en el CSV
    se estima con lo mínimo necesario para que nunca quede negativa, o la fija Santi con «Ajustar tenencia» */
 function cocosPos(){
@@ -844,16 +845,20 @@ function cocosPos(){
   const aj = cfg().cocosAj || {}, out = [];
   for (const [code, rs] of Object.entries(by)){
     const tipo = cocosTipo(rs[0].ins), mon = rs[rs.length-1].mon, vto = cocosVto(rs[0].ins);
-    let run = 0, min = 0; rs.forEach(r => { run += r.q; if (run < min) min = run; });
+    /* cambios de ratio (config.cocosRatio[ticker] = [{f, x}]): desde esa fecha cada unidad vieja son x nuevas; el costo total no cambia */
+    const rx = ratioOf(code), rxAt = f => rx.filter(e => e.f <= f).reduce((a,e) => a * e.x, 1);
+    let run = 0, min = 0, fx = 1; rs.forEach(r => { const k = rxAt(r.f); if (k !== fx){ run *= k / fx; min *= k / fx; fx = k; } run += r.q; if (run < min) min = run; });
     const auto = Math.max(0, -min), q0 = aj[code] !== undefined ? Math.max(0, +aj[code]) : auto;
     const first = rs[0], u0 = unitOf(tipo, first.px);
-    let qty = q0, cost = q0 * toUSDf(u0, first.mon, first.f), real = 0;
+    let qty = q0, cost = q0 * toUSDf(u0, first.mon, first.f), real = 0, fq = rxAt(first.f);
     for (const r of rs){
+      const k = rxAt(r.f); if (k !== fq){ qty *= k / fq; fq = k; }
       const usd = toUSDf(r.tot, r.mon, r.f);
       if (r.q > 0){ qty += r.q; cost += -usd; }
       else { const out_ = Math.min(-r.q, qty); const avg = qty > 0 ? cost / qty : 0; real += usd - avg * out_; cost -= avg * out_; qty += r.q; if (qty < 1e-6) { qty = Math.max(qty, 0); if (qty === 0) cost = 0; } }
     }
-    const last = rs[rs.length-1], uLast = unitOf(tipo, last.px || rs.filter(r => r.px).slice(-1)[0]?.px || 0);
+    const hoyF = NOW.toISOString().slice(0,10), kHoy = rxAt(hoyF); if (kHoy !== fq){ qty *= kHoy / fq; }
+    const last = rs[rs.length-1], uLast = unitOf(tipo, last.px || rs.filter(r => r.px).slice(-1)[0]?.px || 0) / (kHoy / rxAt(last.f));
     const vencida = vto && vto < NOW.toISOString().slice(0,10);
     if (vencida) { qty = 0; cost = 0; }
     let v = 0, src = "último precio";
@@ -861,7 +866,7 @@ function cocosPos(){
     if (on > 0){ v = on * (PX.mep || usdHoy()) / usdHoy() * qty; src = "online"; }
     else v = mon === "USD" ? uLast * qty : uLast * qty / usdHoy();
     out.push({id:"cocos:" + code, cocos:true, broker:"Cocos", tipo, ticker:code, nombre:rs[0].ins.replace(/\s*\([A-Z0-9.]+\)\s*$/, ""), mon, cantidad:qty, costo:cost, real,
-      px:{v, src: vencida ? "vencida" : src}, estimada: aj[code] === undefined && auto > 0, q0, n: rs.length, ult: last.f});
+      px:{v, src: vencida ? "vencida" : src}, estimada: aj[code] === undefined && auto > 0, q0, n: rs.length, ult: last.f, ratio: rx});
   }
   return out;
 }
@@ -912,7 +917,7 @@ function portPos(){
   const mv = {}; cocosPos().forEach(h => mv[h.ticker] = h);
   return P.filas.filter(r => r.q > 0 || r.tot > 0).map(r => { const code = cocosCode(r.ins), m = mv[code];
     return {id:"cocos:" + code, cocos:true, port:true, fijo:true, broker:"Cocos", tipo:portTipo(r.ins), ticker:code, nombre:r.ins.replace(/\s*\([A-Z0-9.]+\)\s*$/, ""), mon:r.mon, cantidad:r.q,
-      costo: m && m.cantidad > 1e-6 && m.costo > 0 ? m.costo / m.cantidad * r.q : 0, px:{v:portUSD(r), src:"reporte de Cocos"}, ult:P.fecha}; });
+      costo: m && m.cantidad > 1e-6 && m.costo > 0 ? m.costo / m.cantidad * r.q : 0, px:{v:portUSD(r), src:"reporte de Cocos"}, ult:P.fecha, ratio:ratioOf(code)}; });
 }
 const cocosHold = () => portPos() || cocosPos().filter(h => h.cantidad > 1e-6);
 const holdings = () => [...(S.inversiones||[]).map(h => Object.assign({}, h, {px: pxOf(h)})), ...cocosHold()];
@@ -1823,11 +1828,11 @@ function vInversiones(){
   const row = h => { const kc = +h.costo > 0, r = kc ? h.px.v - h.costo : 0, rp = kc ? r / h.costo : 0, unit = +h.cantidad && h.tipo !== "fci" && h.tipo !== "lecap" && h.tipo !== "otro" ? h.px.v / +h.cantidad : 0;
     const share = tot ? h.px.v / tot : 0;
     return `<div class="pos-r">
-      <div class="pos-a"><b>${esc(h.ticker)}</b><span>${esc(TIPOL[h.tipo]||h.tipo)} · ${esc(h.broker)}${h.cocos ? ` · ${h.port ? "reporte de Cocos" : h.estimada ? `<em class="neg">tenencia inicial estimada</em>` : "desde movimientos"}` : ""}</span>
+      <div class="pos-a"><b>${esc(h.ticker)}</b><span>${esc(TIPOL[h.tipo]||h.tipo)} · ${esc(h.broker)}${h.cocos ? ` · ${h.port ? "reporte de Cocos" : h.estimada ? `<em class="neg">tenencia inicial estimada</em>` : "desde movimientos"}` : ""}${(h.ratio||[]).length ? ` · ratio ${h.ratio.map(e => "×" + nf2.format(e.x).replace(/,00$/,"") + " desde " + ddmm(e.f)).join(", ")}` : ""}</span>
         <small>${h.tipo === "fci" || h.tipo === "lecap" ? (h.cocos ? `${qtyF(h)} ${h.tipo === "fci" ? "cuotapartes" : "VN"}` : "valor cargado a mano") : `${qtyF(h)} × ${unit ? fUSD(unit) : "—"}`} · <span class="src">${esc(h.px.src)}</span></small></div>
       <div class="pos-w" aria-hidden="true"><i style="width:${(share*100).toFixed(1)}%"></i></div>
       <div class="pos-v"><b>${fUSD(h.px.v)}</b>${kc ? `<span class="${r>=0?"pos":"neg"}">${r>=0?"+":"−"}${fUSD(Math.abs(r))} · ${pct(rp,1)}</span>` : `<span class="na">sin costo</span>`}</div>
-      <div class="pos-x">${h.port ? "" : h.cocos ? `<button class="ib" data-act="cocosAj" data-k="${esc(h.ticker)}" aria-label="Ajustar tenencia de ${esc(h.ticker)}" title="Ajustar tenencia"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4"/></svg></button>` : acts("inversiones", h.id)}</div>
+      <div class="pos-x">${h.cocos && (h.tipo === "cedear" || h.tipo === "accion") ? `<button class="ib" data-act="cocosRatio" data-k="${esc(h.ticker)}" aria-label="Cambio de ratio de ${esc(h.ticker)}" title="Cambio de ratio"><svg viewBox="0 0 24 24"><path d="M4 8h12l-3-3M20 16H8l3 3"/></svg></button>` : ""}${h.port ? "" : h.cocos ? `<button class="ib" data-act="cocosAj" data-k="${esc(h.ticker)}" aria-label="Ajustar tenencia de ${esc(h.ticker)}" title="Ajustar tenencia"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4"/></svg></button>` : acts("inversiones", h.id)}</div>
     </div>`; };
   const ms = st ? Object.keys(st.meses).sort() : [];
   return `<section class="camp inv" aria-label="Valor de la cartera">
@@ -2454,6 +2459,19 @@ document.addEventListener("click", async ev => {
     $("#ajFrm").addEventListener("submit", e => { e.preventDefault(); const v = parseFloat(String($("#fAj").value).replace(",",".")); if (!isFinite(v) || v < 0) return $("#fErr").textContent = "Cargá una cantidad válida.";
       const aj = Object.assign({}, cfg().cocosAj || {}); aj[k] = Math.max(0, v - sinIni); S.config = Object.assign({}, cfg(), {cocosAj:aj}); closeForm(); changed(); toast("Tenencia actualizada"); });
     setTimeout(() => $("#fAj").focus(), 30); return; }
+  if (a === "cocosRatio"){ const k = el.dataset.k, L = ratioOf(k); formOpener = el;
+    $("#layer").innerHTML = `<div class="scrim" data-act="close"></div><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+      <h3 id="dTitle">Cambio de ratio de ${esc(k)}</h3><p class="sub" style="margin:0 0 18px">Cuando Cocos cambia el ratio de un CEDEAR, cada unidad vieja pasa a ser varias nuevas y el precio baja en la misma proporción. Lo que pagaste no cambia: el costo se reparte entre las unidades nuevas. Se aplica a todos los movimientos anteriores a la fecha.</p>
+      ${L.length ? `<div class="catplan" style="margin-bottom:14px">${L.map((e,i) => `<div class="cp-r"><span>×${esc(nf2.format(e.x).replace(/,00$/,""))} desde el ${ddmm(e.f)}/${e.f.slice(0,4)}</span><button type="button" class="btn ghost" data-act="ratioDel" data-k="${esc(k)}" data-i="${i}">Quitar</button></div>`).join("")}</div>` : ""}
+      <form class="form" id="rxFrm"><div class="f"><label for="fRx">Cada unidad vieja pasó a ser</label><input id="fRx" type="number" step="any" min="0" inputmode="decimal" placeholder="3"></div>
+      <div class="f"><label for="fRf">Desde el</label><input id="fRf" type="date" value="${NOW.toISOString().slice(0,10)}"><small>Alcanza con una fecha posterior a la última compra con el ratio viejo.</small></div>
+      <div class="err" id="fErr"></div><div class="foot"><button type="button" class="btn ghost" data-act="close">Cancelar</button><button type="submit" class="btn primary">Guardar</button></div></form></aside>`;
+    $("#rxFrm").addEventListener("submit", e => { e.preventDefault(); const x = parseFloat(String($("#fRx").value).replace(",",".")), f = $("#fRf").value;
+      if (!isFinite(x) || x <= 0 || x === 1) return $("#fErr").textContent = "Cargá cuántas unidades nuevas es cada vieja (por ejemplo 3).";
+      if (!okF(f)) return $("#fErr").textContent = "Elegí una fecha válida.";
+      const R = Object.assign({}, cfg().cocosRatio || {}); R[k] = [...(R[k] || []), {f, x}]; S.config = Object.assign({}, cfg(), {cocosRatio:R}); closeForm(); changed(); toast(`Ratio de ${k} ×${nf2.format(x).replace(/,00$/,"")} desde el ${ddmm(f)}`); });
+    setTimeout(() => $("#fRx").focus(), 30); return; }
+  if (a === "ratioDel"){ const k = el.dataset.k, R = Object.assign({}, cfg().cocosRatio || {}), L = ratioOf(k); L.splice(+el.dataset.i, 1); if (L.length) R[k] = L; else delete R[k]; S.config = Object.assign({}, cfg(), {cocosRatio:R}); closeForm(); changed(); toast("Cambio de ratio quitado"); return; }
   if (a === "ajAuto"){ const aj = Object.assign({}, cfg().cocosAj || {}); delete aj[el.dataset.k]; S.config = Object.assign({}, cfg(), {cocosAj:aj}); closeForm(); changed(); return; }
   if (a === "portOk"){ const P = S.pendingPort; S.pendingPort = null; if (!P) return;
     /* el reporte pisa todo lo de Cocos: posiciones, ajustes viejos de tenencia y el disponible de las cuentas de Cocos */
