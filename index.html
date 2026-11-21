@@ -2551,7 +2551,8 @@ function landScroll(){
   if (t && k0 >= .12){ const b = t.getBoundingClientRect(), s = say.parentNode.getBoundingClientRect();
     Object.assign(sel.style, {left:(b.left - s.left - 6) + "px", top:(b.top - s.top - 2) + "px", width:(b.width + 12) + "px", height:(b.height + 4) + "px", opacity:1}); } else sel.style.opacity = 0;
   const mono = $("#ldMono"); if (mono) mono.classList.toggle("on", vis >= ws.length);
-  document.querySelectorAll(".ld-c").forEach(c => c.style.opacity = k0 < .12 ? "0" : "1");
+  const saliendo = r.bottom < innerHeight - 8; /* cuando el arranque se va, las esquinas no se pisan con la barra */
+  document.querySelectorAll(".ld-c").forEach(c => c.style.opacity = k0 < .12 || saliendo ? "0" : "1");
   const hint = document.querySelector(".ld-hint"); if (hint) hint.style.opacity = k0 > .06 ? "0" : "1";
   document.body.classList.toggle("ld-light", r.bottom < 60);
 }
