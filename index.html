@@ -165,7 +165,7 @@ button{cursor:pointer}
 
 /* libro de retiros */
 .libro{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:24px;align-items:start}
-.lh{display:grid;gap:8px;padding:24px;background:var(--bg)}
+.lh{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;padding:24px;background:var(--bg);min-width:0}
 .lh p{margin:0;font-size:15px;color:var(--ink2)}
 .lh dl{display:grid;gap:10px;margin:8px 0 0;padding-top:14px;border-top:1px solid var(--sep2)}
 .lh dl div{display:flex;justify-content:space-between;gap:12px;font-size:14px}
@@ -609,6 +609,8 @@ td .note{display:block;font-size:13px;color:var(--sec);font-weight:400;margin-to
 .util{background:transparent;padding-top:calc(10px + env(safe-area-inset-top,0px));padding-bottom:6px}
 .main{padding-top:4px}
 #vhead:empty{display:none}
+/* los importes nunca se parten en dos renglones; si no entran en su caja, fitNums() achica la letra */
+.num,.cks > div > b,.kpi .v{white-space:nowrap}
 .util{background:transparent;color:var(--ink)}
 .util .tcinfo{color:var(--ink)}.util .tcinfo #tclbl,.util .tcinfo #tcsrc{color:var(--sec)}
 .util .chip,.util .eye,.util .seg button,.util .pdf{background:transparent;border:1px solid var(--sep2);border-radius:var(--pill);color:var(--ink);font-family:var(--f);font-stretch:normal;font-weight:500;letter-spacing:0;text-transform:none}
@@ -715,7 +717,7 @@ button.ld-c{cursor:pointer}button.ld-c:hover b{text-decoration:underline;text-un
 .ld-mono.crit{background:#FF3B30;color:#fff;transform:translateX(-50%) rotate(-5deg)}
 .ld-mono i{font-style:normal;font-weight:500;opacity:.8}
 .ld-mono{white-space:nowrap}@media (max-width:500px){.ld-mono{font-size:13px;height:38px;padding:0 14px}}
-.ld-hint{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);z-index:2;display:grid;justify-items:center;gap:8px;font:500 12px/1 "Inter",sans-serif;color:rgba(255,255,255,.7)}
+.ld-hint{transition:opacity .3s;position:absolute;bottom:22px;left:50%;transform:translateX(-50%);z-index:2;display:grid;justify-items:center;gap:8px;font:500 12px/1 "Inter",sans-serif;color:rgba(255,255,255,.7)}
 .ld-hint i{width:1px;height:26px;background:linear-gradient(#fff,transparent);animation:ldDrip 1.6s ease-in-out infinite}
 @keyframes ldDrip{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
 /* logo del arranque: S en píxeles de colores, M blanca seleccionada como en Figma y R de cromo */
@@ -897,9 +899,9 @@ body.v-cuentas .strip b,body.v-inversiones .strip b,body.v-cuentas .big,body.v-i
 .hu small{font:500 14px/1 "Figtree",sans-serif;color:#5C5C5C}
 .hu .big{display:block;margin:8px 0 0;font:800 clamp(54px,9vw,124px)/1 "Figtree",sans-serif;letter-spacing:-.05em;font-variant-numeric:tabular-nums}
 .hu .big small{font-size:.3em;letter-spacing:0;color:#8A8A8A;font-weight:500}
-.hu .rot{height:22px;overflow:hidden;margin-top:12px;font:500 16px/22px "Figtree",sans-serif;color:#3A3A3A}
+.hu .rot{height:26px;overflow:hidden;margin-top:12px;font:500 16px/26px "Figtree",sans-serif;color:#3A3A3A}
 .hu .rot span{display:block;animation:huRot 9s infinite}
-@keyframes huRot{0%,28%{transform:translateY(0)}33%,61%{transform:translateY(-22px)}66%,95%{transform:translateY(-44px)}100%{transform:translateY(0)}}
+@keyframes huRot{0%,28%{transform:translateY(0)}33%,61%{transform:translateY(-26px)}66%,95%{transform:translateY(-52px)}100%{transform:translateY(0)}}
 .hu .pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
 .hu .pills span{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:99px;font:700 13px/1 "Figtree",sans-serif;background:#111;color:#fff}
 .hu .pills span.g{background:linear-gradient(135deg,#B6FF3B,#5BE38A);color:#0A0A0A}
@@ -938,9 +940,9 @@ body.v-papa .camp h2{font-weight:700;letter-spacing:-.03em;text-transform:none}
 body.v-papa .ph h2{font:700 26px/1.1 "Instrument Sans",sans-serif;text-transform:none;letter-spacing:-.02em}
 body.v-papa .strip b,body.v-papa .big{font-weight:700;letter-spacing:-.03em}
 .hd{display:grid;grid-template-columns:minmax(260px,340px) 1fr;margin:8px var(--gut) 24px;border:1px solid #000}
-.hd .l{padding:28px 24px;display:grid;gap:12px;align-content:start}
+.hd .l{padding:28px 24px;display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-content:start;min-width:0}
 .hd h1{margin:0;font:700 34px/1.08 "Instrument Sans",sans-serif;letter-spacing:-.02em}
-.hd .sal{font:700 46px/1 "Instrument Sans",sans-serif;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.hd .sal{display:block;font:700 46px/1 "Instrument Sans",sans-serif;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
 .hd .l p{margin:0;font:400 19px/1.35 "Source Serif 4",Georgia,serif}
 .hd .r{background:#000;color:#fff;padding:20px 28px}
 .hd .mv{display:grid;grid-template-columns:1fr auto;gap:2px 20px;padding:16px 0;border-bottom:1px solid #333}
@@ -949,7 +951,7 @@ body.v-papa .strip b,body.v-papa .big{font-weight:700;letter-spacing:-.03em}
 .hd .mv p{margin:0;font:400 16px/1.4 "Source Serif 4",Georgia,serif;color:#B5B5B5}
 .hd .mv .amt{font:700 22px/1.15 "Instrument Sans",sans-serif;text-align:right;grid-row:span 2;font-variant-numeric:tabular-nums}
 .hd .mv .amt.pay{color:#A8A8A8}
-@media (max-width:800px){.hd{grid-template-columns:1fr}}
+@media (max-width:800px){.hd{grid-template-columns:minmax(0,1fr)}}
 
 /* ===== AJUSTES: calma (Shopify Editions) ===== */
 body.v-ajustes{color-scheme:light;
@@ -1384,7 +1386,7 @@ function cuentaSaldo(){ const s = {ARS:0, USD:0}; for (const m of S.cuenta||[]) 
 const val = (ars, ym) => S.cur === "USD" ? ars / tcFor(ym) : ars;
 const nf0 = new Intl.NumberFormat("es-AR",{maximumFractionDigits:0});
 const nf2 = new Intl.NumberFormat("es-AR",{minimumFractionDigits:2,maximumFractionDigits:2});
-function fmt(v, cur){ cur = cur || S.cur; if (S.hide) return (cur==="USD"?"US$ ":"$ ")+"••••"; const a = Math.abs(v); const f = cur==="USD" ? (a<100?nf2:nf0) : (a<1000?nf2:nf0); return (v<0?"−":"")+(cur==="USD"?"US$ ":"$ ")+f.format(a); }
+function fmt(v, cur){ cur = cur || S.cur; if (S.hide) return (cur==="USD"?"US$\u00a0":"$\u00a0")+"••••"; const a = Math.abs(v); const f = cur==="USD" ? (a<100?nf2:nf0) : (a<1000?nf2:nf0); return (v<0?"−":"")+(cur==="USD"?"US$\u00a0":"$\u00a0")+f.format(a); } /* espacio duro: el signo nunca queda solo al final del renglón */
 function compact(v, cur){ cur = cur || S.cur; if (S.hide) return (cur==="USD"?"US$":"$")+"••"; const a = Math.abs(v); let s;
   if (a >= 1e6) s = (a/1e6).toFixed(a>=1e7?0:1).replace(".",",")+"M"; else if (a >= 1e3) s = Math.round(a/1e3)+"k"; else s = Math.round(a);
   return (v<0?"−":"")+(cur==="USD"?"US$":"$")+s; }
@@ -2366,6 +2368,20 @@ const CONC = [
   {v:"papa", n:"Papá", d:() => { const p = patri(); return p.deuda > .5 ? "le debés " + fUSD(p.deuda) : p.deuda < -.5 ? "te debe " + fUSD(-p.deuda) : "al día"; }},
   {v:"ajustes", n:"Ajustes", d:() => ""}
 ];
+/* achica los importes grandes que no entran en su caja (con la fuente real ya cargada) */
+function fitNums(){
+  document.querySelectorAll("#view .num, #vhead .num, #view .cks > div > b, #view .kpi .v").forEach(el => {
+    if (el.closest(".ld")) return; /* la portada maneja sus tamaños con clamp() */
+    el.style.fontSize = ""; const cs = getComputedStyle(el), fs = parseFloat(cs.fontSize); if (fs < 18 || cs.display === "none") return;
+    let avail, w;
+    if (cs.display !== "inline"){ avail = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight); w = el.scrollWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight); }
+    else { let p = el.parentElement; while (p && getComputedStyle(p).display === "inline") p = p.parentElement; if (!p) return;
+      const pc = getComputedStyle(p); avail = p.clientWidth - parseFloat(pc.paddingLeft) - parseFloat(pc.paddingRight); w = el.getBoundingClientRect().width; }
+    if (avail > 0 && w > avail + .5) el.style.fontSize = Math.max(fs * .45, fs * avail / w * .97).toFixed(1) + "px";
+  });
+}
+let FITT = 0; addEventListener("resize", () => { clearTimeout(FITT); FITT = setTimeout(fitNums, 120); });
+if (document.fonts){ document.fonts.ready.then(() => fitNums()); document.fonts.addEventListener("loadingdone", () => { clearTimeout(FITT); FITT = setTimeout(fitNums, 60); }); }
 function renderIx(){
   const ix = $("#ix"); if (!ix) return;
   ix.innerHTML = `<button class="home" data-act="view" data-v="cabina">Santiago Rossi<span>volver a la portada</span></button>` +
@@ -2536,6 +2552,7 @@ function landScroll(){
     Object.assign(sel.style, {left:(b.left - s.left - 6) + "px", top:(b.top - s.top - 2) + "px", width:(b.width + 12) + "px", height:(b.height + 4) + "px", opacity:1}); } else sel.style.opacity = 0;
   const mono = $("#ldMono"); if (mono) mono.classList.toggle("on", vis >= ws.length);
   document.querySelectorAll(".ld-c").forEach(c => c.style.opacity = k0 < .12 ? "0" : "1");
+  const hint = document.querySelector(".ld-hint"); if (hint) hint.style.opacity = k0 > .06 ? "0" : "1";
   document.body.classList.toggle("ld-light", r.bottom < 60);
 }
 addEventListener("scroll", () => { if (S.view === "cabina") landScroll(); }, {passive:true});
@@ -2710,6 +2727,7 @@ function render(force){
   try { renderIx(); renderAlerts(); renderCargar(); } catch(e){ console.error(e); }
   if (S.view === "cabina"){ $("#view").insertAdjacentHTML("beforeend", VIVO.tail || ""); vivoPost(); } else document.body.classList.remove("ld-light");
   if (S.view === "gastos") heatDraw(ms);
+  try { fitNums(); } catch(e){ console.error(e); }
   const stb = document.querySelector(".subtabs"), sta = stb && stb.querySelector("[aria-current]"); if (sta) stb.scrollLeft = Math.max(0, sta.offsetLeft - stb.offsetLeft - 16);
 }
 document.addEventListener("focusout", () => setTimeout(() => { if (pendingRender && !( $("#view").contains(document.activeElement) && document.activeElement.matches("input,select,textarea"))) render(); }, 0));
