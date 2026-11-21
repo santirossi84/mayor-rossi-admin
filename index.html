@@ -2606,7 +2606,10 @@ function mergeData(base, local, server){
 const total = d => LISTAS.reduce((a, k) => a + (d[k] ? d[k].length : 0), 0);
 function cacheLocal(){ try { localStorage.setItem(CACHE, JSON.stringify({rev:S.rev, data:snapshot(), dirty, base: dirty ? S.base : null})); } catch(e){} }
 function setSync(t){ if (pausada) t = PAUSA_TXT; S.sync = t; const st = $("#status"); if (!st || S.mode !== "live") return;
-  st.className = "chip " + (t === "Guardado" ? "live" : t === "Guardando…" ? "busy" : "bad"); st.lastElementChild.textContent = t; }
+  st.className = "chip " + (t === "Guardado" ? "live" : t === "Guardando…" ? "busy" : "bad"); st.lastElementChild.textContent = t;
+  const ob = document.querySelector(".orb .mb [data-act=sync]"); /* la barra de menú de la portada muestra el mismo estado */
+  if (ob){ ob.title = t; ob.setAttribute("aria-label", "Estado de guardado: " + t); const dt = ob.querySelector(".dot"), tx = ob.querySelector(".opt");
+    if (dt) dt.className = "dot " + (t === "Guardado" ? "" : t === "Guardando…" ? "busy" : "bad"); if (tx) tx.textContent = t; } }
 function pausar(){
   if (pausada) return; pausada = true; clearTimeout(saveT);
   console.error("[mayor-rossi] Sincronización pausada por el freno de emergencia: más de " + FRENO.PUT + " PUT o " + FRENO.GET + " GET en 10 minutos.", {put: usos.PUT.length, get: usos.GET.length});
