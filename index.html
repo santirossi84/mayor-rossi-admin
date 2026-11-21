@@ -902,6 +902,10 @@ function parsePortfolio(txt){
 function portTipo(ins){ const u = (ins||"").toUpperCase();
   if (/^FCI\b/.test(u)) return "fci"; if (/^CEDEAR\b/.test(u)) return "cedear"; if (/LETRA|LECAP|BONO|OBLIGAC|TESORO|BOPREAL|^ON\b/.test(u)) return "lecap"; return "accion"; }
 const portUSD = r => r.mon === "USD" ? r.tot : r.tot / usdHoy();
+/* cuentas de Cocos que pisa el disponible del reporte: la que se llama Cocos en cada moneda. Si el reporte no trae la fila de una moneda, ese disponible es cero. */
+function portCajaCtas(P){ const caja = P && P.caja || {};
+  return ["ARS","USD"].map(mon => { const x = ctas().find(c => c.moneda === mon && (/^cocos-(ars|usd)$/.test(c.id) || /cocos/i.test(c.nombre)));
+    return x ? {id:x.id, nombre:x.nombre, mon, monto:+caja[mon]||0} : null; }).filter(Boolean); }
 /* el costo sale de los movimientos importados (costo promedio por unidad × cantidad del reporte); sin movimientos queda sin costo */
 function portPos(){
   const P = cfg().carteraCocos; if (!P || !Array.isArray(P.filas)) return null;
@@ -2451,7 +2455,15 @@ document.addEventListener("click", async ev => {
       const aj = Object.assign({}, cfg().cocosAj || {}); aj[k] = Math.max(0, v - sinIni); S.config = Object.assign({}, cfg(), {cocosAj:aj}); closeForm(); changed(); toast("Tenencia actualizada"); });
     setTimeout(() => $("#fAj").focus(), 30); return; }
   if (a === "ajAuto"){ const aj = Object.assign({}, cfg().cocosAj || {}); delete aj[el.dataset.k]; S.config = Object.assign({}, cfg(), {cocosAj:aj}); closeForm(); changed(); return; }
-  if (a === "portOk"){ const P = S.pendingPort; S.pendingPort = null; if (!P) return; S.config = Object.assign({}, cfg(), {carteraCocos:P}); closeForm(); changed(); loadPX(true); toast(`${P.filas.length} posiciones de Cocos al ${ddmm(P.fecha)}`); return; }
+  if (a === "portOk"){ const P = S.pendingPort; S.pendingPort = null; if (!P) return;
+    /* el reporte pisa todo lo de Cocos: posiciones, ajustes viejos de tenencia y el disponible de las cuentas de Cocos */
+    const c = Object.assign({}, cfg(), {carteraCocos:P}); delete c.cocosAj;
+    const caja = portCajaCtas(P);
+    if (caja.length){ const mv = ctaMovs(); c.cuentas = ctas().map(x => { const k = caja.find(y => y.id === x.id); if (!k) return Object.assign({}, x);
+      const hasta = mv.filter(m => m.cta === x.id && m.fecha <= P.fecha).reduce((a,m) => a + m.monto, 0);
+      return Object.assign({}, x, {inicial: Math.round((k.monto - hasta)*100)/100}); }); }
+    S.config = c; closeForm(); changed(); loadPX(true);
+    toast(`${P.filas.length} posiciones de Cocos al ${ddmm(P.fecha)}${caja.length ? " y saldo de " + caja.map(k => k.nombre).join(" y ") : ""}`); return; }
   if (a === "portQuitar"){ const c = Object.assign({}, cfg()); delete c.carteraCocos; S.config = c; changed(); toast("Las posiciones de Cocos vuelven a salir de los movimientos"); return; }
   if (a === "pxRefresh"){ loadPX(true); render(true); return; }
   if (a === "comp"){ try { await patch("comisiones", el.dataset.id, {compensado:true, compensadoFecha: NOW.toISOString().slice(0,10)}); toast("Marcado como compensado"); } catch(e){ toast(errMsg(e), true); } return; }
@@ -2495,8 +2507,8 @@ document.addEventListener("change", ev => {
       const ports = txts.map(parsePortfolio).filter(Boolean).sort((a,b) => a.fecha < b.fecha ? 1 : -1);
       if (ports.length){ const P = ports[0], tot = P.filas.reduce((a,r) => a + portUSD(r), 0), mix = txts.length > ports.length; S.pendingPort = P; formOpener = $("[data-act=pickCocos]");
         $("#layer").innerHTML = `<div class="scrim" data-act="close"></div><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle">
-          <h3 id="dTitle">Tenencias de Cocos</h3><p class="sub" style="margin:0 0 18px">Reporte al ${ddmm(P.fecha)}/${P.fecha.slice(0,4)} · ${P.filas.length} posiciones por ${fmt(tot, "USD")} (pesos al oficial de hoy). Reemplaza las posiciones de Cocos actuales.${mix ? " Los archivos de movimientos importalos aparte." : ""}</p>
-          ${P.filas.some(r => r.aviso) ? `<p class="sub" style="margin:-8px 0 14px;color:var(--red)">Cocos no tenía el precio del día de ${P.filas.filter(r => r.aviso).length} posición${P.filas.filter(r => r.aviso).length>1?"es":""}: ${P.filas.some(r => r.aviso === "sin precio") ? "sin precio vale cero hasta el próximo reporte" : "usó el último precio disponible"}.</p>` : ""}<div class="catplan">${P.filas.map(r => `<div class="cp-r"><span>${esc(cocosCode(r.ins))} · ${esc(TIPOL[portTipo(r.ins)])}${r.aviso ? ` · <b style="color:var(--red)">${esc(r.aviso)}</b>` : ""}</span><small>${esc(fmt(portUSD(r), "USD"))}</small></div>`).join("")}${P.caja.ARS || P.caja.USD ? `<div class="cp-r"><span>Disponible en la cuenta (no suma a la cartera)</span><small>${esc([P.caja.ARS ? ars(P.caja.ARS) : "", P.caja.USD ? fmt(P.caja.USD,"USD") : ""].filter(Boolean).join(" + "))}</small></div>` : ""}</div>
+          <h3 id="dTitle">Tenencias de Cocos</h3><p class="sub" style="margin:0 0 18px">Reporte al ${ddmm(P.fecha)}/${P.fecha.slice(0,4)} · ${P.filas.length} posiciones por ${fmt(tot, "USD")} (pesos al oficial de hoy). Pisa las posiciones de Cocos, los ajustes de tenencia y el saldo de las cuentas de Cocos a esa fecha; lo que cargues después suma y resta desde ahí.${mix ? " Los archivos de movimientos importalos aparte." : ""}</p>
+          ${P.filas.some(r => r.aviso) ? `<p class="sub" style="margin:-8px 0 14px;color:var(--red)">Cocos no tenía el precio del día de ${P.filas.filter(r => r.aviso).length} posición${P.filas.filter(r => r.aviso).length>1?"es":""}: ${P.filas.some(r => r.aviso === "sin precio") ? "sin precio vale cero hasta el próximo reporte" : "usó el último precio disponible"}.</p>` : ""}<div class="catplan">${P.filas.map(r => `<div class="cp-r"><span>${esc(cocosCode(r.ins))} · ${esc(TIPOL[portTipo(r.ins)])}${r.aviso ? ` · <b style="color:var(--red)">${esc(r.aviso)}</b>` : ""}</span><small>${esc(fmt(portUSD(r), "USD"))}</small></div>`).join("")}${portCajaCtas(P).map(k => `<div class="cp-r"><span>Disponible · pisa el saldo de ${esc(k.nombre)}</span><small>${esc(k.mon === "USD" ? fmt(k.monto,"USD") : ars(k.monto))}</small></div>`).join("")}</div>
           <div class="foot"><button type="button" class="btn ghost" data-act="close">Cancelar</button><button type="button" class="btn primary" data-act="portOk">Usar estas tenencias</button></div></aside>`;
         return; }
       const rows = []; let bad = 0; txts.forEach(x => { const r = parseCocos(x); if (r) rows.push(...r); else bad++; });
