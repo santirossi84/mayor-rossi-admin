@@ -675,7 +675,7 @@ body.v-cabina .panel{border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(
 body.v-cabina .ph h2{font:600 20px/1.2 var(--fd);text-transform:none;letter-spacing:-.01em}
 body.v-cabina .kpi .v,body.v-cabina .big,body.v-cabina .gstats b,body.v-cabina .rate b{font-weight:700;letter-spacing:-.03em}
 body.v-cabina .scale{padding-top:24px}
-.orb{position:relative;height:100vh;height:100svh;min-height:620px;background:#0B0B12;color:#fff;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",system-ui,sans-serif}
+.orb{position:relative;height:100vh;height:100svh;min-height:520px;background:#0B0B12;color:#fff;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",system-ui,sans-serif}
 .orb canvas{position:absolute;display:block}
 #silk{inset:0;width:100%;height:100%;pointer-events:none}
 #sphere{left:0;top:28px;width:100%;height:calc(100% - 28px);cursor:grab;touch-action:pan-y}
@@ -2358,7 +2358,12 @@ function orbNodes(){
 }
 function orbFit(){ const c = ORB.cv, s = ORB.sk; if (!c || !s) return; const d = Math.min(2, devicePixelRatio || 1), sd = Math.min(1.25, devicePixelRatio || 1);
   ORB.W = c.clientWidth; ORB.H = c.clientHeight; c.width = ORB.W * d; c.height = ORB.H * d; c.getContext("2d").setTransform(d, 0, 0, d, 0, 0);
-  ORB.SW = s.clientWidth; ORB.SH = s.clientHeight; s.width = ORB.SW * sd; s.height = ORB.SH * sd; s.getContext("2d").setTransform(sd, 0, 0, sd, 0, 0); }
+  ORB.SW = s.clientWidth; ORB.SH = s.clientHeight; s.width = ORB.SW * sd; s.height = ORB.SH * sd; s.getContext("2d").setTransform(sd, 0, 0, sd, 0, 0);
+  /* hueco libre entre el titular y el dock (o el aviso, en celular): ahí va la esfera, así no se pisa en pantallas bajas */
+  const sc = c.closest(".orb"), r = c.getBoundingClientRect(), t = sc && sc.querySelector(".tit"), dk = sc && sc.querySelector(".dock"), n = sc && sc.querySelector(".notif");
+  let top = t ? t.getBoundingClientRect().bottom - r.top + 8 : ORB.H * .3, bot = dk ? dk.getBoundingClientRect().top - r.top - 8 : ORB.H * .9;
+  if (n && ORB.W < 700){ const nt = n.getBoundingClientRect().top - r.top - 8; if (nt > top + 120) bot = Math.min(bot, nt); }
+  ORB.top = top; ORB.bot = Math.max(top + 120, bot); }
 addEventListener("resize", () => { if (ORB.cv && ORB.cv.isConnected) orbFit(); });
 function orbStart(){
   const c = document.getElementById("sphere"), s = document.getElementById("silk"); if (!c || !s || document.hidden) return;
@@ -2375,7 +2380,7 @@ function orbStart(){
 document.addEventListener("visibilitychange", () => { if (!document.hidden) orbStart(); });
 function orbProj(X, Y, Z, R, cx, cy){ const p = 900 / (900 - Z * R); return [cx + X * R * p, cy + Y * R * p, p]; }
 function orbGeom(){ const W = ORB.W, H = ORB.H, movil = W < 700, e = ORB.ease;
-  const cx = W * .5 + (ORB.mx - .5) * -30, cy = H * (movil ? .53 : .57) + (ORB.my - .5) * -20, base = Math.min(W * (movil ? .4 : .5), H * (movil ? .3 : .26));
+  const alto = (ORB.bot || H * .9) - (ORB.top || H * .3), cx = W * .5 + (ORB.mx - .5) * -30, cy = (ORB.top || H * .3) + alto / 2 + (ORB.my - .5) * -14, base = Math.min(W * (movil ? .4 : .5), alto / 2 * .74);
   return {cx, cy, R: base * (.4 + .6 * e) + (1 - e) * Math.min(W, H) * .9}; }
 function orbPts(){ const {cx, cy, R} = orbGeom(), cyr = Math.cos(ORB.ry), syr = Math.sin(ORB.ry), cxr = Math.cos(ORB.rx), sxr = Math.sin(ORB.rx);
   return ORB.nodes.map(n => { const x1 = n.x * cyr - n.z * syr, z1 = n.x * syr + n.z * cyr, y1 = n.y * cxr - z1 * sxr, z2 = n.y * sxr + z1 * cxr; const [sx, sy, p] = orbProj(x1, y1, z2, R, cx, cy); return {n, sx, sy, p, z:z2}; }).sort((a, b) => a.z - b.z); }
